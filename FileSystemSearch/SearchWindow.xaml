@@ -1,0 +1,71 @@
+﻿<Window x:Class="FileSystemSearch.SearchWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="File System Search - Search" 
+        Height="620" Width="425"
+        MinHeight="620" MinWidth="425"
+        MaxHeight="620" MaxWidth="425">
+    <Grid x:Name="LayoutRoot">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="30" />
+			<RowDefinition Height="30" />
+			<RowDefinition Height="30" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="20" />
+			<RowDefinition Height="20" />
+			<RowDefinition Height="20" />
+			<RowDefinition Height="20" />
+			<RowDefinition Height="20" />
+			<RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+			<RowDefinition Height="30" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="400" />
+		</Grid.ColumnDefinitions>
+		<TextBlock Grid.Row="0" Text="Search Path" VerticalAlignment="Bottom" Margin="40,2"/>
+		<TextBox Grid.Row="1" Text="{Binding SearchPath, Mode=TwoWay}" VerticalAlignment="Top" Margin="40,2"/>
+		<TextBlock Grid.Row="2" Text="Search Pattern" VerticalAlignment="Bottom" Margin="40,2"/>
+        <TextBox Grid.Row="3" Text="{Binding SearchPattern, Mode=TwoWay}" VerticalAlignment="Top" Margin="40,2"/>
+        <TextBlock Grid.Row="4" Text="Search String" VerticalAlignment="Bottom" Margin="40,2"/>
+        <TextBox Grid.Row="5" Text="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Top" Margin="40,2"/>
+        <TextBlock Grid.Row="6" Text="Ignore files larger than" VerticalAlignment="Bottom" Margin="40,2"/>
+        <Grid Grid.Row="7">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0" Text="{Binding IgnoreFilesLargerThan, Mode=TwoWay, StringFormat={}{0:0.####}}" VerticalAlignment="Top" Margin="40,2,20,2"/>
+            <ComboBox Grid.Column="1" ItemsSource="{Binding ByteUnits}" SelectedValue="{Binding SelectedIgnoreFliesLargerThanByteUnit}" Width="45" HorizontalAlignment="Left" Margin="0,0,0,8" />
+        </Grid>
+
+        <CheckBox Grid.Row="8" Content="Search for files" HorizontalContentAlignment="Left" IsChecked="{Binding SearchForFiles, Mode=TwoWay}" Margin="40,2" />
+
+		<CheckBox Grid.Row="9" Content="Search in file path" HorizontalContentAlignment="Left" IsChecked="{Binding SearchInFilePath, Mode=TwoWay}" Margin="40,2" />
+        <CheckBox Grid.Row="10" Content="Search in file name" HorizontalContentAlignment="Left" IsChecked="{Binding SearchInFileName, Mode=TwoWay}" Margin="40,2" />
+        <CheckBox Grid.Row="11" Content="Search in file contents" HorizontalContentAlignment="Left" IsChecked="{Binding SearchInFileContents, Mode=TwoWay}" Margin="40,2" />
+        <CheckBox Grid.Row="12" Content="Search file contents as UTF8" HorizontalContentAlignment="Left" IsChecked="{Binding SearchContentsAsUtf8, Mode=TwoWay}" Margin="40,2" />
+        <CheckBox Grid.Row="13" Content="Search file contents as UTF16" HorizontalContentAlignment="Left" IsChecked="{Binding SearchContentsAsUtf16, Mode=TwoWay}" Margin="40,2" />
+
+        <CheckBox Grid.Row="15" Content="Search for directories" HorizontalContentAlignment="Left" IsChecked="{Binding SearchForDirectories, Mode=TwoWay}" Margin="40,2" />
+		<CheckBox Grid.Row="16" Content="Search in directory path" HorizontalContentAlignment="Left" IsChecked="{Binding SearchInDirectoryPath, Mode=TwoWay}" Margin="40,2" />
+        <CheckBox Grid.Row="17" Content="Search in directory name" HorizontalContentAlignment="Left" IsChecked="{Binding SearchInDirectoryName, Mode=TwoWay}" Margin="40,2" />
+
+        <CheckBox Grid.Row="19" Content="Search recursively" HorizontalContentAlignment="Left" IsChecked="{Binding SearchRecursively, Mode=TwoWay}" Margin="40,2" />
+        <CheckBox Grid.Row="20" Content="Ignore case" HorizontalContentAlignment="Left" IsChecked="{Binding SearchIgnoreCase, Mode=TwoWay}" Margin="40,2" />
+
+		<Button Grid.Row="22" x:Name="buttonSearch" Click="ButtonSearch_Click" Content="Search!" Margin="40,2" />
+    </Grid>
+</Window>
