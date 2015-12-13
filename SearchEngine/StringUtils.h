@@ -29,7 +29,8 @@ inline std::wstring ToLowerUnicode(const std::wstring& str)
 	return ToLowerUnicode(str.c_str(), str.length());
 }
 
-inline void ToLowerAscii(const wchar_t* source, wchar_t* destination, size_t length)
+template <typename CharType>
+inline void ToLowerAscii(const CharType* source, CharType* destination, size_t length)
 {
 	auto end = source + length;
 	for (auto ptr = source; ptr != end; ptr++, destination++)

@@ -14,5 +14,6 @@
     <ClInclude Include="ScopedStackAllocator.h" />
     <ClInclude Include="OrdinalStringSearcher.h" />
     <ClInclude Include="UnicodeUtf16StringSearcher.h" />
+    <ClInclude Include="HandleHolder.h" />
   </ItemGroup>
 </Project>

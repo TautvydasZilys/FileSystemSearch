@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -57,6 +58,12 @@ namespace FileSystemSearch
             if (Encoding.UTF8.GetByteCount(searchViewModel.SearchString) > (1 << 30))
             {
                 validationFailedReason = "Search string is too long.";
+                return false;
+            }
+
+            if (searchViewModel.SearchInFileContents && searchViewModel.SearchContentsAsUtf8 && searchViewModel.SearchString.Any(c => c < 0 || c > 127))
+            {
+                validationFailedReason = "Searching for file contents as UTF8 with non-ascii string is not implemented.";
                 return false;
             }
 

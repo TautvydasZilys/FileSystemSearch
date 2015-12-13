@@ -63,11 +63,11 @@ private:
 
 	inline void AllocateBlock(size_t bytes)
 	{
-		auto allocationSize = std::max(m_NextBlockSize, bytes);
+		auto allocationSize = std::max(m_NextBlockSize, bytes + sizeof(BlockHeader));
 		allocationSize = AlignSize(allocationSize);
 
 		auto memory = VirtualAlloc(nullptr, allocationSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-		auto blockHeader = new (memory)BlockHeader(static_cast<uint8_t*>(memory)+sizeof(BlockHeader), static_cast<uint8_t*>(memory)+allocationSize);
+		auto blockHeader = new (memory)BlockHeader(static_cast<uint8_t*>(memory) + sizeof(BlockHeader), static_cast<uint8_t*>(memory) + allocationSize);
 		m_Blocks.push_back(blockHeader);
 		m_CurrentBlockPtr = m_Blocks[m_CurrentBlock];
 

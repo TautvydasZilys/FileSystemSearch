@@ -167,6 +167,7 @@
   <ItemGroup>
     <ClInclude Include="FileEnumerator.h" />
     <ClInclude Include="FileSearcher.h" />
+    <ClInclude Include="HandleHolder.h" />
     <ClInclude Include="PathUtils.h" />
     <ClInclude Include="PrecompiledHeader.h" />
     <ClInclude Include="ScopedStackAllocator.h" />

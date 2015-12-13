@@ -1,7 +1,8 @@
 #pragma once
 
-#include "ScopedStackAllocator.h"
+#include "HandleHolder.h"
 #include "OrdinalStringSearcher.h"
+#include "ScopedStackAllocator.h"
 #include "UnicodeUtf16StringSearcher.h"
 
 typedef void(__stdcall *FoundPathCallback)(const wchar_t* path);
@@ -88,23 +89,31 @@ private:
 	uint32_t m_RefCount;
 	SearchInstructions m_SearchInstructions;
 	std::string m_Utf8SearchString;
-	ScopedStackAllocator m_StackAllocator;
 
 	OrdinalStringSearcher<wchar_t> m_OrdinalUtf16Searcher;
 	OrdinalStringSearcher<char> m_OrdinalUtf8Searcher;
 	UnicodeUtf16StringSearcher m_UnicodeUtf16Searcher;
 	bool m_SearchStringIsAscii;
 
+	uint32_t m_WorkerThreadCount;
+	HandleHolder m_WorkSemaphore;
+	SLIST_HEADER* m_WorkList;
+	std::vector<HandleHolder> m_WorkerThreadHandles;
+
 	void AddRef();
 	void Release();
 
-	void Search();
-	void OnDirectoryFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData);
-	void OnFileFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData);
-	bool SearchInFileName(const std::wstring& directory, const wchar_t* fileName, bool searchInPath);
-	bool SearchForString(const wchar_t* str, size_t length);
+	void InitializeContentSearchThreads();
 
-	void FindSearchString(std::wstring fileName);
+	void Search();
+	void OnDirectoryFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData, ScopedStackAllocator& stackAllocator);
+	void OnFileFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData, ScopedStackAllocator& stackAllocator);
+	bool SearchInFileName(const std::wstring& directory, const wchar_t* fileName, bool searchInPath, ScopedStackAllocator& stackAllocator);
+	bool SearchForString(const wchar_t* str, size_t length, ScopedStackAllocator& stackAllocator);
+
+	void WorkerThreadLoop();
+	void SearchFileContents(const struct WorkerJob* job, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator);
+	bool PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator);
 
 	FileSearcher(SearchInstructions&& searchInstructions);
 	~FileSearcher();
