@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ namespace FileSystemSearch
 {
     class SearchUtils
     {
-        public delegate void FoundPathCallbackDelegate([MarshalAs(UnmanagedType.LPWStr)]string path);
+        public delegate void FoundPathCallbackDelegate(IntPtr findData, IntPtr path);
         public delegate void SearchProgressUpdatedDelegate(double progress);
         public delegate void SearchDoneCallbackDelegate();
 

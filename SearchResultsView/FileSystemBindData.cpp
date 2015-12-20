@@ -1,0 +1,4 @@
+#include "PrecompiledHeader.h"
+#include "FileSystemBindData.h"
+
+const CLSID FileSystemBindData::CLSID_UnknownJunction = { 0xfc0a77e6, 0x9d70, 0x4258, { 0x97, 0x83, 0x6d, 0xab, 0x1d, 0x0f, 0xe3, 0x1e } };

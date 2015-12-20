@@ -154,7 +154,7 @@ void FileSearcher::OnDirectoryFound(const std::wstring& directory, const WIN32_F
 	if (!m_SearchInstructions.SearchForDirectories())
 		return;
 
-	SearchInFileName(directory, findData.cFileName, m_SearchInstructions.SearchInDirectoryPath(), stackAllocator);
+	SearchInFileName(directory, findData, m_SearchInstructions.SearchInDirectoryPath(), stackAllocator);
 }
 
 void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData, ScopedStackAllocator& stackAllocator)
@@ -168,12 +168,12 @@ void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_D
 
 	if (m_SearchInstructions.SearchInFilePath())
 	{
-		if (SearchInFileName(directory, findData.cFileName, true, stackAllocator))
+		if (SearchInFileName(directory, findData, true, stackAllocator))
 			return;
 	}
 	else if (m_SearchInstructions.SearchInFileName())
 	{
-		if (SearchInFileName(directory, findData.cFileName, false, stackAllocator))
+		if (SearchInFileName(directory, findData, false, stackAllocator))
 			return;
 	}
 
@@ -192,26 +192,26 @@ void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_D
 	Assert(releaseResult != FALSE);
 }
 
-bool FileSearcher::SearchInFileName(const std::wstring& directory, const wchar_t* fileName, bool searchInPath, ScopedStackAllocator& stackAllocator)
+bool FileSearcher::SearchInFileName(const std::wstring& directory, const WIN32_FIND_DATAW& findData, bool searchInPath, ScopedStackAllocator& stackAllocator)
 {
-	auto fileNameLength = wcslen(fileName);
+	auto fileNameLength = wcslen(findData.cFileName);
 
 	if (searchInPath)
 	{
 		size_t pathLength;
-		auto path = PathUtils::CombinePathsTemporary(directory, fileName, fileNameLength, stackAllocator, pathLength);
+		auto path = PathUtils::CombinePathsTemporary(directory, findData.cFileName, fileNameLength, stackAllocator, pathLength);
 		if (SearchForString(path, pathLength, stackAllocator))
 		{
-			m_SearchInstructions.onFoundPath(path);
+			m_SearchInstructions.onFoundPath(&findData, path);
 			return true;
 		}
 	}
 	else
 	{
-		if (SearchForString(fileName, fileNameLength, stackAllocator))
+		if (SearchForString(findData.cFileName, fileNameLength, stackAllocator))
 		{
-			auto path = PathUtils::CombinePathsTemporary(directory, fileName, fileNameLength, stackAllocator);
-			m_SearchInstructions.onFoundPath(path);
+			auto path = PathUtils::CombinePathsTemporary(directory, findData.cFileName, fileNameLength, stackAllocator);
+			m_SearchInstructions.onFoundPath(&findData, path);
 			return true;
 		}
 	}
@@ -313,7 +313,7 @@ void FileSearcher::SearchFileContents(const WorkerJob* job, uint8_t* primaryBuff
 
 		if (PerformFileContentSearch(primaryBuffer, bytesRead, stackAllocator))
 		{
-			m_SearchInstructions.onFoundPath(job->filePath.c_str());
+			m_SearchInstructions.onFoundPath(nullptr, job->filePath.c_str());
 			return;
 		}
 
@@ -327,7 +327,7 @@ void FileSearcher::SearchFileContents(const WorkerJob* job, uint8_t* primaryBuff
 	}
 
 	if (PerformFileContentSearch(secondaryBuffer, bytesRead, stackAllocator))
-		m_SearchInstructions.onFoundPath(job->filePath.c_str());
+		m_SearchInstructions.onFoundPath(nullptr, job->filePath.c_str());
 }
 
 bool FileSearcher::PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator)

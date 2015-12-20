@@ -12,8 +12,6 @@ namespace FileSystemSearch
 	/// </summary>
 	public partial class SearchResultWindow : Window
 	{
-		private ObservableCollection<SearchResultViewModel> resultList;
-
         private SearchUtils.FoundPathCallbackDelegate foundPathCallback;
         private SearchUtils.SearchProgressUpdatedDelegate searchProgressUpdatedCallback;
         private SearchUtils.SearchDoneCallbackDelegate searchDoneCallback;
@@ -24,19 +22,22 @@ namespace FileSystemSearch
 
             headerStackPanel.DataContext = searchViewModel;
 
-			resultList = new ObservableCollection<SearchResultViewModel>();
-			resultListView.ItemsSource = resultList;
-
             progressBar.IsEnabled = true;
             progressBar.Value = 0;
             progressBar.IsIndeterminate = true;
 
-            foundPathCallback = OnPathFound;
+            foundPathCallback = resultsView.AddItem;
             searchProgressUpdatedCallback = OnProgressUpdated;
             searchDoneCallback = OnSearchDone;
 
 			SearchUtils.SearchAsync(searchViewModel, foundPathCallback, searchProgressUpdatedCallback, searchDoneCallback);
 		}
+
+        protected override void OnClosed(EventArgs e)
+        {
+            resultsView.Cleanup();
+            base.OnClosed(e);
+        }
 
 		private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
 		{
@@ -50,14 +51,6 @@ namespace FileSystemSearch
             {
                 MessageBox.Show(string.Format("Failed to open {0}: {1}.", item.Path, ex.Message), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-		}
-
-		private void OnPathFound(string path)
-		{
-			Dispatcher.InvokeAsync(() =>
-			{
-				resultList.Add(new SearchResultViewModel(path));
-			}, DispatcherPriority.Background);
 		}
 
         private void OnProgressUpdated(double progress)

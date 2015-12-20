@@ -5,7 +5,7 @@
 #include "ScopedStackAllocator.h"
 #include "UnicodeUtf16StringSearcher.h"
 
-typedef void(__stdcall *FoundPathCallback)(const wchar_t* path);
+typedef void(__stdcall *FoundPathCallback)(const WIN32_FIND_DATAW* findData, const wchar_t* path);
 typedef void(__stdcall *SearchProgressUpdated)(double progress);
 typedef void(__stdcall *SearchDoneCallback)();
 
@@ -108,7 +108,7 @@ private:
 	void Search();
 	void OnDirectoryFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData, ScopedStackAllocator& stackAllocator);
 	void OnFileFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData, ScopedStackAllocator& stackAllocator);
-	bool SearchInFileName(const std::wstring& directory, const wchar_t* fileName, bool searchInPath, ScopedStackAllocator& stackAllocator);
+	bool SearchInFileName(const std::wstring& directory, const WIN32_FIND_DATAW& findData, bool searchInPath, ScopedStackAllocator& stackAllocator);
 	bool SearchForString(const wchar_t* str, size_t length, ScopedStackAllocator& stackAllocator);
 
 	void WorkerThreadLoop();
