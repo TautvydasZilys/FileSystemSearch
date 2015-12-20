@@ -8,6 +8,8 @@
 static CriticalSection s_WindowClassCriticalSection;
 static WindowClassHolder s_WindowClass;
 
+static const wchar_t kExplorerBrowserBag[] = L"BDA86866-3A40-4539-AB61-3E9059C9DCB0";
+
 void ExplorerWindow::EnsureWindowClassIsCreated()
 {
 	CriticalSection::Lock lock(s_WindowClassCriticalSection);
@@ -69,14 +71,17 @@ void ExplorerWindow::Initialize()
 	Assert(SUCCEEDED(hr));
 
 	RECT displayRect = { 0, 0, m_Width, m_Height };
-	FOLDERSETTINGS folderSettings = { FVM_DETAILS, 0 };
+	FOLDERSETTINGS folderSettings = { FVM_DETAILS, FWF_NOENUMREFRESH | FWF_NOHEADERINALLVIEWS };
 	hr = m_ExplorerBrowser->Initialize(m_Hwnd, &displayRect, &folderSettings);
 	Assert(SUCCEEDED(hr));
 
-	hr = m_ExplorerBrowser->FillFromObject(nullptr, EBF_NONE);
+	hr = m_ExplorerBrowser->SetPropertyBag(kExplorerBrowserBag);
 	Assert(SUCCEEDED(hr));
 
-	hr = m_ExplorerBrowser->SetOptions(EBO_NOPERSISTVIEWSTATE | EBO_SHOWFRAMES | EBO_NOBORDER | EBO_NAVIGATEONCE);
+	hr = m_ExplorerBrowser->SetOptions(EBO_NOBORDER | EBO_NAVIGATEONCE);
+	Assert(SUCCEEDED(hr));
+
+	hr = m_ExplorerBrowser->FillFromObject(nullptr, EBF_NONE);
 	Assert(SUCCEEDED(hr));
 
 	WRL::ComPtr<IFolderView> folderView;
