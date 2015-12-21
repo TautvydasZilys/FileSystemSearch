@@ -17,7 +17,6 @@
     <ClInclude Include="..\Common\HandleHolder.h" />
     <ClInclude Include="WorkQueue.h" />
     <ClInclude Include="SearchInstructions.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="FileContentSearchData.h" />
   </ItemGroup>
 </Project>
