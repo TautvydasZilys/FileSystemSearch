@@ -7,7 +7,8 @@
 FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_RefCount(1),
 	m_SearchInstructions(std::move(searchInstructions)),
-	m_FileContentSearchWorkQueue(*this)
+	m_FileContentSearchWorkQueue(*this),
+	m_SearchResultDispatchWorkQueue(*this)
 {
 	// Sanity checks
 	if (m_SearchInstructions.searchString.length() == 0)
@@ -18,15 +19,10 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 
 	m_SearchStringIsAscii = StringUtils::IsAscii(m_SearchInstructions.searchString);
 
-	if (m_SearchInstructions.IgnoreCase())
-	{
-		if (m_SearchStringIsAscii)
-			StringUtils::ToLowerAsciiInline(m_SearchInstructions.searchString);
-		else
-			m_SearchInstructions.searchString = StringUtils::ToLowerUnicode(m_SearchInstructions.searchString);
-	}
+	if (m_SearchInstructions.IgnoreCase() && m_SearchStringIsAscii)
+		StringUtils::ToLowerAsciiInline(m_SearchInstructions.searchString);
 
-	if (m_SearchStringIsAscii)
+	if (m_SearchStringIsAscii || !m_SearchInstructions.IgnoreCase())
 		m_OrdinalUtf16Searcher.Initialize(m_SearchInstructions.searchString.c_str(), m_SearchInstructions.searchString.length());
 	else
 		m_UnicodeUtf16Searcher.Initialize(m_SearchInstructions.searchString.c_str(), m_SearchInstructions.searchString.length());
@@ -44,6 +40,8 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 
 		m_FileContentSearchWorkQueue.Initialize<&FileSearcher::InitializeFileContentSearchThread>(systemInfo.dwNumberOfProcessors);
 	}
+
+	m_SearchResultDispatchWorkQueue.Initialize<&FileSearcher::InitializeSearchResultDispatcherWorkerThread>(1);
 }
 
 FileSearcher::~FileSearcher()
@@ -136,7 +134,7 @@ void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_D
 	if (!m_SearchInstructions.SearchInFileContents())
 		return;
 
-	m_FileContentSearchWorkQueue.PushWorkItem(PathUtils::CombinePaths(directory, findData.cFileName), fileSize);
+	m_FileContentSearchWorkQueue.PushWorkItem(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData);
 }
 
 bool FileSearcher::SearchInFileName(const std::wstring& directory, const WIN32_FIND_DATAW& findData, bool searchInPath, ScopedStackAllocator& stackAllocator)
@@ -149,7 +147,7 @@ bool FileSearcher::SearchInFileName(const std::wstring& directory, const WIN32_F
 		auto path = PathUtils::CombinePathsTemporary(directory, findData.cFileName, fileNameLength, stackAllocator, pathLength);
 		if (SearchForString(path, pathLength, stackAllocator))
 		{
-			m_SearchInstructions.onFoundPath(&findData, path);
+			DispatchSearchResult(findData, std::wstring(path));
 			return true;
 		}
 	}
@@ -158,7 +156,7 @@ bool FileSearcher::SearchInFileName(const std::wstring& directory, const WIN32_F
 		if (SearchForString(findData.cFileName, fileNameLength, stackAllocator))
 		{
 			auto path = PathUtils::CombinePathsTemporary(directory, findData.cFileName, fileNameLength, stackAllocator);
-			m_SearchInstructions.onFoundPath(&findData, path);
+			DispatchSearchResult(findData, std::wstring(path));
 			return true;
 		}
 	}
@@ -201,6 +199,19 @@ void FileSearcher::InitializeFileContentSearchThread(WorkQueue<FileSearcher, Fil
 	{
 		SearchFileContents(searchData, fileReadBuffers[0].get(), fileReadBuffers[1].get(), stackAllocator);
 	});
+}
+
+void FileSearcher::InitializeSearchResultDispatcherWorkerThread(WorkQueue<FileSearcher, SearchResultData>& workQueue)
+{
+	workQueue.DoWork([this](const SearchResultData& searchResult)
+	{
+		m_SearchInstructions.onFoundPath(&searchResult.resultFindData, searchResult.resultPath.c_str());
+	});
+}
+
+void FileSearcher::DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::wstring&& path)
+{
+	m_SearchResultDispatchWorkQueue.PushWorkItem(std::forward<std::wstring>(path), findData);
 }
 
 static inline bool InitiateFileRead(HANDLE fileHandle, uint64_t fileOffset, uint64_t fileSize, uint8_t*& primaryBuffer, uint8_t*& secondaryBuffer, OVERLAPPED& overlapped, HANDLE overlappedEvent)
@@ -252,7 +263,7 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 
 		if (PerformFileContentSearch(primaryBuffer, bytesRead, stackAllocator))
 		{
-			m_SearchInstructions.onFoundPath(nullptr, searchData.filePath.c_str());
+			DispatchSearchResult(searchData.fileFindData, searchData.filePath.c_str());
 			return;
 		}
 
@@ -266,7 +277,7 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 	}
 
 	if (PerformFileContentSearch(secondaryBuffer, bytesRead, stackAllocator))
-		m_SearchInstructions.onFoundPath(nullptr, searchData.filePath.c_str());
+		DispatchSearchResult(searchData.fileFindData, searchData.filePath.c_str());
 }
 
 bool FileSearcher::PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator)

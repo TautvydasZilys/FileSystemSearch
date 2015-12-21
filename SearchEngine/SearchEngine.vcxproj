@@ -182,6 +182,7 @@
     <ClInclude Include="ScopedStackAllocator.h" />
     <ClInclude Include="OrdinalStringSearcher.h" />
     <ClInclude Include="SearchInstructions.h" />
+    <ClInclude Include="SearchResultData.h" />
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="UnicodeUtf16StringSearcher.h" />
     <ClInclude Include="WorkQueue.h" />

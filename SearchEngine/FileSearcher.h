@@ -5,6 +5,7 @@
 #include "OrdinalStringSearcher.h"
 #include "ScopedStackAllocator.h"
 #include "SearchInstructions.h"
+#include "SearchResultData.h"
 #include "UnicodeUtf16StringSearcher.h"
 #include "WorkQueue.h"
 
@@ -21,6 +22,7 @@ private:
 	bool m_SearchStringIsAscii;
 
 	WorkQueue<FileSearcher, FileContentSearchData> m_FileContentSearchWorkQueue;
+	WorkQueue<FileSearcher, SearchResultData> m_SearchResultDispatchWorkQueue;
 
 	void AddRef();
 	void Release();
@@ -32,6 +34,9 @@ private:
 	bool SearchForString(const wchar_t* str, size_t length, ScopedStackAllocator& stackAllocator);
 
 	void InitializeFileContentSearchThread(WorkQueue<FileSearcher, FileContentSearchData>& contentSearchWorkQueue);
+	void InitializeSearchResultDispatcherWorkerThread(WorkQueue<FileSearcher, SearchResultData>& workQueue);
+	void DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::wstring&& path);
+
 	void SearchFileContents(const FileContentSearchData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator);
 	bool PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator);
 

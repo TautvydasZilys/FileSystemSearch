@@ -18,5 +18,6 @@
     <ClInclude Include="WorkQueue.h" />
     <ClInclude Include="SearchInstructions.h" />
     <ClInclude Include="FileContentSearchData.h" />
+    <ClInclude Include="SearchResultData.h" />
   </ItemGroup>
 </Project>
