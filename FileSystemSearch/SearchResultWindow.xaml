@@ -4,20 +4,20 @@
         xmlns:FileSystemSearch="clr-namespace:FileSystemSearch"
         Title="File System Search - Results" Height="300" Width="600">
     <Grid x:Name="LayoutRoot">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="30" />
-			<RowDefinition Height="*" />
-			<RowDefinition Height="25" />
-		</Grid.RowDefinitions>
-		<WrapPanel x:Name="headerStackPanel" VerticalAlignment="Center" Margin="20,5" Orientation="Horizontal">
-			<TextBlock Text="Results for &quot;"/>
-			<TextBlock Text="{Binding SearchString}" />
-			<TextBlock Text="&quot; in &quot;"/>
-			<TextBlock Text="{Binding SearchPathAndPattern}" />
-			<TextBlock Text="&quot;:"/>
-		</WrapPanel>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="25" />
+        </Grid.RowDefinitions>
+        <WrapPanel x:Name="headerStackPanel" VerticalAlignment="Center" Margin="20,5" Orientation="Horizontal">
+            <TextBlock Text="Results for &quot;"/>
+            <TextBlock Text="{Binding SearchString}" />
+            <TextBlock Text="&quot; in &quot;"/>
+            <TextBlock Text="{Binding SearchPathAndPattern}" />
+            <TextBlock Text="&quot;:"/>
+        </WrapPanel>
 
         <FileSystemSearch:SearchResultsView Grid.Row="1" x:Name="resultsView" Margin="20,5" />
-		<ProgressBar Grid.Row="2" x:Name="progressBar" Height="20" Margin="20,0,20,5" />
-	</Grid>
+        <ProgressBar Grid.Row="2" x:Name="progressBar" Height="20" Margin="20,0,20,5" />
+    </Grid>
 </Window>
