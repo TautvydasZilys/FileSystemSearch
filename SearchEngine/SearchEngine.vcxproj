@@ -174,14 +174,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\HandleHolder.h" />
+    <ClInclude Include="FileContentSearchData.h" />
     <ClInclude Include="FileEnumerator.h" />
     <ClInclude Include="FileSearcher.h" />
     <ClInclude Include="PathUtils.h" />
     <ClInclude Include="PrecompiledHeader.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ScopedStackAllocator.h" />
     <ClInclude Include="OrdinalStringSearcher.h" />
+    <ClInclude Include="SearchInstructions.h" />
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="UnicodeUtf16StringSearcher.h" />
+    <ClInclude Include="WorkQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
