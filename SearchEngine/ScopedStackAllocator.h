@@ -152,6 +152,9 @@ public:
 		AllocateBlock(kFirstBlockSize);
 	}
 
+	ScopedStackAllocator(const ScopedStackAllocator&) = delete;
+	ScopedStackAllocator& operator=(const ScopedStackAllocator&) = delete;
+
 	inline ~ScopedStackAllocator()
 	{
 		for (auto block : m_Blocks)

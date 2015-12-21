@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="SearchResultsView.cpp" />
+    <ClCompile Include="PrecompiledHeader.cpp" />
+    <ClCompile Include="ExplorerWindow.cpp" />
+    <ClCompile Include="FileSystemBindData.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="PrecompiledHeader.h" />
+    <ClInclude Include="ExplorerWindow.h" />
+    <ClInclude Include="..\Common\HandleHolder.h" />
+    <ClInclude Include="CriticalSection.h" />
+    <ClInclude Include="WindowClassHolder.h" />
+    <ClInclude Include="FileSystemBindData.h" />
+  </ItemGroup>
+</Project>

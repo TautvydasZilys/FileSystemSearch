@@ -26,7 +26,7 @@ public:
 	{
 		while (textEnd - textBegin >= m_PatternLength)
 		{
-			auto comparisonResult = CompareStringEx(LOCALE_NAME_SYSTEM_DEFAULT, NORM_IGNORECASE, textBegin, static_cast<int>(textEnd - textBegin), m_Pattern, static_cast<int>(m_PatternLength), nullptr, nullptr, 0);
+			auto comparisonResult = CompareStringEx(LOCALE_NAME_SYSTEM_DEFAULT, NORM_IGNORECASE, textBegin, static_cast<int>(m_PatternLength), m_Pattern, static_cast<int>(m_PatternLength), nullptr, nullptr, 0);
 			if (comparisonResult == CSTR_EQUAL)
 				return true;
 

@@ -4,34 +4,34 @@ using System.IO;
 
 namespace FileSystemSearch
 {
-    public enum ByteUnit
-    {
-        B,
-        KB,
-        MB,
-        GB,
-        TB
-    }
+	public enum ByteUnit
+	{
+		B,
+		KB,
+		MB,
+		GB,
+		TB
+	}
 
 	public class SearchViewModel : INotifyPropertyChanged
 	{
-        private ulong ignoreFilesLargerThanInBytes;
-        private ByteUnit[] byteUnits = new ByteUnit[] { ByteUnit.B, ByteUnit.KB, ByteUnit.MB, ByteUnit.GB, ByteUnit.TB };
+		private ulong ignoreFilesLargerThanInBytes;
+		private ByteUnit[] byteUnits = new ByteUnit[] { ByteUnit.B, ByteUnit.KB, ByteUnit.MB, ByteUnit.GB, ByteUnit.TB };
 
-        public event PropertyChangedEventHandler PropertyChanged;
+		public event PropertyChangedEventHandler PropertyChanged;
 
-        public SearchViewModel()
-        {
-            SelectedIgnoreFliesLargerThanByteUnit = ByteUnit.MB;
-            ignoreFilesLargerThanInBytes = 10 * 1024 * 1024;
-            SearchPattern = "*";
+		public SearchViewModel()
+		{
+			SelectedIgnoreFliesLargerThanByteUnit = ByteUnit.MB;
+			ignoreFilesLargerThanInBytes = 10 * 1024 * 1024;
+			SearchPattern = "*";
 
-            SearchPath = "C:";
-            SearchString = "aF";
-            SearchForFiles = true;
-            SearchInFilePath = true;
-            SearchRecursively = true;
-            SearchIgnoreCase = true;
+			SearchPath = "C:";
+			SearchString = "aF";
+			SearchForFiles = true;
+			SearchInFilePath = true;
+			SearchRecursively = true;
+			SearchIgnoreCase = true;
 		}
 
 		public string SearchPath { get; set; }
@@ -39,110 +39,110 @@ namespace FileSystemSearch
 		public string SearchPattern { get; set; }
 		public string SearchString { get; set; }
 
-		public string SearchPathAndPattern 
-        {
-            get
-            {
-                // Path.Combine fails to combine "C:" with "*.cpp", producing "C:*.cpp"
-                var result = SearchPath;
-                if (SearchPath[SearchPath.Length - 1] != '\\')
-                    result += '\\';
+		public string SearchPathAndPattern
+		{
+			get
+			{
+				// Path.Combine fails to combine "C:" with "*.cpp", producing "C:*.cpp"
+				var result = SearchPath;
+				if (SearchPath[SearchPath.Length - 1] != '\\')
+					result += '\\';
 
-                return result + SearchPattern;
-            }
-        }
+				return result + SearchPattern;
+			}
+		}
 
 		public bool SearchForFiles { get; set; }
 		public bool SearchInFilePath { get; set; }
-        public bool SearchInFileName { get; set; }
-        public bool SearchInFileContents { get; set; }
-        public bool SearchContentsAsUtf8 { get; set; }
-        public bool SearchContentsAsUtf16 { get; set; }
+		public bool SearchInFileName { get; set; }
+		public bool SearchInFileContents { get; set; }
+		public bool SearchContentsAsUtf8 { get; set; }
+		public bool SearchContentsAsUtf16 { get; set; }
 
 		public bool SearchForDirectories { get; set; }
 		public bool SearchInDirectoryPath { get; set; }
 		public bool SearchInDirectoryName { get; set; }
 
-        public bool SearchRecursively { get; set; }
-        public bool SearchIgnoreCase { get; set; }
+		public bool SearchRecursively { get; set; }
+		public bool SearchIgnoreCase { get; set; }
 
-        public double IgnoreFilesLargerThan
-        {
-            get
-            {
-                switch (SelectedIgnoreFliesLargerThanByteUnit)
-                {
-                    case ByteUnit.B:
-                        return (double)ignoreFilesLargerThanInBytes;
+		public double IgnoreFilesLargerThan
+		{
+			get
+			{
+				switch (SelectedIgnoreFliesLargerThanByteUnit)
+				{
+					case ByteUnit.B:
+						return (double)ignoreFilesLargerThanInBytes;
 
-                    case ByteUnit.KB:
-                        return ignoreFilesLargerThanInBytes / 1024.0;
+					case ByteUnit.KB:
+						return ignoreFilesLargerThanInBytes / 1024.0;
 
-                    case ByteUnit.MB:
-                        return ignoreFilesLargerThanInBytes / 1024.0 / 1024.0;
+					case ByteUnit.MB:
+						return ignoreFilesLargerThanInBytes / 1024.0 / 1024.0;
 
-                    case ByteUnit.GB:
-                        return ignoreFilesLargerThanInBytes / 1024.0 / 1024.0 / 1024.0;
+					case ByteUnit.GB:
+						return ignoreFilesLargerThanInBytes / 1024.0 / 1024.0 / 1024.0;
 
-                    case ByteUnit.TB:
-                        return ignoreFilesLargerThanInBytes / 1024.0 / 1024.0 / 1024.0 / 1024.0;
+					case ByteUnit.TB:
+						return ignoreFilesLargerThanInBytes / 1024.0 / 1024.0 / 1024.0 / 1024.0;
 
-                    default:
-                        throw new Exception(string.Format("Unknown ByteUnit: ", SelectedIgnoreFliesLargerThanByteUnit));
-                }
-            }
-            set
-            {
-                switch (SelectedIgnoreFliesLargerThanByteUnit)
-                {
-                    case ByteUnit.B:
-                        ignoreFilesLargerThanInBytes = (ulong)value;
-                        break;
+					default:
+						throw new Exception(string.Format("Unknown ByteUnit: ", SelectedIgnoreFliesLargerThanByteUnit));
+				}
+			}
+			set
+			{
+				switch (SelectedIgnoreFliesLargerThanByteUnit)
+				{
+					case ByteUnit.B:
+						ignoreFilesLargerThanInBytes = (ulong)value;
+						break;
 
-                    case ByteUnit.KB:
-                        ignoreFilesLargerThanInBytes = (ulong)(value * 1024.0);
-                        break;
+					case ByteUnit.KB:
+						ignoreFilesLargerThanInBytes = (ulong)(value * 1024.0);
+						break;
 
-                    case ByteUnit.MB:
-                        ignoreFilesLargerThanInBytes = (ulong)(value * 1024.0 * 1024.0);
-                        break;
+					case ByteUnit.MB:
+						ignoreFilesLargerThanInBytes = (ulong)(value * 1024.0 * 1024.0);
+						break;
 
-                    case ByteUnit.GB:
-                        ignoreFilesLargerThanInBytes = (ulong)(value * 1024.0 * 1024.0 * 1024.0);
-                        break;
+					case ByteUnit.GB:
+						ignoreFilesLargerThanInBytes = (ulong)(value * 1024.0 * 1024.0 * 1024.0);
+						break;
 
-                    case ByteUnit.TB:
-                        ignoreFilesLargerThanInBytes = (ulong)(value * 1024.0 * 1024.0 * 1024.0 * 1024.0);
-                        break;
+					case ByteUnit.TB:
+						ignoreFilesLargerThanInBytes = (ulong)(value * 1024.0 * 1024.0 * 1024.0 * 1024.0);
+						break;
 
-                    default:
-                        throw new Exception(string.Format("Unknown ByteUnit: ", SelectedIgnoreFliesLargerThanByteUnit));
-                }
-            }
-        }
+					default:
+						throw new Exception(string.Format("Unknown ByteUnit: ", SelectedIgnoreFliesLargerThanByteUnit));
+				}
+			}
+		}
 
-        public ulong IgnoreFilesLargerThanInBytes { get { return ignoreFilesLargerThanInBytes; } }
+		public ulong IgnoreFilesLargerThanInBytes { get { return ignoreFilesLargerThanInBytes; } }
 
-        private ByteUnit selectedIgnoreFliesLargerThanByteUnit;
-        public ByteUnit SelectedIgnoreFliesLargerThanByteUnit
-        {
-            get { return selectedIgnoreFliesLargerThanByteUnit; }
-            set
-            {
-                selectedIgnoreFliesLargerThanByteUnit = value;
-                OnPropertyChanged("IgnoreFilesLargerThan");
-            }
-        }
+		private ByteUnit selectedIgnoreFliesLargerThanByteUnit;
+		public ByteUnit SelectedIgnoreFliesLargerThanByteUnit
+		{
+			get { return selectedIgnoreFliesLargerThanByteUnit; }
+			set
+			{
+				selectedIgnoreFliesLargerThanByteUnit = value;
+				OnPropertyChanged("IgnoreFilesLargerThan");
+			}
+		}
 
-        public ByteUnit[] ByteUnits { get { return byteUnits; } }
+		public ByteUnit[] ByteUnits { get { return byteUnits; } }
 
-        protected void OnPropertyChanged(string name)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(name));
-            }
-        }
-    }
+		protected void OnPropertyChanged(string name)
+		{
+			PropertyChangedEventHandler handler = PropertyChanged;
+			if (handler != null)
+			{
+				handler(this, new PropertyChangedEventArgs(name));
+			}
+		}
+	}
 }

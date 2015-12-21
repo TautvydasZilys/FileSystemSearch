@@ -1,8 +1,9 @@
 ﻿<Window x:Class="FileSystemSearch.SearchResultWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:FileSystemSearch="clr-namespace:FileSystemSearch"
         Title="File System Search - Results" Height="300" Width="600">
-    <Grid x:Name="LayoutRoot">
+	<Grid x:Name="LayoutRoot">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="30" />
 			<RowDefinition Height="*" />
@@ -16,13 +17,7 @@
 			<TextBlock Text="&quot;:"/>
 		</WrapPanel>
 
-		<ListView Grid.Row="1" x:Name="resultListView" MouseDoubleClick="ListViewItem_MouseDoubleClick" Margin="20,5" ScrollViewer.VerticalScrollBarVisibility="Auto">
-			<ListView.ItemTemplate>
-				<DataTemplate>
-					<TextBlock Text="{Binding Path}"/>
-				</DataTemplate>
-			</ListView.ItemTemplate>
-		</ListView>
+		<FileSystemSearch:SearchResultsView Grid.Row="1" x:Name="resultsView" Margin="20,5" />
 		<ProgressBar Grid.Row="2" x:Name="progressBar" Height="20" Margin="20,0,20,5" />
 	</Grid>
 </Window>
