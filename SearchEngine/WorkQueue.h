@@ -81,6 +81,7 @@ public:
 				break;
 
 			callback(workEntry->workItem);
+			workEntry->workItem.~WorkItem();
 			_aligned_free(workEntry);
 		}
 	}
