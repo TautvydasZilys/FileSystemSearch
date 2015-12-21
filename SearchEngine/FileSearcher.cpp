@@ -8,7 +8,8 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_RefCount(1),
 	m_SearchInstructions(std::move(searchInstructions)),
 	m_FileContentSearchWorkQueue(*this),
-	m_SearchResultDispatchWorkQueue(*this)
+	m_SearchResultDispatchWorkQueue(*this),
+	m_IsFinished(false)
 {
 	// Sanity checks
 	if (m_SearchInstructions.searchString.length() == 0)
@@ -44,11 +45,6 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_SearchResultDispatchWorkQueue.Initialize<&FileSearcher::InitializeSearchResultDispatcherWorkerThread>(1);
 }
 
-FileSearcher::~FileSearcher()
-{
-	m_SearchInstructions.onDone();
-}
-
 void FileSearcher::AddRef()
 {
 	InterlockedIncrement(&m_RefCount);
@@ -62,6 +58,22 @@ void FileSearcher::Release()
 
 void FileSearcher::Search()
 {
+	// Search filesystem for files
+	SearchFileSystem();
+
+	// Wait for worker threads to finish
+	m_FileContentSearchWorkQueue.Cleanup();
+	m_SearchResultDispatchWorkQueue.Cleanup();
+
+	// Fire done event
+	m_SearchInstructions.onDone();
+
+	// Release ref count
+	Release();
+}
+
+void FileSearcher::SearchFileSystem()
+{
 	ScopedStackAllocator stackAllocator;
 	std::vector<std::wstring> directoriesToSearch;
 	directoriesToSearch.push_back(m_SearchInstructions.searchPath);
@@ -72,7 +84,7 @@ void FileSearcher::Search()
 		fileSystemEnumerationFlags |= FileSystemEnumerationFlags::kEnumerateDirectories;
 
 	// Do this iteratively rather than recursively. Much easier to profile it that way.
-	while (directoriesToSearch.size() > 0)
+	while (directoriesToSearch.size() > 0 && !m_IsFinished)
 	{
 		auto directory = std::move(directoriesToSearch[0]);
 		directoriesToSearch[0] = std::move(directoriesToSearch[directoriesToSearch.size() - 1]);
@@ -256,7 +268,7 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 	if (fileOffset != searchData.fileSize)
 		fileOffset -= m_SearchInstructions.searchString.length() * sizeof(wchar_t);
 
-	while (searchData.fileSize - fileOffset > 0)
+	while (!m_IsFinished && searchData.fileSize - fileOffset > 0)
 	{
 		if (!InitiateFileRead(fileHandle, fileOffset, searchData.fileSize, primaryBuffer, secondaryBuffer, overlapped, overlappedEvent))
 			return;
@@ -300,10 +312,27 @@ bool FileSearcher::PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferL
 	return m_OrdinalUtf8Searcher.HasSubstring(fileBytes, fileBytes + bufferLength);
 }
 
-void FileSearcher::Search(SearchInstructions&& searchInstructions)
+FileSearcher* FileSearcher::BeginSearch(SearchInstructions&& searchInstructions)
 {
 	auto searcher = new FileSearcher(std::forward<SearchInstructions>(searchInstructions));
-	
-	searcher->Search();
-	searcher->Release();
+	searcher->AddRef();
+
+	auto fileSystemSearchThread = CreateThread(nullptr, 64 * 1024, [](void* ctx) -> DWORD
+	{
+		static_cast<FileSearcher*>(ctx)->Search();
+		return 0;
+	}, searcher, 0, nullptr);
+
+	searcher->m_FileSystemSearchThread = fileSystemSearchThread;
+	return searcher;
+}
+
+void FileSearcher::Cleanup()
+{
+	m_IsFinished = true;
+
+	m_FileContentSearchWorkQueue.DrainWorkQueue();
+	m_SearchResultDispatchWorkQueue.DrainWorkQueue();
+
+	Release();
 }

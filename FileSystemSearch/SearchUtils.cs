@@ -72,7 +72,7 @@ namespace FileSystemSearch
 			return true;
         }
 
-        public async static void SearchAsync(SearchViewModel searchViewModel, FoundPathCallbackDelegate foundPathCallback, SearchProgressUpdatedDelegate searchProgressUpdated, SearchDoneCallbackDelegate searchDoneCallback)
+        public static IntPtr SearchAsync(SearchViewModel searchViewModel, FoundPathCallbackDelegate foundPathCallback, SearchProgressUpdatedDelegate searchProgressUpdated, SearchDoneCallbackDelegate searchDoneCallback)
         {
             SearchFlags searchFlags = SearchFlags.None;
 
@@ -109,10 +109,7 @@ namespace FileSystemSearch
             if (searchViewModel.SearchIgnoreCase)
                 searchFlags |= SearchFlags.SearchIgnoreCase;
 
-            await Task.Run(() =>
-            {
-                Search(foundPathCallback, searchProgressUpdated, searchDoneCallback, searchViewModel.SearchPath, searchViewModel.SearchPattern, searchViewModel.SearchString, searchFlags, searchViewModel.IgnoreFilesLargerThanInBytes);
-            });
+            return Search(foundPathCallback, searchProgressUpdated, searchDoneCallback, searchViewModel.SearchPath, searchViewModel.SearchPattern, searchViewModel.SearchString, searchFlags, searchViewModel.IgnoreFilesLargerThanInBytes);
         }
 
         enum SearchFlags
@@ -132,14 +129,17 @@ namespace FileSystemSearch
         };
 
         [DllImport("SearchEngine.dll")]
-        private static extern void Search(
+        private static extern IntPtr Search(
             FoundPathCallbackDelegate foundPathCallback, 
             SearchProgressUpdatedDelegate progressUpdatedCallback, 
             SearchDoneCallbackDelegate searchDoneCallback,
             [MarshalAs(UnmanagedType.LPWStr)]string searchPath, 
             [MarshalAs(UnmanagedType.LPWStr)]string searchPattern, 
             [MarshalAs(UnmanagedType.LPWStr)]string searchString,
-            SearchFlags searchFlags, 
+            SearchFlags searchFlags,
             ulong ignoreFilesLargerThan);
+
+        [DllImport("SearchEngine.dll")]
+        public static extern void CleanupSearchOperation(IntPtr searchOperation);
     }
 }

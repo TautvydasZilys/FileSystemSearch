@@ -18,12 +18,28 @@ private:
 		WorkItem workItem;
 	};
 
+	inline WorkEntry* PopWorkEntry()
+	{
+		return reinterpret_cast<WorkEntry*>(InterlockedPopEntrySList(m_WorkList));
+	}
+
+	inline void DeleteWorkEntry(WorkEntry* workEntry)
+	{
+		workEntry->workItem.~WorkItem();
+		_aligned_free(workEntry);
+	}
+
 public:
 	inline WorkQueue(Owner& owner) :
 		m_Owner(owner),
 		m_WorkerThreadCount(0),
 		m_WorkList(nullptr)
 	{
+	}
+
+	inline ~WorkQueue()
+	{
+		Cleanup();
 	}
 
 	template <void (Owner::*WorkerThreadInitializer)(WorkQueue<Owner, WorkItem>& workQueue)>
@@ -76,29 +92,45 @@ public:
 			auto waitResult = WaitForSingleObject(m_WorkSemaphore, INFINITE);
 			Assert(waitResult == WAIT_OBJECT_0);
 
-			auto workEntry = reinterpret_cast<WorkEntry*>(InterlockedPopEntrySList(m_WorkList));
+			auto workEntry = PopWorkEntry();
 			if (workEntry == nullptr)
 				break;
 
 			callback(workEntry->workItem);
-			workEntry->workItem.~WorkItem();
-			_aligned_free(workEntry);
+			DeleteWorkEntry(workEntry);
 		}
 	}
 
-	inline ~WorkQueue()
+	inline void DrainWorkQueue()
 	{
 		if (m_WorkerThreadCount == 0)
+			return;
+
+		for (;;)
+		{
+			auto workEntry = PopWorkEntry();
+			if (workEntry == nullptr)
+				break;
+
+			DeleteWorkEntry(workEntry);
+		}
+	}
+
+	inline void Cleanup()
+	{
+		if (m_WorkerThreadCount == 0)	
 			return;
 
 		auto releaseResult = ReleaseSemaphore(m_WorkSemaphore, m_WorkerThreadCount, nullptr);
 		Assert(releaseResult != FALSE);
 
 		auto waitResult = WaitForMultipleObjects(m_WorkerThreadCount, reinterpret_cast<const HANDLE*>(m_WorkerThreadHandles.data()), TRUE, INFINITE);
-		Assert(waitResult == WAIT_OBJECT_0 + m_WorkerThreadCount - 1);
+		Assert(waitResult >= WAIT_OBJECT_0 && waitResult <= WAIT_OBJECT_0 + m_WorkerThreadCount - 1);
 
 		Assert(QueryDepthSList(m_WorkList) == 0); // If this fires, something went very very wrong
 		_aligned_free(m_WorkList);
+
+		m_WorkerThreadCount = 0;
 	}
 };
 

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,6 +18,9 @@ namespace FileSystemSearch
         private SearchUtils.SearchProgressUpdatedDelegate searchProgressUpdatedCallback;
         private SearchUtils.SearchDoneCallbackDelegate searchDoneCallback;
 
+        private IntPtr searchOperation;
+        private GCHandle windowGCHandle;
+
 		public SearchResultWindow(SearchViewModel searchViewModel)
 		{
 			InitializeComponent();
@@ -30,11 +35,13 @@ namespace FileSystemSearch
             searchProgressUpdatedCallback = OnProgressUpdated;
             searchDoneCallback = OnSearchDone;
 
-			SearchUtils.SearchAsync(searchViewModel, foundPathCallback, searchProgressUpdatedCallback, searchDoneCallback);
+            searchOperation = SearchUtils.SearchAsync(searchViewModel, foundPathCallback, searchProgressUpdatedCallback, searchDoneCallback);
+            windowGCHandle = GCHandle.Alloc(this);
 		}
 
         protected override void OnClosed(EventArgs e)
         {
+            CleanupSearchOperationIfNeeded();
             resultsView.Cleanup();
             base.OnClosed(e);
         }
@@ -69,7 +76,23 @@ namespace FileSystemSearch
                 progressBar.IsIndeterminate = false;
                 progressBar.IsEnabled = false;
                 progressBar.Value = 100;
+                CleanupSearchOperationIfNeeded();
+                windowGCHandle.Free();
             }, DispatcherPriority.Background);
+        }
+
+        private void CleanupSearchOperationIfNeeded()
+        {
+            if (searchOperation != IntPtr.Zero)
+            {
+                var operation = searchOperation;
+                searchOperation = IntPtr.Zero;
+
+                Task.Run(() =>
+                {
+                    SearchUtils.CleanupSearchOperation(operation);
+                });
+            }
         }
 	}
 }

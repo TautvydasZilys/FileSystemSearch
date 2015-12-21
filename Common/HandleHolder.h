@@ -41,4 +41,13 @@ public:
 		std::swap(m_Handle, other.m_Handle);
 		return *this;
 	}
+
+	HandleHolder& operator=(HANDLE handle)
+	{
+		if (m_Handle != INVALID_HANDLE_VALUE)
+			CloseHandle(m_Handle);
+		
+		m_Handle = handle;
+		return *this;
+	}
 };
