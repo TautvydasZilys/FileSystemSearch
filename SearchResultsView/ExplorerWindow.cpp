@@ -51,12 +51,6 @@ ExplorerWindow::ExplorerWindow(HWND parent, int width, int height) :
 
 ExplorerWindow::~ExplorerWindow()
 {
-	if (m_ExplorerBrowser != nullptr)
-	{
-		auto hr = m_ExplorerBrowser->Destroy();
-		Assert(SUCCEEDED(hr));
-	}
-
 	m_ExplorerBrowser = nullptr;
 	m_ResultsFolder = nullptr;
 	m_BindCtx = nullptr;
@@ -110,6 +104,12 @@ void ExplorerWindow::Initialize()
 
 void ExplorerWindow::Destroy()
 {
+	if (m_ExplorerBrowser != nullptr)
+	{
+		auto hr = m_ExplorerBrowser->Destroy();
+		Assert(SUCCEEDED(hr));
+	}
+
 	DestroyWindow(m_Hwnd);
 	delete this;
 }
