@@ -19,23 +19,23 @@ namespace FileSystemSearch
 			DataContext = viewModel;
 		}
 
-        static bool HasValidationErrors(DependencyObject obj)
-        {
-            return Validation.GetHasError(obj) || LogicalTreeHelper.GetChildren(obj).OfType<DependencyObject>().Any(HasValidationErrors);
-        }
+		static bool HasValidationErrors(DependencyObject obj)
+		{
+			return Validation.GetHasError(obj) || LogicalTreeHelper.GetChildren(obj).OfType<DependencyObject>().Any(HasValidationErrors);
+		}
 
 		private void ButtonSearch_Click(object sender, RoutedEventArgs e)
 		{
-            if (HasValidationErrors(this))
-            {
-                MessageBox.Show("One or more of search parameters are invalid.", "Search is not possible", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string validationFailedReason;
-            if (!SearchUtils.ValidateSearchViewModel(viewModel, out validationFailedReason))
+			if (HasValidationErrors(this))
 			{
-                MessageBox.Show(validationFailedReason, "Search is not possible", MessageBoxButton.OK, MessageBoxImage.Error);
+				MessageBox.Show("One or more of search parameters are invalid.", "Search is not possible", MessageBoxButton.OK, MessageBoxImage.Error);
+				return;
+			}
+
+			string validationFailedReason;
+			if (!SearchUtils.ValidateSearchViewModel(viewModel, out validationFailedReason))
+			{
+				MessageBox.Show(validationFailedReason, "Search is not possible", MessageBoxButton.OK, MessageBoxImage.Error);
 				return;
 			}
 
