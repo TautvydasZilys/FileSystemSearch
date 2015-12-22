@@ -65,7 +65,7 @@ namespace FileSystemSearch
 			Dispatcher.InvokeAsync(() =>
 			{
 				progressBar.IsIndeterminate = false;
-				progressBar.Value = progress;
+				progressBar.Value = 100.0 * progress;
 			}, DispatcherPriority.Background);
 		}
 

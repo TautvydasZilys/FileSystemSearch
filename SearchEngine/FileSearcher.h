@@ -18,8 +18,10 @@ private:
 	WorkQueue<FileSearcher, FileContentSearchData> m_FileContentSearchWorkQueue;
 	WorkQueue<FileSearcher, SearchResultData> m_SearchResultDispatchWorkQueue;
 
-	bool m_SearchStringIsAscii;
+	int64_t m_TotalFileSize;
+	volatile int64_t m_ScannedFileSize;
 	volatile bool m_IsFinished;
+	bool m_SearchStringIsAscii;
 
 	OrdinalStringSearcher<char> m_OrdinalUtf8Searcher;
 	UnicodeUtf16StringSearcher m_UnicodeUtf16Searcher;
@@ -27,6 +29,7 @@ private:
 
 	HandleHolder m_FileSystemSearchThread;
 	uint32_t m_RefCount;
+	ProgressReporter m_ProgressReporter;
 
 	void AddRef();
 	void Release();
@@ -44,6 +47,7 @@ private:
 
 	void SearchFileContents(const FileContentSearchData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator);
 	bool PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator);
+	void AddToScannedFileSize(int64_t size);
 
 	FileSearcher(SearchInstructions&& searchInstructions);
 

@@ -9,7 +9,10 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_SearchInstructions(std::move(searchInstructions)),
 	m_FileContentSearchWorkQueue(*this),
 	m_SearchResultDispatchWorkQueue(*this),
-	m_IsFinished(false)
+	m_TotalFileSize(0),
+	m_ScannedFileSize(0),
+	m_IsFinished(false),
+	m_ProgressReporter(m_SearchInstructions.onProgressUpdated, &m_ScannedFileSize, &m_TotalFileSize)
 {
 	// Sanity checks
 	if (m_SearchInstructions.searchString.length() == 0)
@@ -61,9 +64,17 @@ void FileSearcher::Search()
 	// Search filesystem for files
 	SearchFileSystem();
 
+	// Start reporting progress
+	if (m_SearchInstructions.SearchInFileContents())
+		m_ProgressReporter.StartReporting();
+
 	// Wait for worker threads to finish
 	m_FileContentSearchWorkQueue.Cleanup();
 	m_SearchResultDispatchWorkQueue.Cleanup();
+
+	// Stop reporting progress
+	if (m_SearchInstructions.SearchInFileContents())
+		m_ProgressReporter.StopReporting();
 
 	// Fire done event
 	m_SearchInstructions.onDone();
@@ -146,6 +157,7 @@ void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_D
 	if (!m_SearchInstructions.SearchInFileContents())
 		return;
 
+	m_TotalFileSize += fileSize;
 	m_FileContentSearchWorkQueue.PushWorkItem(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData);
 }
 
@@ -251,14 +263,20 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 	HandleHolder fileHandle = CreateFileW(searchData.filePath.c_str(), GENERIC_READ, kFileSharingFlags, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
 
 	if (fileHandle == INVALID_HANDLE_VALUE)
+	{
+		AddToScannedFileSize(searchData.fileSize);
 		return;
+	}
 
 	HandleHolder overlappedEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
 	Assert(overlappedEvent != nullptr);
 
 	OVERLAPPED overlapped;
 	if (!InitiateFileRead(fileHandle, fileOffset, searchData.fileSize, primaryBuffer, secondaryBuffer, overlapped, overlappedEvent))
+	{
+		AddToScannedFileSize(searchData.fileSize);
 		return;
+	}
 
 	auto waitResult = WaitForSingleObject(overlappedEvent, INFINITE);
 	Assert(waitResult == WAIT_OBJECT_0);
@@ -271,12 +289,20 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 	while (!m_IsFinished && searchData.fileSize - fileOffset > 0)
 	{
 		if (!InitiateFileRead(fileHandle, fileOffset, searchData.fileSize, primaryBuffer, secondaryBuffer, overlapped, overlappedEvent))
+		{
+			AddToScannedFileSize(searchData.fileSize - fileOffset);
 			return;
+		}
 
 		if (PerformFileContentSearch(primaryBuffer, bytesRead, stackAllocator))
 		{
+			AddToScannedFileSize(bytesRead + searchData.fileSize - fileOffset);
 			DispatchSearchResult(searchData.fileFindData, searchData.filePath.c_str());
 			return;
+		}
+		else
+		{
+			AddToScannedFileSize(bytesRead);
 		}
 
 		auto waitResult = WaitForSingleObject(overlappedEvent, INFINITE);
@@ -290,6 +316,8 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 
 	if (PerformFileContentSearch(secondaryBuffer, bytesRead, stackAllocator))
 		DispatchSearchResult(searchData.fileFindData, searchData.filePath.c_str());
+
+	AddToScannedFileSize(bytesRead);
 }
 
 bool FileSearcher::PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator)
@@ -310,6 +338,11 @@ bool FileSearcher::PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferL
 		StringUtils::ToLowerAscii(fileBytes, fileBytes, bufferLength);
 
 	return m_OrdinalUtf8Searcher.HasSubstring(fileBytes, fileBytes + bufferLength);
+}
+
+void FileSearcher::AddToScannedFileSize(int64_t size)
+{
+	InterlockedAdd64(&m_ScannedFileSize, size);
 }
 
 FileSearcher* FileSearcher::BeginSearch(SearchInstructions&& searchInstructions)

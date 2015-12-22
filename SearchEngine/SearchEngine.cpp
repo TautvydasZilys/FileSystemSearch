@@ -3,7 +3,7 @@
 
 extern "C" __declspec(dllexport) FileSearcher* Search(
 	FoundPathCallback foundPathCallback,
-	SearchProgressUpdated progressUpdatedCallback,
+	ProgressUpdated progressUpdatedCallback,
 	SearchDoneCallback searchDoneCallback,
 	const wchar_t* searchPath,
 	const wchar_t* searchPattern,

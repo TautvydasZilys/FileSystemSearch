@@ -1,7 +1,8 @@
 #pragma once
 
+#include "ProgressReporter.h"
+
 typedef void(__stdcall *FoundPathCallback)(const WIN32_FIND_DATAW* findData, const wchar_t* path);
-typedef void(__stdcall *SearchProgressUpdated)(double progress);
 typedef void(__stdcall *SearchDoneCallback)();
 
 #define SearchFlagsEnumDefinition \
@@ -29,7 +30,7 @@ MAKE_BIT_OPERATORS_FOR_ENUM_CLASS(SearchFlags)
 struct SearchInstructions
 {
 	FoundPathCallback onFoundPath;
-	SearchProgressUpdated onProgressUpdated;
+	ProgressUpdated onProgressUpdated;
 	SearchDoneCallback onDone;
 
 	std::wstring searchPath;
@@ -40,7 +41,7 @@ struct SearchInstructions
 	SearchFlags searchFlags;
 	uint64_t ignoreFilesLargerThan;
 
-	SearchInstructions(FoundPathCallback foundPathCallback, SearchProgressUpdated progressUpdatedCallback, SearchDoneCallback searchDoneCallback, const wchar_t* searchPath, const wchar_t* searchPattern, const wchar_t* searchString,
+	SearchInstructions(FoundPathCallback foundPathCallback, ProgressUpdated progressUpdatedCallback, SearchDoneCallback searchDoneCallback, const wchar_t* searchPath, const wchar_t* searchPattern, const wchar_t* searchString,
 		SearchFlags searchFlags, uint64_t ignoreFilesLargerThan) :
 		onFoundPath(foundPathCallback),
 		onProgressUpdated(progressUpdatedCallback),

@@ -179,6 +179,7 @@
     <ClInclude Include="FileSearcher.h" />
     <ClInclude Include="PathUtils.h" />
     <ClInclude Include="PrecompiledHeader.h" />
+    <ClInclude Include="ProgressReporter.h" />
     <ClInclude Include="ScopedStackAllocator.h" />
     <ClInclude Include="OrdinalStringSearcher.h" />
     <ClInclude Include="SearchInstructions.h" />
