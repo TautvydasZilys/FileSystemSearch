@@ -1,5 +1,10 @@
 #pragma once
 
+#define NTDDI_VERSION 0x06010000
+#define WINVER 0x0601
+#define _WIN32_WINNT 0x0601
+
+#include <ShellScalingApi.h>
 #include <Shlobj.h>
 #include <ShObjIdl.h>
 #include <Windows.h>

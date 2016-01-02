@@ -38,12 +38,21 @@ void ExplorerWindow::EnsureWindowClassIsCreated()
 ExplorerWindow::ExplorerWindow(HWND parent, int width, int height) :
 	m_Hwnd(nullptr),
 	m_Width(width),
-	m_Height(height)
+	m_Height(height),
+	m_ShcoreDll(nullptr),
+	m_GetDpiForMonitor(nullptr)
 {
 	auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 	Assert(SUCCEEDED(hr));
 
+	InitializeDpiResources();
+
 	EnsureWindowClassIsCreated();
+	
+	float scaleX, scaleY;
+	GetCurrentMonitorScale(scaleX, scaleY);
+	m_Width = static_cast<int>(ceil(m_Width * scaleX));
+	m_Height = static_cast<int>(ceil(m_Height * scaleY));
 
 	m_Hwnd = CreateWindowExW(0, s_WindowClass, L"SearchResultsViewWindow", WS_CHILD, 0, 0, m_Width, m_Height, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
 	Assert(m_Hwnd != nullptr);
@@ -56,6 +65,7 @@ ExplorerWindow::~ExplorerWindow()
 	m_BindCtx = nullptr;
 	m_FileSystemBindData = nullptr;
 
+	FreeDpiResources();
 	CoUninitialize();
 }
 
@@ -114,12 +124,55 @@ void ExplorerWindow::Destroy()
 	delete this;
 }
 
+void ExplorerWindow::InitializeDpiResources()
+{
+	m_ShcoreDll = LoadLibraryW(L"Shcore.dll");
+
+	if (m_ShcoreDll != nullptr)
+		m_GetDpiForMonitor = reinterpret_cast<GetDpiForMonitorFunc>(GetProcAddress(m_ShcoreDll, "GetDpiForMonitor"));
+}
+
+void ExplorerWindow::FreeDpiResources()
+{
+	if (m_ShcoreDll != nullptr)
+	{
+		m_GetDpiForMonitor = nullptr;
+		FreeLibrary(m_ShcoreDll);
+		m_ShcoreDll = nullptr;
+	}
+}
+
+void ExplorerWindow::GetCurrentMonitorScale(float& scaleX, float& scaleY)
+{
+	if (m_GetDpiForMonitor != nullptr)
+	{
+		auto hmonitor = MonitorFromWindow(m_Hwnd, m_Hwnd != nullptr ? MONITOR_DEFAULTTONEAREST : MONITOR_DEFAULTTOPRIMARY);
+
+		UINT dpiX, dpiY;
+		if (SUCCEEDED(m_GetDpiForMonitor(hmonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY)))
+		{
+			scaleX = dpiX / 96.0f;
+			scaleY = dpiY / 96.0f;
+			return;
+		}
+	}
+
+	// Default to no scaling
+	scaleX = 1.0f;
+	scaleY = 1.0f;
+}
+
 void ExplorerWindow::ResizeView(int width, int height)
 {
-	auto setPositionResult = SetWindowPos(m_Hwnd, HWND_BOTTOM, 0, 0, width, height, 0);
+	float scaleX, scaleY;
+	GetCurrentMonitorScale(scaleX, scaleY);
+	m_Width = static_cast<int>(ceil(scaleX * width));
+	m_Height = static_cast<int>(ceil(scaleY * height));
+
+	auto setPositionResult = SetWindowPos(m_Hwnd, HWND_BOTTOM, 0, 0, m_Width, m_Height, 0);
 	Assert(setPositionResult != FALSE);
 
-	RECT rect = { 0, 0, width, height };
+	RECT rect = { 0, 0, m_Width, m_Height };
 	auto hr = m_ExplorerBrowser->SetRect(nullptr, rect);
 	Assert(SUCCEEDED(hr));
 }
