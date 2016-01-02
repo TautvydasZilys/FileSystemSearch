@@ -9,8 +9,8 @@ namespace FileSystemSearch
 	class SearchUtils
 	{
 		public delegate void FoundPathCallbackDelegate(IntPtr findData, IntPtr path);
-		public delegate void SearchProgressUpdatedDelegate(double progress);
-		public delegate void SearchDoneCallbackDelegate();
+		public delegate void SearchProgressUpdatedDelegate([In] ref SearchStatistics searchStatistics, double progress);
+		public delegate void SearchDoneCallbackDelegate([In] ref SearchStatistics searchStatistics);
 
 		public static bool ValidateSearchViewModel(SearchViewModel searchViewModel, out string validationFailedReason)
 		{
@@ -141,5 +141,16 @@ namespace FileSystemSearch
 
 		[DllImport("SearchEngine.dll")]
 		public static extern void CleanupSearchOperation(IntPtr searchOperation);
+	}
+
+	struct SearchStatistics
+	{
+		public ulong directoriesEnumerated;
+		public ulong filesEnumerated;
+		public ulong fileContentsSearched;
+		public ulong resultsFound;
+		public ulong totalFileSize;
+		public ulong scannedFileSize;
+		public double searchTimeInSeconds;
 	}
 }

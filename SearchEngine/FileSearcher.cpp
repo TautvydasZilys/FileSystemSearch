@@ -1,4 +1,5 @@
 #include "PrecompiledHeader.h"
+#include "AsynchronousPeriodicTimer.h"
 #include "FileEnumerator.h"
 #include "FileSearcher.h"
 #include "PathUtils.h"
@@ -9,11 +10,14 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_SearchInstructions(std::move(searchInstructions)),
 	m_FileContentSearchWorkQueue(*this),
 	m_SearchResultDispatchWorkQueue(*this),
-	m_TotalFileSize(0),
-	m_ScannedFileSize(0),
-	m_IsFinished(false),
-	m_ProgressReporter(m_SearchInstructions.onProgressUpdated, &m_ScannedFileSize, &m_TotalFileSize)
+	m_FinishedSearchingFileSystem(false),
+	m_IsFinished(false)
 {
+	ZeroMemory(&m_SearchStatistics, sizeof(m_SearchStatistics));
+
+	QueryPerformanceCounter(&m_SearchStart);
+	QueryPerformanceFrequency(&m_PerformanceFrequency);
+
 	// Sanity checks
 	if (m_SearchInstructions.searchString.length() == 0)
 		__fastfail(1);
@@ -61,23 +65,30 @@ void FileSearcher::Release()
 
 void FileSearcher::Search()
 {
-	// Search filesystem for files
-	SearchFileSystem();
+	const uint32_t kProgressReportIntervalInMilliseconds = 100;
+	auto progressTimer = MakePeriodicTimer(kProgressReportIntervalInMilliseconds, [this]()
+	{
+		ReportProgress();
+	});
 
 	// Start reporting progress
-	if (m_SearchInstructions.SearchInFileContents())
-		m_ProgressReporter.StartReporting();
+	progressTimer.Start();
+
+	// Search filesystem for files
+	SearchFileSystem();
 
 	// Wait for worker threads to finish
 	m_FileContentSearchWorkQueue.Cleanup();
 	m_SearchResultDispatchWorkQueue.Cleanup();
 
 	// Stop reporting progress
-	if (m_SearchInstructions.SearchInFileContents())
-		m_ProgressReporter.StopReporting();
+	progressTimer.Stop();
+
+	// Note total search time
+	m_SearchStatistics.searchTimeInSeconds = GetTotalSearchTimeInSeconds();
 
 	// Fire done event
-	m_SearchInstructions.onDone();
+	m_SearchInstructions.onDone(m_SearchStatistics);
 
 	// Release ref count
 	Release();
@@ -114,6 +125,8 @@ void FileSearcher::SearchFileSystem()
 		// Second, enumerate directory using our filters
 		EnumerateFileSystem(directory, m_SearchInstructions.searchPattern.c_str(), m_SearchInstructions.searchPattern.length(), fileSystemEnumerationFlags, stackAllocator, [this, &directory, &directoriesToSearch, &stackAllocator](WIN32_FIND_DATAW& findData)
 		{
+			m_SearchStatistics.filesEnumerated++;
+
 			if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			{
 				OnDirectoryFound(directory, findData, stackAllocator);
@@ -123,7 +136,11 @@ void FileSearcher::SearchFileSystem()
 				OnFileFound(directory, findData, stackAllocator);
 			}
 		});
+
+		m_SearchStatistics.directoriesEnumerated++;
 	}
+
+	m_FinishedSearchingFileSystem = true;
 }
 
 void FileSearcher::OnDirectoryFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData, ScopedStackAllocator& stackAllocator)
@@ -154,10 +171,11 @@ void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_D
 			return;
 	}
 
+	m_SearchStatistics.totalFileSize += fileSize;
+
 	if (!m_SearchInstructions.SearchInFileContents())
 		return;
 
-	m_TotalFileSize += fileSize;
 	m_FileContentSearchWorkQueue.PushWorkItem(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData);
 }
 
@@ -222,6 +240,7 @@ void FileSearcher::InitializeFileContentSearchThread(WorkQueue<FileSearcher, Fil
 	contentSearchWorkQueue.DoWork([this, &fileReadBuffers, &stackAllocator](const FileContentSearchData& searchData)
 	{
 		SearchFileContents(searchData, fileReadBuffers[0].get(), fileReadBuffers[1].get(), stackAllocator);
+		m_SearchStatistics.fileContentsSearched++;
 	});
 }
 
@@ -233,8 +252,29 @@ void FileSearcher::InitializeSearchResultDispatcherWorkerThread(WorkQueue<FileSe
 	});
 }
 
+double FileSearcher::GetTotalSearchTimeInSeconds()
+{
+	LARGE_INTEGER currentTime;
+	QueryPerformanceCounter(&currentTime);
+
+	return static_cast<double>(currentTime.QuadPart - m_SearchStart.QuadPart) / static_cast<double>(m_PerformanceFrequency.QuadPart);
+}
+
+void FileSearcher::ReportProgress()
+{
+	double progress = m_FinishedSearchingFileSystem 
+		? static_cast<double>(m_SearchStatistics.scannedFileSize) / static_cast<double>(m_SearchStatistics.totalFileSize)
+		: sqrt(-1); // indeterminate
+
+	auto statisticsSnapshot = m_SearchStatistics;
+
+	statisticsSnapshot.searchTimeInSeconds = GetTotalSearchTimeInSeconds();
+	m_SearchInstructions.onProgressUpdated(statisticsSnapshot, progress);
+}
+
 void FileSearcher::DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::wstring&& path)
 {
+	m_SearchStatistics.resultsFound++;
 	m_SearchResultDispatchWorkQueue.PushWorkItem(std::forward<std::wstring>(path), findData);
 }
 
@@ -342,7 +382,7 @@ bool FileSearcher::PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferL
 
 void FileSearcher::AddToScannedFileSize(int64_t size)
 {
-	InterlockedAdd64(&m_ScannedFileSize, size);
+	InterlockedAdd64(&m_SearchStatistics.scannedFileSize, size);
 }
 
 FileSearcher* FileSearcher::BeginSearch(SearchInstructions&& searchInstructions)

@@ -13,13 +13,13 @@ class FileSearcher
 {
 private:
 	SearchInstructions m_SearchInstructions;
+	SearchStatistics m_SearchStatistics;
 	std::string m_Utf8SearchString;
 
 	WorkQueue<FileSearcher, FileContentSearchData> m_FileContentSearchWorkQueue;
 	WorkQueue<FileSearcher, SearchResultData> m_SearchResultDispatchWorkQueue;
 
-	int64_t m_TotalFileSize;
-	volatile int64_t m_ScannedFileSize;
+	volatile bool m_FinishedSearchingFileSystem;
 	volatile bool m_IsFinished;
 	bool m_SearchStringIsAscii;
 
@@ -29,7 +29,9 @@ private:
 
 	HandleHolder m_FileSystemSearchThread;
 	uint32_t m_RefCount;
-	ProgressReporter m_ProgressReporter;
+
+	LARGE_INTEGER m_SearchStart;
+	LARGE_INTEGER m_PerformanceFrequency;
 
 	void AddRef();
 	void Release();
@@ -43,6 +45,9 @@ private:
 
 	void InitializeFileContentSearchThread(WorkQueue<FileSearcher, FileContentSearchData>& contentSearchWorkQueue);
 	void InitializeSearchResultDispatcherWorkerThread(WorkQueue<FileSearcher, SearchResultData>& workQueue);
+
+	double GetTotalSearchTimeInSeconds();
+	void ReportProgress();
 	void DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::wstring&& path);
 
 	void SearchFileContents(const FileContentSearchData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator);

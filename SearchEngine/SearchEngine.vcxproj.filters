@@ -19,6 +19,6 @@
     <ClInclude Include="SearchInstructions.h" />
     <ClInclude Include="FileContentSearchData.h" />
     <ClInclude Include="SearchResultData.h" />
-    <ClInclude Include="ProgressReporter.h" />
+    <ClInclude Include="AsynchronousPeriodicTimer.h" />
   </ItemGroup>
 </Project>

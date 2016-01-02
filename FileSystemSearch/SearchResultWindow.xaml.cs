@@ -20,11 +20,13 @@ namespace FileSystemSearch
 
 		private IntPtr searchOperation;
 		private GCHandle windowGCHandle;
+		private SearchResultsViewModel resultsViewModel;
 
 		public SearchResultWindow(SearchViewModel searchViewModel)
 		{
 			InitializeComponent();
 
+			DataContext = resultsViewModel = new SearchResultsViewModel();
 			headerStackPanel.DataContext = searchViewModel;
 
 			progressBar.IsEnabled = true;
@@ -46,34 +48,30 @@ namespace FileSystemSearch
 			base.OnClosed(e);
 		}
 
-		private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+		private void OnProgressUpdated(ref SearchStatistics searchStatistics, double progress)
 		{
-			var item = (sender as ListView).SelectedItem as SearchResultViewModel;
+			var statsSnapshot = searchStatistics;
 
-			try
-			{
-				System.Diagnostics.Process.Start(item.Path);
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(string.Format("Failed to open {0}: {1}.", item.Path, ex.Message), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-			}
-		}
-
-		private void OnProgressUpdated(double progress)
-		{
 			Dispatcher.InvokeAsync(() =>
 			{
-				progressBar.IsIndeterminate = false;
-				progressBar.Value = 100.0 * progress;
+				if (!double.IsNaN(progress))
+				{
+					progressBar.IsIndeterminate = false;
+					progressBar.Value = 100.0 * progress;
+				}
+
+				UpdateStats(ref statsSnapshot);
 			}, DispatcherPriority.Background);
 		}
 
-		private void OnSearchDone()
+		private void OnSearchDone(ref SearchStatistics searchStatistics)
 		{
+			var statsSnapshot = searchStatistics;
+
 			Dispatcher.InvokeAsync(() =>
 			{
-				progressBar.IsIndeterminate = false;
+				UpdateStats(ref statsSnapshot);
+                progressBar.IsIndeterminate = false;
 				progressBar.IsEnabled = false;
 				progressBar.Value = 100;
 				CleanupSearchOperationIfNeeded();
@@ -93,6 +91,17 @@ namespace FileSystemSearch
 					SearchUtils.CleanupSearchOperation(operation);
 				});
 			}
+		}
+
+		private void UpdateStats(ref SearchStatistics searchStatistics)
+		{
+			resultsViewModel.DirectoriesEnumerated = searchStatistics.directoriesEnumerated;
+			resultsViewModel.FilesEnumerated = searchStatistics.filesEnumerated;
+			resultsViewModel.FileContentsSearched = searchStatistics.fileContentsSearched;
+			resultsViewModel.ResultsFound = searchStatistics.resultsFound;
+			resultsViewModel.TotalEnumeratedFilesSizeInBytes = searchStatistics.totalFileSize;
+            resultsViewModel.TotalContentSearchedFilesSizeInBytes = searchStatistics.scannedFileSize;
+			resultsViewModel.SearchTimeInSeconds = searchStatistics.searchTimeInSeconds;
 		}
 	}
 }

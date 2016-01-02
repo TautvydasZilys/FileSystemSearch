@@ -1,9 +1,19 @@
 #pragma once
 
-#include "ProgressReporter.h"
+struct SearchStatistics
+{
+	uint64_t directoriesEnumerated;
+	uint64_t filesEnumerated;
+	uint64_t fileContentsSearched;
+	uint64_t resultsFound;
+	uint64_t totalFileSize;
+	volatile int64_t scannedFileSize;
+	double searchTimeInSeconds;
+};
 
 typedef void(__stdcall *FoundPathCallback)(const WIN32_FIND_DATAW* findData, const wchar_t* path);
-typedef void(__stdcall *SearchDoneCallback)();
+typedef void(__stdcall *SearchProgressUpdated)(const SearchStatistics& searchStatistics, double progress);
+typedef void(__stdcall *SearchDoneCallback)(const SearchStatistics& searchStatistics);
 
 #define SearchFlagsEnumDefinition \
 	EnumValue(SearchForFiles,         1 << 0) \
@@ -30,7 +40,7 @@ MAKE_BIT_OPERATORS_FOR_ENUM_CLASS(SearchFlags)
 struct SearchInstructions
 {
 	FoundPathCallback onFoundPath;
-	ProgressUpdated onProgressUpdated;
+	SearchProgressUpdated onProgressUpdated;
 	SearchDoneCallback onDone;
 
 	std::wstring searchPath;
@@ -41,7 +51,7 @@ struct SearchInstructions
 	SearchFlags searchFlags;
 	uint64_t ignoreFilesLargerThan;
 
-	SearchInstructions(FoundPathCallback foundPathCallback, ProgressUpdated progressUpdatedCallback, SearchDoneCallback searchDoneCallback, const wchar_t* searchPath, const wchar_t* searchPattern, const wchar_t* searchString,
+	SearchInstructions(FoundPathCallback foundPathCallback, SearchProgressUpdated progressUpdatedCallback, SearchDoneCallback searchDoneCallback, const wchar_t* searchPath, const wchar_t* searchPattern, const wchar_t* searchString,
 		SearchFlags searchFlags, uint64_t ignoreFilesLargerThan) :
 		onFoundPath(foundPathCallback),
 		onProgressUpdated(progressUpdatedCallback),

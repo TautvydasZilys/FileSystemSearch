@@ -2,13 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:FileSystemSearch="clr-namespace:FileSystemSearch"
-        Title="File System Search - Results" Height="500" Width="1000">
+        Title="File System Search - Results" Height="540" Width="1000" MinWidth="400">
 	<Grid x:Name="LayoutRoot">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="30" />
-			<RowDefinition Height="*" />
-			<RowDefinition Height="30" />
-		</Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 		<WrapPanel x:Name="headerStackPanel" VerticalAlignment="Center" Margin="20,5" Orientation="Horizontal">
 			<TextBlock Text="Results for &quot;"/>
 			<TextBlock Text="{Binding SearchString}" />
@@ -19,5 +20,36 @@
 
 		<FileSystemSearch:SearchResultsView Grid.Row="1" x:Name="resultsView" Margin="20,5" />
 		<ProgressBar Grid.Row="2" x:Name="progressBar" Height="20" Margin="20,0,20,5" />
-	</Grid>
+        
+        <WrapPanel Grid.Row="3" Margin="10,0,10,5">            
+            <StackPanel Margin="20,0" Orientation="Horizontal">
+                <TextBlock Text="Directories enumerated: " />
+                <TextBlock Text="{Binding DirectoriesEnumerated}" />
+            </StackPanel>
+            <StackPanel Margin="20,0" Orientation="Horizontal">
+                <TextBlock Text="Files enumerated: " />
+                <TextBlock Text="{Binding FilesEnumerated}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Margin="20,0" Orientation="Horizontal">
+                <TextBlock Text="File contents searched: " />
+                <TextBlock Text="{Binding FileContentsSearched}" />
+            </StackPanel>
+            <StackPanel Grid.Row="0" Grid.Column="3" Margin="20,0" Orientation="Horizontal">
+                <TextBlock Text="Total enumerated files size: " />
+                <TextBlock Text="{Binding TotalEnumeratedFilesSize}" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Grid.Column="0" Margin="20,0" Orientation="Horizontal">
+                <TextBlock Text="Total content searched files size: " />
+                <TextBlock Text="{Binding TotalContentSearchedFilesSize}" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Grid.Column="2" Margin="20,0" Orientation="Horizontal">
+                <TextBlock Text="Results found: " />
+                <TextBlock Text="{Binding ResultsFound}" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Grid.Column="3" Margin="20,0" Orientation="Horizontal">
+                <TextBlock Text="Search time: " />
+                <TextBlock Text="{Binding SearchTime}" />
+            </StackPanel>
+        </WrapPanel>
+    </Grid>
 </Window>
