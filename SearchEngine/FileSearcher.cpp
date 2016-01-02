@@ -305,7 +305,7 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 			AddToScannedFileSize(bytesRead);
 		}
 
-		auto waitResult = WaitForSingleObject(overlappedEvent, INFINITE);
+		waitResult = WaitForSingleObject(overlappedEvent, INFINITE);
 		Assert(waitResult == WAIT_OBJECT_0);
 
 		bytesRead = static_cast<uint32_t>(overlapped.InternalHigh);

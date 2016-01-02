@@ -65,7 +65,7 @@ void ExplorerWindow::Initialize()
 	Assert(SUCCEEDED(hr));
 
 	RECT displayRect = { 0, 0, m_Width, m_Height };
-	FOLDERSETTINGS folderSettings = { FVM_DETAILS, FWF_NOENUMREFRESH | FWF_NOHEADERINALLVIEWS };
+	FOLDERSETTINGS folderSettings = { FVM_DETAILS, static_cast<UINT>(FWF_NOENUMREFRESH | FWF_NOHEADERINALLVIEWS) };
 	hr = m_ExplorerBrowser->Initialize(m_Hwnd, &displayRect, &folderSettings);
 	Assert(SUCCEEDED(hr));
 
