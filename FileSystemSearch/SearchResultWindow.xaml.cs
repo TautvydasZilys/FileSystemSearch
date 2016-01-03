@@ -26,6 +26,7 @@ namespace FileSystemSearch
 		{
 			InitializeComponent();
 
+			Title = string.Format("Results for \"{0}\" - FileSystemSearch", searchViewModel.SearchString);
 			DataContext = resultsViewModel = new SearchResultsViewModel();
 			headerStackPanel.DataContext = searchViewModel;
 
