@@ -62,7 +62,7 @@ namespace FileSystemSearch
 				}
 
 				UpdateStats(ref statsSnapshot);
-			}, DispatcherPriority.Background);
+			}, DispatcherPriority.Input);
 		}
 
 		private void OnSearchDone(ref SearchStatistics searchStatistics)
@@ -77,7 +77,7 @@ namespace FileSystemSearch
 				progressBar.Value = 100;
 				CleanupSearchOperationIfNeeded();
 				windowGCHandle.Free();
-			}, DispatcherPriority.Background);
+			}, DispatcherPriority.Input);
 		}
 
 		private void CleanupSearchOperationIfNeeded()
