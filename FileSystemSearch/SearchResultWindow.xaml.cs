@@ -21,6 +21,7 @@ namespace FileSystemSearch
 		private IntPtr searchOperation;
 		private GCHandle windowGCHandle;
 		private SearchResultsViewModel resultsViewModel;
+        private bool isClosing;
 
 		public SearchResultWindow(SearchViewModel searchViewModel)
 		{
@@ -44,6 +45,7 @@ namespace FileSystemSearch
 
 		protected override void OnClosed(EventArgs e)
 		{
+            isClosing = true;
 			CleanupSearchOperationIfNeeded();
 			resultsView.Cleanup();
 			base.OnClosed(e);
@@ -71,27 +73,30 @@ namespace FileSystemSearch
 
 			Dispatcher.InvokeAsync(() =>
 			{
-				UpdateStats(ref statsSnapshot);
-                progressBar.IsIndeterminate = false;
-				progressBar.IsEnabled = false;
-				progressBar.Value = 100;
-				CleanupSearchOperationIfNeeded();
+                if (!isClosing)
+                {
+                    UpdateStats(ref statsSnapshot);
+                    progressBar.IsIndeterminate = false;
+                    progressBar.IsEnabled = false;
+                    progressBar.Value = 100;
+                }
+                CleanupSearchOperationIfNeeded();
 				windowGCHandle.Free();
 			}, DispatcherPriority.Input);
 		}
 
 		private void CleanupSearchOperationIfNeeded()
 		{
-			if (searchOperation != IntPtr.Zero)
-			{
-				var operation = searchOperation;
-				searchOperation = IntPtr.Zero;
+            if (searchOperation == IntPtr.Zero)
+                return;
+			
+            var operation = searchOperation;
+			searchOperation = IntPtr.Zero;
 
-				Task.Run(() =>
-				{
-					SearchUtils.CleanupSearchOperation(operation);
-				});
-			}
+			Task.Run(() =>
+			{
+				SearchUtils.CleanupSearchOperation(operation);
+			});
 		}
 
 		private void UpdateStats(ref SearchStatistics searchStatistics)
