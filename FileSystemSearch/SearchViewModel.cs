@@ -22,7 +22,7 @@ namespace FileSystemSearch
 
 		public SearchViewModel()
 		{
-			SelectedIgnoreFliesLargerThanByteUnit = ByteUnit.MB;
+			SelectedIgnoreFilesLargerThanByteUnit = ByteUnit.MB;
 			ignoreFilesLargerThanInBytes = 10 * 1024 * 1024;
 			SearchPattern = "*";
 
@@ -70,7 +70,7 @@ namespace FileSystemSearch
 		{
 			get
 			{
-				switch (SelectedIgnoreFliesLargerThanByteUnit)
+				switch (SelectedIgnoreFilesLargerThanByteUnit)
 				{
 					case ByteUnit.B:
 						return (double)ignoreFilesLargerThanInBytes;
@@ -88,12 +88,12 @@ namespace FileSystemSearch
 						return ignoreFilesLargerThanInBytes / 1024.0 / 1024.0 / 1024.0 / 1024.0;
 
 					default:
-						throw new Exception(string.Format("Unknown ByteUnit: ", SelectedIgnoreFliesLargerThanByteUnit));
+						throw new Exception(string.Format("Unknown ByteUnit: ", SelectedIgnoreFilesLargerThanByteUnit));
 				}
 			}
 			set
 			{
-				switch (SelectedIgnoreFliesLargerThanByteUnit)
+				switch (SelectedIgnoreFilesLargerThanByteUnit)
 				{
 					case ByteUnit.B:
 						ignoreFilesLargerThanInBytes = (ulong)value;
@@ -116,7 +116,7 @@ namespace FileSystemSearch
 						break;
 
 					default:
-						throw new Exception(string.Format("Unknown ByteUnit: ", SelectedIgnoreFliesLargerThanByteUnit));
+						throw new Exception(string.Format("Unknown ByteUnit: ", SelectedIgnoreFilesLargerThanByteUnit));
 				}
 			}
 		}
@@ -124,7 +124,7 @@ namespace FileSystemSearch
 		public ulong IgnoreFilesLargerThanInBytes { get { return ignoreFilesLargerThanInBytes; } }
 
 		private ByteUnit selectedIgnoreFliesLargerThanByteUnit;
-		public ByteUnit SelectedIgnoreFliesLargerThanByteUnit
+		public ByteUnit SelectedIgnoreFilesLargerThanByteUnit
 		{
 			get { return selectedIgnoreFliesLargerThanByteUnit; }
 			set
