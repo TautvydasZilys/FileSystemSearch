@@ -57,7 +57,7 @@ namespace FileSystemSearch
 				totalEnumeratedFilesSizeInBytes = value;
 				OnPropertyChanged();
 				OnPropertyChanged("TotalEnumeratedFilesSize");
-            }
+			}
 		}
 
 		public ulong TotalContentSearchedFilesSizeInBytes

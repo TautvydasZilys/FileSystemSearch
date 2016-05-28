@@ -6,18 +6,18 @@ using System.Threading.Tasks;
 
 namespace FileSystemSearch
 {
-    public struct AtomicBox<T>
-    {
-        private volatile object boxedItem;
+	public struct AtomicBox<T>
+	{
+		private volatile object boxedItem;
 
-        public void Set(ref T item)
-        {
-            boxedItem = item;
-        }
+		public void Set(ref T item)
+		{
+			boxedItem = item;
+		}
 
-        public T Get()
-        {
-            return (T)boxedItem;
-        }
-    }
+		public T Get()
+		{
+			return (T)boxedItem;
+		}
+	}
 }
