@@ -262,11 +262,15 @@ double FileSearcher::GetTotalSearchTimeInSeconds()
 
 void FileSearcher::ReportProgress()
 {
-	double progress = m_FinishedSearchingFileSystem 
-		? static_cast<double>(m_SearchStatistics.scannedFileSize) / static_cast<double>(m_SearchStatistics.totalFileSize)
-		: sqrt(-1); // indeterminate
-
+	// This is bad: we're reading m_SearchStatistics which is constantly being updated from other threads. 
+	// This read isn't atomic, that means we might read the statistics that didn't actually exist as a whole at any given
+	// HOWEVER, I believe it still is a better alternative than protecting it with a critical section, as that would just utterly destroy performance
+	// Some glitches in the statistics should be okay, as you can't really tell just by looking at them if they're correct or not
 	auto statisticsSnapshot = m_SearchStatistics;
+
+	double progress = m_FinishedSearchingFileSystem 
+		? static_cast<double>(statisticsSnapshot.scannedFileSize) / static_cast<double>(statisticsSnapshot.totalFileSize)
+		: sqrt(-1); // indeterminate
 
 	statisticsSnapshot.searchTimeInSeconds = GetTotalSearchTimeInSeconds();
 	m_SearchInstructions.onProgressUpdated(statisticsSnapshot, progress);

@@ -7,7 +7,7 @@ struct SearchStatistics
 	uint64_t fileContentsSearched;
 	uint64_t resultsFound;
 	uint64_t totalFileSize;
-	volatile int64_t scannedFileSize;
+	int64_t scannedFileSize;
 	double searchTimeInSeconds;
 };
 
