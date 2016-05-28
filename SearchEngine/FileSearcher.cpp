@@ -325,7 +325,7 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 	auto waitResult = WaitForSingleObject(overlappedEvent, INFINITE);
 	Assert(waitResult == WAIT_OBJECT_0);
 
-	uint32_t bytesRead = static_cast<uint32_t>(overlapped.InternalHigh);;
+	uint32_t bytesRead = static_cast<uint32_t>(overlapped.InternalHigh);
 	fileOffset += bytesRead;
 	if (fileOffset != searchData.fileSize)
 		fileOffset -= m_SearchInstructions.searchString.length() * sizeof(wchar_t);
