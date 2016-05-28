@@ -44,11 +44,8 @@ namespace FileSystemSearch
 		{
 			createdEvent.WaitOne();
 
-			Dispatcher.Invoke(() =>
-			{
-				if (childView != IntPtr.Zero)
-					AddItemToView(childView, findData, itemPath);
-			});
+			if (childView != IntPtr.Zero)
+				AddItemToView(childView, findData, itemPath);
 		}
 
 		public void Cleanup()
