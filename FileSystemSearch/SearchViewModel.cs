@@ -27,9 +27,9 @@ namespace FileSystemSearch
 			SearchPattern = "*";
 
 			SearchPath = "C:";
-			SearchString = "aF";
+			SearchString = "";
 			SearchForFiles = true;
-			SearchInFilePath = true;
+			SearchInFileName = true;
 			SearchRecursively = true;
 			SearchIgnoreCase = true;
 		}
