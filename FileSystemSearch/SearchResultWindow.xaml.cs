@@ -21,7 +21,9 @@ namespace FileSystemSearch
 		private IntPtr searchOperation;
 		private GCHandle windowGCHandle;
 		private SearchResultsViewModel resultsViewModel;
+        private AtomicBox<SearchStatistics> latestSearchStatistics;
         private bool isClosing;
+        private volatile bool isProgressUpdating;
 
 		public SearchResultWindow(SearchViewModel searchViewModel)
 		{
@@ -53,7 +55,14 @@ namespace FileSystemSearch
 
 		private void OnProgressUpdated(ref SearchStatistics searchStatistics, double progress)
 		{
-			var statsSnapshot = searchStatistics;
+            latestSearchStatistics.Set(ref searchStatistics);
+
+            // Don't queue up new progress updates if progress is already updating
+            // This prevents overloading WPF dispatcher queue, making UI more responsive
+            if (isProgressUpdating)
+                return;
+
+            isProgressUpdating = true;
 
 			Dispatcher.InvokeAsync(() =>
 			{
@@ -63,26 +72,31 @@ namespace FileSystemSearch
 					progressBar.Value = 100.0 * progress;
 				}
 
-				UpdateStats(ref statsSnapshot);
+                var statsSnapshot = latestSearchStatistics.Get();
+                UpdateStats(ref statsSnapshot);
+
+                isProgressUpdating = false;
 			}, DispatcherPriority.Input);
 		}
 
 		private void OnSearchDone(ref SearchStatistics searchStatistics)
-		{
-			var statsSnapshot = searchStatistics;
+        {
+            latestSearchStatistics.Set(ref searchStatistics);
 
-			Dispatcher.InvokeAsync(() =>
-			{
+            Dispatcher.InvokeAsync(() =>
+            {
                 if (!isClosing)
                 {
+                    var statsSnapshot = latestSearchStatistics.Get();
                     UpdateStats(ref statsSnapshot);
                     progressBar.IsIndeterminate = false;
                     progressBar.IsEnabled = false;
                     progressBar.Value = 100;
                 }
+
                 CleanupSearchOperationIfNeeded();
-				windowGCHandle.Free();
-			}, DispatcherPriority.Input);
+                windowGCHandle.Free();
+            }, DispatcherPriority.Input);
 		}
 
 		private void CleanupSearchOperationIfNeeded()
