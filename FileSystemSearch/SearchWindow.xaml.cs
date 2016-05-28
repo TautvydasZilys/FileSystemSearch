@@ -14,6 +14,7 @@ namespace FileSystemSearch
 		public SearchWindow()
 		{
 			InitializeComponent();
+			searchStringTextBox.Focus();
 
 			viewModel = new SearchViewModel();
 			DataContext = viewModel;
@@ -26,6 +27,10 @@ namespace FileSystemSearch
 
 		private void ButtonSearch_Click(object sender, RoutedEventArgs e)
 		{
+			// This is needed because WPF bindings get only updated when textboxes lose focus
+			// If this isn't done, then hitting search button with ENTER shortcut makes us not see the last textbox edit
+			((Button)sender).Focus();
+
 			if (HasValidationErrors(this))
 			{
 				MessageBox.Show("One or more of search parameters are invalid.", "Search is not possible", MessageBoxButton.OK, MessageBoxImage.Error);
