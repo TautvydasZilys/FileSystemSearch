@@ -67,6 +67,8 @@ ExplorerWindow::~ExplorerWindow()
 
 	FreeDpiResources();
 	CoUninitialize();
+
+	DestroyWindow(m_Hwnd);
 }
 
 void ExplorerWindow::Initialize()
@@ -120,7 +122,6 @@ void ExplorerWindow::Destroy()
 		Assert(SUCCEEDED(hr));
 	}
 
-	DestroyWindow(m_Hwnd);
 	delete this;
 }
 
