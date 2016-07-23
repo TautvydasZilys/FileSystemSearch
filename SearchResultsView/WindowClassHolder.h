@@ -16,11 +16,15 @@ public:
 	{
 	}
 
-	WindowClassHolder& operator=(ATOM windowClass)
+	~WindowClassHolder()
 	{
 		if (m_WindowClass != 0)
 			UnregisterClassW(*this, GetModuleHandleW(nullptr));
+	}
 
+	WindowClassHolder& operator=(ATOM windowClass)
+	{
+		this->~WindowClassHolder();
 		m_WindowClass = windowClass;
 		return *this;
 	}
