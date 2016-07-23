@@ -9,9 +9,6 @@ using System.Windows.Threading;
 
 namespace FileSystemSearch
 {
-	/// <summary>
-	/// Interaction logic for SearchResultWindow.xaml
-	/// </summary>
 	public partial class SearchResultWindow : Window
 	{
 		private SearchUtils.FoundPathCallbackDelegate foundPathCallback;

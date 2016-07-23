@@ -4,9 +4,6 @@ using System.Windows.Controls;
 
 namespace FileSystemSearch
 {
-	/// <summary>
-	/// Interaction logic for MainWindow.xaml
-	/// </summary>
 	public partial class SearchWindow : Window
 	{
 		SearchViewModel viewModel;
