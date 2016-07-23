@@ -240,7 +240,7 @@ void FileSearcher::InitializeFileContentSearchThread(WorkQueue<FileSearcher, Fil
 	contentSearchWorkQueue.DoWork([this, &fileReadBuffers, &stackAllocator](const FileContentSearchData& searchData)
 	{
 		SearchFileContents(searchData, fileReadBuffers[0].get(), fileReadBuffers[1].get(), stackAllocator);
-		m_SearchStatistics.fileContentsSearched++;
+		InterlockedIncrement(&m_SearchStatistics.fileContentsSearched);
 	});
 }
 
@@ -278,7 +278,7 @@ void FileSearcher::ReportProgress()
 
 void FileSearcher::DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::wstring&& path)
 {
-	m_SearchStatistics.resultsFound++;
+	InterlockedIncrement(&m_SearchStatistics.resultsFound);
 	m_SearchResultDispatchWorkQueue.PushWorkItem(std::forward<std::wstring>(path), findData);
 }
 
