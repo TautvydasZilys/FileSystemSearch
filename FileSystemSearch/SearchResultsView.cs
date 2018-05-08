@@ -19,10 +19,14 @@ namespace FileSystemSearch
 
 			Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
 			{
-				InitializeView(childView);
+                if (childView != IntPtr.Zero)
+                {
+                    InitializeView(childView);
 
-				SizeChanged += OnSizeChanged;
-				ResizeView(childView, (int)ActualWidth, (int)ActualHeight);
+                    SizeChanged += OnSizeChanged;
+                    ResizeView(childView, (int)ActualWidth, (int)ActualHeight);
+                }
+
 				createdEvent.Set();
 			}));
 
