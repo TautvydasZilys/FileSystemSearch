@@ -32,6 +32,7 @@ namespace FileSystemSearch
 			SearchInFileName = true;
 			SearchRecursively = true;
 			SearchIgnoreCase = true;
+            SearchIgnoreDotStart = true;
 		}
 
 		public string SearchPath { get; set; }
@@ -65,6 +66,7 @@ namespace FileSystemSearch
 
 		public bool SearchRecursively { get; set; }
 		public bool SearchIgnoreCase { get; set; }
+		public bool SearchIgnoreDotStart { get; set; }
 
 		public double IgnoreFilesLargerThan
 		{

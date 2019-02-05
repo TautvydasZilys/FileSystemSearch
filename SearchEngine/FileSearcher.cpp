@@ -117,6 +117,9 @@ void FileSearcher::SearchFileSystem()
 		{
 			EnumerateFileSystem(directory, L"*", 1, FileSystemEnumerationFlags::kEnumerateDirectories, stackAllocator, [this, &directory, &directoriesToSearch](WIN32_FIND_DATAW& findData)
 			{
+                if (m_SearchInstructions.IgnoreDotStart() && findData.cFileName[0] == '.')
+                    return;
+
 				if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 					directoriesToSearch.push_back(PathUtils::CombinePaths(directory, findData.cFileName));
 			});
@@ -125,6 +128,9 @@ void FileSearcher::SearchFileSystem()
 		// Second, enumerate directory using our filters
 		EnumerateFileSystem(directory, m_SearchInstructions.searchPattern.c_str(), m_SearchInstructions.searchPattern.length(), fileSystemEnumerationFlags, stackAllocator, [this, &directory, &directoriesToSearch, &stackAllocator](WIN32_FIND_DATAW& findData)
 		{
+            if (m_SearchInstructions.IgnoreDotStart() && findData.cFileName[0] == '.')
+                return;
+
 			m_SearchStatistics.filesEnumerated++;
 
 			if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))

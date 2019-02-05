@@ -26,7 +26,8 @@ typedef void(__stdcall *SearchDoneCallback)(const SearchStatistics& searchStatis
 	EnumValue(SearchInDirectoryPath, 1 << 7) \
 	EnumValue(SearchInDirectoryName, 1 << 8) \
 	EnumValue(SearchRecursively,     1 << 9) \
-	EnumValue(IgnoreCase,            1 << 10)
+	EnumValue(IgnoreCase,            1 << 10) \
+	EnumValue(IgnoreDotStart,        1 << 11)
 
 enum class SearchFlags
 {
