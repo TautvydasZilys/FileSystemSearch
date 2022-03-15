@@ -4,14 +4,14 @@
 #define _WIN32_WINNT 0x0A00 // _WIN32_WINNT_WIN10
 #define WINVER 0x0A00
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <ShellScalingApi.h>
 #include <Shlobj.h>
 #include <ShObjIdl.h>
 #include <Windows.h>
 #include <wrl.h>
-
-#undef min
-#undef max
 
 #include <algorithm>
 #include <unordered_map>
