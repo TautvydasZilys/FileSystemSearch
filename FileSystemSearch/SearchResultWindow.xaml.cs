@@ -14,6 +14,7 @@ namespace FileSystemSearch
 		private SearchUtils.FoundPathCallbackDelegate foundPathCallback;
 		private SearchUtils.SearchProgressUpdatedDelegate searchProgressUpdatedCallback;
 		private SearchUtils.SearchDoneCallbackDelegate searchDoneCallback;
+		private SearchUtils.ErrorCallbackDelegate errorCallback;
 
 		private IntPtr searchOperation;
 		private GCHandle windowGCHandle;
@@ -37,12 +38,21 @@ namespace FileSystemSearch
 			foundPathCallback = resultsView.AddItem;
 			searchProgressUpdatedCallback = OnProgressUpdated;
 			searchDoneCallback = OnSearchDone;
+			errorCallback = OnError;
 
-			searchOperation = SearchUtils.SearchAsync(searchViewModel, foundPathCallback, searchProgressUpdatedCallback, searchDoneCallback);
+			{
+				var defaultSearchStatistics = default(SearchStatistics);
+				latestSearchStatistics.Set(ref defaultSearchStatistics);
+			}
+
+			searchOperation = SearchUtils.SearchAsync(searchViewModel, foundPathCallback, searchProgressUpdatedCallback, searchDoneCallback, errorCallback);
+			if (searchOperation == IntPtr.Zero)
+				return;
+
 			windowGCHandle = GCHandle.Alloc(this);
 		}
 
-		protected override async void OnClosed(EventArgs e)
+        protected override async void OnClosed(EventArgs e)
 		{
 			isClosing = true;
 			base.OnClosed(e);
@@ -81,20 +91,36 @@ namespace FileSystemSearch
 		{
 			latestSearchStatistics.Set(ref searchStatistics);
 
+            Dispatcher.InvokeAsync(async () =>
+            {
+                await FinishSearch();
+            }, DispatcherPriority.Input);
+		}
+
+        private void OnError(string message)
+		{
 			Dispatcher.InvokeAsync(async () =>
 			{
-				if (!isClosing)
-				{
-					var statsSnapshot = latestSearchStatistics.Get();
-					UpdateStats(ref statsSnapshot);
-					progressBar.IsIndeterminate = false;
-					progressBar.IsEnabled = false;
-					progressBar.Value = 100;
-				}
-
-				await CleanupSearchOperationIfNeeded();
-				windowGCHandle.Free();
+				MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				await FinishSearch();
 			}, DispatcherPriority.Input);
+		}
+
+		private async Task FinishSearch()
+		{
+			if (!isClosing)
+			{
+				var statsSnapshot = latestSearchStatistics.Get();
+				UpdateStats(ref statsSnapshot);
+				progressBar.IsIndeterminate = false;
+				progressBar.IsEnabled = false;
+				progressBar.Value = 100;
+			}
+
+			await CleanupSearchOperationIfNeeded();
+
+			if (windowGCHandle.IsAllocated)
+				windowGCHandle.Free();
 		}
 
 		private async Task CleanupSearchOperationIfNeeded()

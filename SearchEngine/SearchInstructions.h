@@ -14,6 +14,7 @@ struct SearchStatistics
 typedef void(__stdcall *FoundPathCallback)(const WIN32_FIND_DATAW* findData, const wchar_t* path);
 typedef void(__stdcall *SearchProgressUpdated)(const SearchStatistics& searchStatistics, double progress);
 typedef void(__stdcall *SearchDoneCallback)(const SearchStatistics& searchStatistics);
+typedef void(__stdcall *ErrorCallback)(const wchar_t* errorMessage);
 
 #define SearchFlagsEnumDefinition \
 	EnumValue(SearchForFiles,         1 << 0) \
@@ -43,6 +44,7 @@ struct SearchInstructions
 	FoundPathCallback onFoundPath;
 	SearchProgressUpdated onProgressUpdated;
 	SearchDoneCallback onDone;
+	ErrorCallback onError;
 
 	std::wstring searchPath;
 	std::wstring searchPattern;
@@ -52,11 +54,12 @@ struct SearchInstructions
 	SearchFlags searchFlags;
 	uint64_t ignoreFilesLargerThan;
 
-	SearchInstructions(FoundPathCallback foundPathCallback, SearchProgressUpdated progressUpdatedCallback, SearchDoneCallback searchDoneCallback, const wchar_t* searchPath, const wchar_t* searchPattern, const wchar_t* searchString,
+	SearchInstructions(FoundPathCallback foundPathCallback, SearchProgressUpdated progressUpdatedCallback, SearchDoneCallback searchDoneCallback, ErrorCallback errorCallback, const wchar_t* searchPath, const wchar_t* searchPattern, const wchar_t* searchString,
 		SearchFlags searchFlags, uint64_t ignoreFilesLargerThan) :
 		onFoundPath(foundPathCallback),
 		onProgressUpdated(progressUpdatedCallback),
 		onDone(searchDoneCallback),
+		onError(errorCallback),
 		searchPath(searchPath),
 		searchPattern(searchPattern),
 		searchString(searchString),
@@ -65,10 +68,11 @@ struct SearchInstructions
 	{
 	}
 
-	SearchInstructions(SearchInstructions&& other) :
+	SearchInstructions(SearchInstructions&& other):
 		onFoundPath(other.onFoundPath),
 		onProgressUpdated(other.onProgressUpdated),
 		onDone(other.onDone),
+		onError(other.onError),
 		searchPath(std::move(other.searchPath)),
 		searchPattern(std::move(other.searchPattern)),
 		searchString(std::move(other.searchString)),

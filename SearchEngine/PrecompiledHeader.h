@@ -9,6 +9,10 @@
 
 #include <Windows.h>
 
+#include <dstorage.h>
+#include <dstorageerr.h>
+#include <wrl.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <memory>

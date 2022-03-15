@@ -11,7 +11,8 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_FileContentSearchWorkQueue(*this),
 	m_SearchResultDispatchWorkQueue(*this),
 	m_FinishedSearchingFileSystem(false),
-	m_IsFinished(false)
+	m_IsFinished(false),
+	m_FailedInit(false)
 {
 	ZeroMemory(&m_SearchStatistics, sizeof(m_SearchStatistics));
 
@@ -45,6 +46,20 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	{
 		SYSTEM_INFO systemInfo;
 		GetNativeSystemInfo(&systemInfo);
+
+		auto hr = DStorageGetFactory(__uuidof(m_DStorageFactory), &m_DStorageFactory);
+		Assert(SUCCEEDED(hr));
+
+		if (FAILED(hr))
+		{
+			m_SearchInstructions.onError(L"Failed to initialize DirectStorage.");
+			m_FailedInit = true;
+			return;
+		}
+
+#if _DEBUG
+		m_DStorageFactory->SetDebugFlags(DSTORAGE_DEBUG_SHOW_ERRORS | DSTORAGE_DEBUG_BREAK_ON_ERROR);
+#endif
 
 		m_FileContentSearchWorkQueue.Initialize<&FileSearcher::InitializeFileContentSearchThread>(systemInfo.dwNumberOfProcessors);
 	}
@@ -179,7 +194,7 @@ void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_D
 
 	m_SearchStatistics.totalFileSize += fileSize;
 
-	if (!m_SearchInstructions.SearchInFileContents())
+	if (!m_SearchInstructions.SearchInFileContents() || fileSize == 0)
 		return;
 
 	m_FileContentSearchWorkQueue.PushWorkItem(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData);
@@ -243,9 +258,23 @@ void FileSearcher::InitializeFileContentSearchThread(WorkQueue<FileSearcher, Fil
 		std::unique_ptr<uint8_t[]>(new uint8_t[kFileReadBufferSize]),
 	};
 
-	contentSearchWorkQueue.DoWork([this, &fileReadBuffers, &stackAllocator](const FileContentSearchData& searchData)
+	DSTORAGE_QUEUE_DESC queueDesc = {};
+	queueDesc.SourceType = DSTORAGE_REQUEST_SOURCE_FILE;
+	queueDesc.Capacity = std::max<UINT16>(2, DSTORAGE_MIN_QUEUE_CAPACITY);
+	queueDesc.Priority = DSTORAGE_PRIORITY_NORMAL;
+
+	Microsoft::WRL::ComPtr<IDStorageQueue> dstorageQueue;
+	auto hr = m_DStorageFactory->CreateQueue(&queueDesc, __uuidof(dstorageQueue), &dstorageQueue);
+	Assert(SUCCEEDED(hr));
+
+	Microsoft::WRL::ComPtr<IDStorageStatusArray> dstorageStatusArray;
+	hr = m_DStorageFactory->CreateStatusArray(1, nullptr, __uuidof(dstorageStatusArray), &dstorageStatusArray);
+
+	uint64_t readIndex = 0;
+
+	contentSearchWorkQueue.DoWork([this, &fileReadBuffers, &stackAllocator, dstorageQueue { dstorageQueue.Get() }, dstorageStatusArray { dstorageStatusArray.Get() }, &readIndex](const FileContentSearchData& searchData)
 	{
-		SearchFileContents(searchData, fileReadBuffers[0].get(), fileReadBuffers[1].get(), stackAllocator);
+		SearchFileContents(searchData, fileReadBuffers[0].get(), fileReadBuffers[1].get(), stackAllocator, dstorageQueue, dstorageStatusArray, readIndex);
 		InterlockedIncrement(&m_SearchStatistics.fileContentsSearched);
 	});
 }
@@ -288,66 +317,75 @@ void FileSearcher::DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::w
 	m_SearchResultDispatchWorkQueue.PushWorkItem(std::forward<std::wstring>(path), findData);
 }
 
-static inline bool InitiateFileRead(HANDLE fileHandle, uint64_t fileOffset, uint64_t fileSize, uint8_t*& primaryBuffer, uint8_t*& secondaryBuffer, OVERLAPPED& overlapped, HANDLE overlappedEvent)
+static inline uint32_t InitiateFileRead(IDStorageFile* file, uint64_t fileOffset, uint64_t fileSize, uint8_t* buffer, IDStorageQueue* dstorageQueue, IDStorageStatusArray* statusArray, uint64_t& readIndex)
 {
-	ZeroMemory(&overlapped, sizeof(overlapped));
-
-	overlapped.hEvent = overlappedEvent;
-	overlapped.Offset = static_cast<uint32_t>(fileOffset & 0xFFFFFFFF);
-	overlapped.OffsetHigh = static_cast<uint32_t>(fileOffset >> 32);
-
 	uint32_t bytesToRead = static_cast<uint32_t>(std::min(fileSize - fileOffset, kFileReadBufferSize));
 
-	auto readResult = ReadFile(fileHandle, primaryBuffer, bytesToRead, nullptr, &overlapped);
-	Assert(readResult != FALSE || GetLastError() == ERROR_IO_PENDING);
+	DSTORAGE_REQUEST request = {};
+	request.Source.File.Source = file;
+	request.Source.File.Offset = fileOffset;
+	request.Source.File.Size = bytesToRead;
+	request.Destination.Memory.Buffer = buffer;
+	request.Destination.Memory.Size = kFileReadBufferSize;
+	request.UncompressedSize = kFileReadBufferSize;
+	request.CancellationTag = readIndex++;
 
-	std::swap(primaryBuffer, secondaryBuffer);
-	return readResult != FALSE || GetLastError() == ERROR_IO_PENDING;
+	dstorageQueue->EnqueueRequest(&request);
+	dstorageQueue->EnqueueStatus(statusArray, 0);
+	dstorageQueue->Submit();
+
+	return bytesToRead;
 }
 
-void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator)
+inline HRESULT BlockUntilCompletion(IDStorageStatusArray* statusArray)
+{
+	for (;;)
+	{
+		if (statusArray->IsComplete(0))
+			break;
+
+		Sleep(0);
+	}
+
+	return statusArray->GetHResult(0);
+}
+
+void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, uint8_t* readBuffer, uint8_t* scanBuffer, ScopedStackAllocator& stackAllocator, IDStorageQueue* dstorageQueue, IDStorageStatusArray* statusArray, uint64_t& readIndex)
 {
 	const DWORD kFileSharingFlags = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE; // We really don't want to step on anyones toes
 	uint64_t fileOffset = 0;
 
-	HandleHolder fileHandle = CreateFileW(searchData.filePath.c_str(), GENERIC_READ, kFileSharingFlags, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
+	Microsoft::WRL::ComPtr<IDStorageFile> file;
+	auto hr = m_DStorageFactory->OpenFile(searchData.filePath.c_str(), __uuidof(file), &file);
 
-	if (fileHandle == INVALID_HANDLE_VALUE)
+	if (FAILED(hr))
 	{
 		AddToScannedFileSize(searchData.fileSize);
 		return;
 	}
 
-	HandleHolder overlappedEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
-	Assert(overlappedEvent != nullptr);
-
-	OVERLAPPED overlapped;
-	if (!InitiateFileRead(fileHandle, fileOffset, searchData.fileSize, primaryBuffer, secondaryBuffer, overlapped, overlappedEvent))
-	{
-		AddToScannedFileSize(searchData.fileSize);
-		return;
-	}
-
-	auto waitResult = WaitForSingleObject(overlappedEvent, INFINITE);
-	Assert(waitResult == WAIT_OBJECT_0);
-
-	uint32_t bytesRead = static_cast<uint32_t>(overlapped.InternalHigh);
+	uint32_t bytesRead = InitiateFileRead(file.Get(), fileOffset, searchData.fileSize, scanBuffer, dstorageQueue, statusArray, readIndex);
 	fileOffset += bytesRead;
 	if (fileOffset != searchData.fileSize)
 		fileOffset -= m_SearchInstructions.searchString.length() * sizeof(wchar_t);
 
+	hr = BlockUntilCompletion(statusArray);
+	Assert(SUCCEEDED(hr));
+	if (FAILED(hr))
+	{
+		AddToScannedFileSize(searchData.fileSize);
+		return;
+	}
+
 	while (!m_IsFinished && searchData.fileSize - fileOffset > 0)
 	{
-		if (!InitiateFileRead(fileHandle, fileOffset, searchData.fileSize, primaryBuffer, secondaryBuffer, overlapped, overlappedEvent))
-		{
-			AddToScannedFileSize(searchData.fileSize - fileOffset);
-			return;
-		}
+		auto newBytesRead = InitiateFileRead(file.Get(), fileOffset, searchData.fileSize, readBuffer, dstorageQueue, statusArray, readIndex);
 
-		if (PerformFileContentSearch(primaryBuffer, bytesRead, stackAllocator))
+		if (PerformFileContentSearch(scanBuffer, bytesRead, stackAllocator))
 		{
 			AddToScannedFileSize(bytesRead + searchData.fileSize - fileOffset);
 			DispatchSearchResult(searchData.fileFindData, searchData.filePath.c_str());
+			BlockUntilCompletion(statusArray);
 			return;
 		}
 		else
@@ -355,16 +393,24 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 			AddToScannedFileSize(bytesRead);
 		}
 
-		waitResult = WaitForSingleObject(overlappedEvent, INFINITE);
-		Assert(waitResult == WAIT_OBJECT_0);
+		hr = BlockUntilCompletion(statusArray);
+		Assert(SUCCEEDED(hr));
+		if (FAILED(hr))
+		{
+			AddToScannedFileSize(searchData.fileSize - fileOffset);
+			return;
+		}
 
-		bytesRead = static_cast<uint32_t>(overlapped.InternalHigh);
+		bytesRead = newBytesRead;
 		fileOffset += bytesRead;
 		if (fileOffset != searchData.fileSize)
 			fileOffset -= m_SearchInstructions.searchString.length() * sizeof(wchar_t);
+
+		std::swap(readBuffer, scanBuffer);
 	}
 
-	if (PerformFileContentSearch(secondaryBuffer, bytesRead, stackAllocator))
+	hr = BlockUntilCompletion(statusArray);
+	if (SUCCEEDED(hr) && PerformFileContentSearch(scanBuffer, bytesRead, stackAllocator))
 		DispatchSearchResult(searchData.fileFindData, searchData.filePath.c_str());
 
 	AddToScannedFileSize(bytesRead);
@@ -397,7 +443,13 @@ void FileSearcher::AddToScannedFileSize(int64_t size)
 
 FileSearcher* FileSearcher::BeginSearch(SearchInstructions&& searchInstructions)
 {
-	auto searcher = new FileSearcher(std::forward<SearchInstructions>(searchInstructions));
+	FileSearcher* searcher = new FileSearcher(std::forward<SearchInstructions>(searchInstructions));
+	if (searcher->m_FailedInit)
+	{
+		searcher->Release();
+		return nullptr;
+	}
+
 	searcher->AddRef();
 
 	auto fileSystemSearchThread = CreateThread(nullptr, 64 * 1024, [](void* ctx) -> DWORD

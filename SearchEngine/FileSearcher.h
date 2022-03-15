@@ -19,9 +19,12 @@ private:
 	WorkQueue<FileSearcher, FileContentSearchData> m_FileContentSearchWorkQueue;
 	WorkQueue<FileSearcher, SearchResultData> m_SearchResultDispatchWorkQueue;
 
+	Microsoft::WRL::ComPtr<IDStorageFactory> m_DStorageFactory;
+
 	volatile bool m_FinishedSearchingFileSystem;
 	volatile bool m_IsFinished;
 	bool m_SearchStringIsAscii;
+	bool m_FailedInit;
 
 	OrdinalStringSearcher<char> m_OrdinalUtf8Searcher;
 	UnicodeUtf16StringSearcher m_UnicodeUtf16Searcher;
@@ -50,7 +53,7 @@ private:
 	void ReportProgress();
 	void DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::wstring&& path);
 
-	void SearchFileContents(const FileContentSearchData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator);
+	void SearchFileContents(const FileContentSearchData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator, IDStorageQueue* dstorageQueue, IDStorageStatusArray* dstorageStatusArray, uint64_t& readIndex);
 	bool PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator);
 	void AddToScannedFileSize(int64_t size);
 
