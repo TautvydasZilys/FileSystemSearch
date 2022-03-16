@@ -132,6 +132,9 @@ void FileSearcher::SearchFileSystem()
 		{
 			EnumerateFileSystem(directory, L"*", 1, FileSystemEnumerationFlags::kEnumerateDirectories, stackAllocator, [this, &directory, &directoriesToSearch](WIN32_FIND_DATAW& findData)
 			{
+				if (m_IsFinished)
+					return;
+
                 if (m_SearchInstructions.IgnoreDotStart() && findData.cFileName[0] == '.')
                     return;
 
@@ -174,7 +177,7 @@ void FileSearcher::OnDirectoryFound(const std::wstring& directory, const WIN32_F
 
 void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData, ScopedStackAllocator& stackAllocator)
 {
-	if (!m_SearchInstructions.SearchForFiles())
+	if (!m_SearchInstructions.SearchForFiles() || m_IsFinished)
 		return;
 
 	uint64_t fileSize = (static_cast<uint64_t>(findData.nFileSizeHigh) << 32) + findData.nFileSizeLow;
@@ -465,9 +468,5 @@ FileSearcher* FileSearcher::BeginSearch(SearchInstructions&& searchInstructions)
 void FileSearcher::Cleanup()
 {
 	m_IsFinished = true;
-
-	m_FileContentSearchWorkQueue.DrainWorkQueue();
-	m_SearchResultDispatchWorkQueue.DrainWorkQueue();
-
 	Release();
 }

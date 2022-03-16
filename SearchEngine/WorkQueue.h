@@ -63,6 +63,7 @@ public:
 				(_this->m_Owner.*WorkerThreadInitializer)(*_this);
 				return 0;
 			}, this, 0, nullptr);
+			Assert(threadHandle != nullptr);
 
 			auto setThreadPriorityResult = SetThreadPriority(threadHandle, THREAD_PRIORITY_BELOW_NORMAL);
 			Assert(setThreadPriorityResult != FALSE);
@@ -101,7 +102,7 @@ public:
 		}
 	}
 
-	inline void DrainWorkQueue()
+	inline void Cleanup()
 	{
 		if (m_WorkerThreadCount == 0)
 			return;
@@ -114,12 +115,6 @@ public:
 
 			DeleteWorkEntry(workEntry);
 		}
-	}
-
-	inline void Cleanup()
-	{
-		if (m_WorkerThreadCount == 0)	
-			return;
 
 		auto releaseResult = ReleaseSemaphore(m_WorkSemaphore, m_WorkerThreadCount, nullptr);
 		Assert(releaseResult != FALSE);
