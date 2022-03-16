@@ -191,7 +191,7 @@
     <ClInclude Include="UnicodeUtf16StringSearcher.h" />
     <ClInclude Include="WorkQueue.h" />
   </ItemGroup>
-    <ItemGroup>
+  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
