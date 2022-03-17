@@ -1,13 +1,15 @@
 #pragma once
 
 #include "FileContentSearchData.h"
+#include "FileReadWorkQueue.h"
 #include "HandleHolder.h"
 #include "OrdinalStringSearcher.h"
-#include "ScopedStackAllocator.h"
 #include "SearchInstructions.h"
 #include "SearchResultData.h"
 #include "UnicodeUtf16StringSearcher.h"
 #include "WorkQueue.h"
+
+class ScopedStackAllocator;
 
 class FileSearcher
 {
@@ -16,10 +18,11 @@ private:
 	SearchStatistics m_SearchStatistics;
 	std::string m_Utf8SearchString;
 
-	WorkQueue<FileSearcher, FileContentSearchData> m_FileContentSearchWorkQueue;
+	WorkQueue<FileSearcher, FileOpenData> m_FileOpenWorkQueue;
+	FileReadWorkQueue m_FileReadWorkQueue;
 	WorkQueue<FileSearcher, SearchResultData> m_SearchResultDispatchWorkQueue;
 
-	Microsoft::WRL::ComPtr<IDStorageFactory> m_DStorageFactory;
+	ComPtr<IDStorageFactory> m_DStorageFactory;
 
 	volatile bool m_FinishedSearchingFileSystem;
 	volatile bool m_IsFinished;
@@ -30,7 +33,7 @@ private:
 	UnicodeUtf16StringSearcher m_UnicodeUtf16Searcher;
 	OrdinalStringSearcher<wchar_t> m_OrdinalUtf16Searcher;
 
-	HandleHolder m_FileSystemSearchThread;
+	ThreadHandleHolder m_FileSystemSearchThread;
 	uint32_t m_RefCount;
 
 	LARGE_INTEGER m_SearchStart;
@@ -46,14 +49,16 @@ private:
 	bool SearchInFileName(const std::wstring& directory, const WIN32_FIND_DATAW& findData, bool searchInPath, ScopedStackAllocator& stackAllocator);
 	bool SearchForString(const wchar_t* str, size_t length, ScopedStackAllocator& stackAllocator);
 
-	void InitializeFileContentSearchThread(WorkQueue<FileSearcher, FileContentSearchData>& contentSearchWorkQueue);
+	void InitializeFileOpenThread(WorkQueue<FileSearcher, FileOpenData>& fileOpenWorkQueue);
+	//void InitializeFileReadThread(WorkQueue<FileSearcher, FileContentSearchData>& fileReadWorkQueue);
 	void InitializeSearchResultDispatcherWorkerThread(WorkQueue<FileSearcher, SearchResultData>& workQueue);
 
 	double GetTotalSearchTimeInSeconds();
 	void ReportProgress();
 	void DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::wstring&& path);
 
-	void SearchFileContents(const FileContentSearchData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator, IDStorageQueue* dstorageQueue, IDStorageStatusArray* dstorageStatusArray, uint64_t& readIndex);
+	//void SearchFileContents(const FileContentSearchData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator, IDStorageQueue* dstorageQueue, IDStorageStatusArray* dstorageStatusArray, uint64_t& readIndex);
+	//void ReadSearchedFile(struct FileReadThreadContext& context, const FileContentSearchData& searchData);
 	bool PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator);
 	void AddToScannedFileSize(int64_t size);
 

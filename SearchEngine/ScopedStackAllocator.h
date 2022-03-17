@@ -1,6 +1,8 @@
 #pragma once
 
-class ScopedStackAllocator
+#include "NonCopyable.h"
+
+class ScopedStackAllocator : NonCopyable
 {
 private:
 	static const size_t kFirstBlockSize = 4096;
@@ -108,7 +110,7 @@ private:
 	}
 
 public:
-	struct ScopedMemory
+	struct ScopedMemory : NonCopyable
 	{
 	private:
 		ScopedStackAllocator& m_Allocator;
@@ -121,9 +123,6 @@ public:
 		{
 
 		}
-
-		ScopedMemory(const ScopedMemory&) = delete;
-		ScopedMemory& operator=(const ScopedMemory&) = delete;
 
 		inline ScopedMemory(ScopedMemory&& other) :
 			m_Allocator(other.m_Allocator),
@@ -151,9 +150,6 @@ public:
 	{
 		AllocateBlock(kFirstBlockSize);
 	}
-
-	ScopedStackAllocator(const ScopedStackAllocator&) = delete;
-	ScopedStackAllocator& operator=(const ScopedStackAllocator&) = delete;
 
 	inline ~ScopedStackAllocator()
 	{

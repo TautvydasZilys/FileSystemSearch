@@ -13,5 +13,7 @@
     <ClInclude Include="CriticalSection.h" />
     <ClInclude Include="WindowClassHolder.h" />
     <ClInclude Include="FileSystemBindData.h" />
+    <ClInclude Include="..\Common\NonCopyable.h" />
+    <ClInclude Include="..\Common\Event.h" />
   </ItemGroup>
 </Project>

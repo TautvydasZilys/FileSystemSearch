@@ -1,13 +1,14 @@
 #pragma once
 
 #include "HandleHolder.h"
+#include "NonCopyable.h"
 #include "SearchInstructions.h"
 
 template <typename Callback>
-class AsynchronousPeriodicTimer
+class AsynchronousPeriodicTimer : NonCopyable
 {
 private:
-	HandleHolder m_TimerThread;
+	ThreadHandleHolder m_TimerThread;
 	Callback m_Callback;
 	uint32_t m_Interval;
 	volatile bool m_Done;
@@ -29,9 +30,6 @@ public:
 	{
 	}
 
-	AsynchronousPeriodicTimer(const AsynchronousPeriodicTimer& other) = delete;
-	AsynchronousPeriodicTimer& operator=(const AsynchronousPeriodicTimer& other) = delete;
-
 	inline AsynchronousPeriodicTimer(AsynchronousPeriodicTimer&& other) :
 		m_TimerThread(std::move(other.m_TimerThread)),
 		m_Callback(std::move(other.m_Callback)),
@@ -51,12 +49,12 @@ public:
 
 	inline ~AsynchronousPeriodicTimer()
 	{
-		Assert(m_TimerThread == INVALID_HANDLE_VALUE);
+		Assert(!m_TimerThread);
 	}
 
 	inline void Start()
 	{
-		if (m_TimerThread != INVALID_HANDLE_VALUE)
+		if (m_TimerThread)
 			__fastfail(1);
 
 		m_Done = false;
@@ -69,7 +67,7 @@ public:
 
 	inline void Stop()
 	{
-		if (m_TimerThread == INVALID_HANDLE_VALUE)
+		if (!m_TimerThread)
 			__fastfail(1);
 
 		m_Done = true;
@@ -77,7 +75,7 @@ public:
 		auto waitResult = WaitForSingleObject(m_TimerThread, INFINITE);
 		Assert(waitResult == WAIT_OBJECT_0);
 
-		m_TimerThread = INVALID_HANDLE_VALUE;
+		m_TimerThread = nullptr;
 	}
 };
 

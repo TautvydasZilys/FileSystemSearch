@@ -4,6 +4,8 @@
     <ClCompile Include="FileSearcher.cpp" />
     <ClCompile Include="SearchEngine.cpp" />
     <ClCompile Include="PrecompiledHeader.cpp" />
+    <ClCompile Include="FileReadWorkQueue.cpp" />
+    <ClCompile Include="DirectXContext.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileSearcher.h" />
@@ -20,6 +22,12 @@
     <ClInclude Include="FileContentSearchData.h" />
     <ClInclude Include="SearchResultData.h" />
     <ClInclude Include="AsynchronousPeriodicTimer.h" />
+    <ClInclude Include="FileReadWorkQueue.h" />
+    <ClInclude Include="..\Common\NonCopyable.h" />
+    <ClInclude Include="DirectXContext.h" />
+    <ClInclude Include="ObjectPool.h" />
+    <ClInclude Include="..\Common\Event.h" />
+    <ClInclude Include="ReadBatch.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

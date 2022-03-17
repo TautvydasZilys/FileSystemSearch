@@ -3,12 +3,14 @@
 #include "FileEnumerator.h"
 #include "FileSearcher.h"
 #include "PathUtils.h"
+#include "ScopedStackAllocator.h"
 #include "StringUtils.h"
 
 FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_RefCount(1),
 	m_SearchInstructions(std::move(searchInstructions)),
-	m_FileContentSearchWorkQueue(*this),
+	m_FileOpenWorkQueue(*this),
+	m_FileReadWorkQueue(m_SearchInstructions.searchString.length()),
 	m_SearchResultDispatchWorkQueue(*this),
 	m_FinishedSearchingFileSystem(false),
 	m_IsFinished(false),
@@ -61,7 +63,8 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 		m_DStorageFactory->SetDebugFlags(DSTORAGE_DEBUG_SHOW_ERRORS | DSTORAGE_DEBUG_BREAK_ON_ERROR);
 #endif
 
-		m_FileContentSearchWorkQueue.Initialize<&FileSearcher::InitializeFileContentSearchThread>(systemInfo.dwNumberOfProcessors);
+		m_FileOpenWorkQueue.Initialize<&FileSearcher::InitializeFileOpenThread>(systemInfo.dwNumberOfProcessors - 2);
+		m_FileReadWorkQueue.Initialize();
 	}
 
 	m_SearchResultDispatchWorkQueue.Initialize<&FileSearcher::InitializeSearchResultDispatcherWorkerThread>(1);
@@ -93,7 +96,8 @@ void FileSearcher::Search()
 	SearchFileSystem();
 
 	// Wait for worker threads to finish
-	m_FileContentSearchWorkQueue.Cleanup();
+	m_FileOpenWorkQueue.Cleanup();
+	m_FileReadWorkQueue.Cleanup();
 	m_SearchResultDispatchWorkQueue.Cleanup();
 
 	// Stop reporting progress
@@ -200,7 +204,7 @@ void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_D
 	if (!m_SearchInstructions.SearchInFileContents() || fileSize == 0)
 		return;
 
-	m_FileContentSearchWorkQueue.PushWorkItem(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData);
+	m_FileOpenWorkQueue.PushWorkItem(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData);
 }
 
 bool FileSearcher::SearchInFileName(const std::wstring& directory, const WIN32_FIND_DATAW& findData, bool searchInPath, ScopedStackAllocator& stackAllocator)
@@ -250,37 +254,33 @@ bool FileSearcher::SearchForString(const wchar_t* str, size_t length, ScopedStac
 	return m_OrdinalUtf16Searcher.HasSubstring(str, str + length);
 }
 
-const size_t kFileReadBufferSize = 5 * 1024 * 1024; // 5 MB
-
-void FileSearcher::InitializeFileContentSearchThread(WorkQueue<FileSearcher, FileContentSearchData>& contentSearchWorkQueue)
+void FileSearcher::InitializeFileOpenThread(WorkQueue<FileSearcher, FileOpenData>& fileOpenWorkQueue)
 {
-	ScopedStackAllocator stackAllocator;
-	std::unique_ptr<uint8_t[]> fileReadBuffers[2] =
+	fileOpenWorkQueue.DoWork([this](FileOpenData& searchData)
 	{
-		std::unique_ptr<uint8_t[]>(new uint8_t[kFileReadBufferSize]),
-		std::unique_ptr<uint8_t[]>(new uint8_t[kFileReadBufferSize]),
-	};
+		FileReadData readData(std::move(searchData));
+		auto hr = m_DStorageFactory->OpenFile(readData.filePath.c_str(), __uuidof(readData.file), &readData.file);
+		if (FAILED(hr))
+		{
+			AddToScannedFileSize(readData.fileSize);
+			return;
+		}
 
-	DSTORAGE_QUEUE_DESC queueDesc = {};
-	queueDesc.SourceType = DSTORAGE_REQUEST_SOURCE_FILE;
-	queueDesc.Capacity = std::max<UINT16>(2, DSTORAGE_MIN_QUEUE_CAPACITY);
-	queueDesc.Priority = DSTORAGE_PRIORITY_NORMAL;
-
-	Microsoft::WRL::ComPtr<IDStorageQueue> dstorageQueue;
-	auto hr = m_DStorageFactory->CreateQueue(&queueDesc, __uuidof(dstorageQueue), &dstorageQueue);
-	Assert(SUCCEEDED(hr));
-
-	Microsoft::WRL::ComPtr<IDStorageStatusArray> dstorageStatusArray;
-	hr = m_DStorageFactory->CreateStatusArray(1, nullptr, __uuidof(dstorageStatusArray), &dstorageStatusArray);
-
-	uint64_t readIndex = 0;
-
-	contentSearchWorkQueue.DoWork([this, &fileReadBuffers, &stackAllocator, dstorageQueue { dstorageQueue.Get() }, dstorageStatusArray { dstorageStatusArray.Get() }, &readIndex](const FileContentSearchData& searchData)
-	{
-		SearchFileContents(searchData, fileReadBuffers[0].get(), fileReadBuffers[1].get(), stackAllocator, dstorageQueue, dstorageStatusArray, readIndex);
-		InterlockedIncrement(&m_SearchStatistics.fileContentsSearched);
+		m_FileReadWorkQueue.PushWorkItem(std::move(readData));
 	});
 }
+
+/*void FileSearcher::InitializeFileReadThread(WorkQueue<FileSearcher, FileContentSearchData>& fileReadWorkQueue)
+{
+	FileReadThreadContext threadContext(m_DStorageFactory.Get());
+
+	fileReadWorkQueue.DoWork([this, &threadContext](const FileContentSearchData& searchData)
+	{
+		ReadSearchedFile(threadContext, searchData);
+
+		// InterlockedIncrement(&m_SearchStatistics.fileContentsSearched);
+	});
+}*/
 
 void FileSearcher::InitializeSearchResultDispatcherWorkerThread(WorkQueue<FileSearcher, SearchResultData>& workQueue)
 {
@@ -320,6 +320,7 @@ void FileSearcher::DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::w
 	m_SearchResultDispatchWorkQueue.PushWorkItem(std::forward<std::wstring>(path), findData);
 }
 
+/*
 static inline uint32_t InitiateFileRead(IDStorageFile* file, uint64_t fileOffset, uint64_t fileSize, uint8_t* buffer, IDStorageQueue* dstorageQueue, IDStorageStatusArray* statusArray, uint64_t& readIndex)
 {
 	uint32_t bytesToRead = static_cast<uint32_t>(std::min(fileSize - fileOffset, kFileReadBufferSize));
@@ -418,6 +419,56 @@ void FileSearcher::SearchFileContents(const FileContentSearchData& searchData, u
 
 	AddToScannedFileSize(bytesRead);
 }
+
+void FileSearcher::ReadSearchedFile(FileReadThreadContext& context, const FileContentSearchData& searchData)
+{
+	const auto maxSearchStringLength = m_SearchInstructions.searchString.length() * sizeof(wchar_t);
+	const auto fileSize = searchData.fileSize;
+
+	DSTORAGE_REQUEST request = {};
+	request.Options.SourceType = DSTORAGE_REQUEST_SOURCE_FILE;
+	request.Options.DestinationType = DSTORAGE_REQUEST_DESTINATION_MEMORY;
+	request.Options.CompressionFormat = DSTORAGE_CUSTOM_COMPRESSION_0;
+	request.Source.File.Source = searchData.file.Get();
+	request.Destination.Memory.Size = FileReadThreadContext::kFileReadBufferSize;
+	request.UncompressedSize = FileReadThreadContext::kFileReadBufferSize;
+
+	for (uint64_t fileOffset = 0, i = 0; fileOffset < fileSize; fileOffset += FileReadThreadContext::kFileReadBufferSize - maxSearchStringLength, i++)
+	{
+		Assert(i < FileReadThreadContext::kFileReadBufferSize);
+
+		uint32_t bytesToRead = static_cast<uint32_t>(std::min(fileSize - fileOffset, FileReadThreadContext::kFileReadBufferSize));
+		request.Destination.Memory.Buffer = context.fileReadBuffers.get() + i * FileReadThreadContext::kFileReadBufferSize;
+		request.Source.File.Offset = fileOffset;
+		request.Source.File.Size = bytesToRead;
+		request.CancellationTag = context.readIndex++;
+	
+		context.dstorageQueue->EnqueueRequest(&request);
+	}
+
+	context.dstorageQueue->Submit();
+
+	Microsoft::WRL::ComPtr<IDStorageCustomDecompressionQueue> decompressionQueue;
+	auto hr = m_DStorageFactory.As(&decompressionQueue);
+	Assert(SUCCEEDED(hr));
+
+	while (true)
+	{
+		DSTORAGE_CUSTOM_DECOMPRESSION_REQUEST decompressionRequest;
+		uint32_t numRequests = 0;
+
+		decompressionQueue->GetRequests(1, &decompressionRequest, &numRequests);
+
+		if (numRequests == 0)
+		{
+			Sleep(0);
+			continue;
+		}
+
+		__debugbreak();
+		break;
+	}
+}*/
 
 bool FileSearcher::PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator)
 {
