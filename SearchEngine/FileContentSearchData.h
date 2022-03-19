@@ -104,3 +104,15 @@ struct FileReadStateData : FileReadData
 		return *this;
 	}
 };
+
+struct SlotSearchData
+{
+	uint16_t slot;
+	bool found;
+
+	SlotSearchData(uint16_t slot) :
+		slot(slot),
+		found(false)
+	{
+	}
+};

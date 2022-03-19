@@ -4,19 +4,42 @@
 #include "HeapArray.h"
 #include "NonCopyable.h"
 
-template <typename Owner, typename WorkItem>
+template <typename WorkItem>
 class WorkQueue : public NonCopyable
 {
-protected:
-	SemaphoreHandleHolder m_WorkSemaphore;
+private:
 	SLIST_HEADER* m_WorkList;
-	HeapArray<ThreadHandleHolder> m_WorkerThreadHandles;
+	SemaphoreHandleHolder m_WorkSemaphore;
 
 	struct WorkEntry
 	{
 		SLIST_ENTRY slistEntry;
 		WorkItem workItem;
 	};
+
+protected:
+	inline WorkQueue() :
+		m_WorkList(nullptr)
+	{
+	}
+
+	~WorkQueue()
+	{
+		if (m_WorkList != nullptr)
+		{
+			Assert(QueryDepthSList(m_WorkList) == 0); // If this fires, something went very very wrong
+			_aligned_free(m_WorkList);
+		}
+	}
+
+	inline void Initialize()
+	{
+		m_WorkSemaphore = CreateSemaphoreW(nullptr, 0, std::numeric_limits<LONG>::max(), nullptr);
+		Assert(m_WorkSemaphore != nullptr);
+
+		m_WorkList = static_cast<SLIST_HEADER*>(_aligned_malloc(sizeof(SLIST_HEADER), MEMORY_ALLOCATION_ALIGNMENT));
+		InitializeSListHead(m_WorkList);
+	}
 
 	inline WorkEntry* PopWorkEntry()
 	{
@@ -29,13 +52,52 @@ protected:
 		_aligned_free(workEntry);
 	}
 
+	inline HANDLE GetWorkSemaphore() const
+	{
+		return m_WorkSemaphore;
+	}
+
 public:
-	inline WorkQueue() :
-		m_WorkList(nullptr)
+	template <typename... WorkItemConstructionArgs>
+	inline void PushWorkItem(WorkItemConstructionArgs&&... workItemConstructionArgs)
+	{
+		WorkEntry* workEntry = static_cast<WorkEntry*>(_aligned_malloc(sizeof(WorkEntry), MEMORY_ALLOCATION_ALIGNMENT));
+		workEntry->slistEntry.Next = nullptr;
+		new (&workEntry->workItem) WorkItem(std::forward<WorkItemConstructionArgs>(workItemConstructionArgs)...);
+
+		InterlockedPushEntrySList(m_WorkList, &workEntry->slistEntry);
+
+		auto releaseResult = ReleaseSemaphore(m_WorkSemaphore, 1, nullptr);
+		Assert(releaseResult != FALSE);
+	}
+
+	inline void DrainWorkQueue()
+	{
+		for (;;)
+		{
+			auto workEntry = PopWorkEntry();
+			if (workEntry == nullptr)
+				break;
+
+			DeleteWorkEntry(workEntry);
+		}
+	}
+};
+
+template <typename Owner, typename WorkItem>
+class ThreadedWorkQueue : public WorkQueue<WorkItem>
+{
+protected:
+	HeapArray<ThreadHandleHolder> m_WorkerThreadHandles;
+
+	typedef WorkQueue<WorkItem> MyBase;
+
+public:
+	inline ThreadedWorkQueue()
 	{
 	}
 
-	inline ~WorkQueue()
+	inline ~ThreadedWorkQueue()
 	{
 		CompleteAllWork();
 	}
@@ -43,15 +105,11 @@ public:
 	template <void (Owner::* WorkerThreadInitializer)()>
 	inline void Initialize(Owner* owner, uint32_t workerThreadCount)
 	{
+		MyBase::Initialize();
+
 		Assert(workerThreadCount > 0);
-
-		m_WorkSemaphore = CreateSemaphoreW(nullptr, 0, std::numeric_limits<LONG>::max(), nullptr);
-		Assert(m_WorkSemaphore != nullptr);
-
-		m_WorkList = static_cast<SLIST_HEADER*>(_aligned_malloc(sizeof(SLIST_HEADER), MEMORY_ALLOCATION_ALIGNMENT));
-		InitializeSListHead(m_WorkList);
-
 		m_WorkerThreadHandles = HeapArray<ThreadHandleHolder>(workerThreadCount);
+
 		for (uint32_t i = 0; i < workerThreadCount; i++)
 		{
 			auto threadHandle = CreateThread(nullptr, 64 * 1024, [](void* context) -> DWORD
@@ -69,33 +127,20 @@ public:
 		}
 	}
 
-	template <typename... WorkItemConstructionArgs>
-	inline void PushWorkItem(WorkItemConstructionArgs&&... workItemConstructionArgs)
-	{
-		WorkEntry* workEntry = static_cast<WorkEntry*>(_aligned_malloc(sizeof(WorkEntry), MEMORY_ALLOCATION_ALIGNMENT));
-		workEntry->slistEntry.Next = nullptr;
-		new (&workEntry->workItem) WorkItem(std::forward<WorkItemConstructionArgs>(workItemConstructionArgs)...);
-
-		InterlockedPushEntrySList(m_WorkList, &workEntry->slistEntry);
-
-		auto releaseResult = ReleaseSemaphore(m_WorkSemaphore, 1, nullptr);
-		Assert(releaseResult != FALSE);
-	}
-
 	template <typename Callback>
 	inline void DoWork(Callback&& callback)
 	{
 		for (;;)
 		{
-			auto waitResult = WaitForSingleObject(m_WorkSemaphore, INFINITE);
+			auto waitResult = WaitForSingleObject(MyBase::GetWorkSemaphore(), INFINITE);
 			Assert(waitResult == WAIT_OBJECT_0);
 
-			auto workEntry = PopWorkEntry();
+			auto workEntry = MyBase::PopWorkEntry();
 			if (workEntry == nullptr)
 				break;
 
 			callback(workEntry->workItem);
-			DeleteWorkEntry(workEntry);
+			MyBase::DeleteWorkEntry(workEntry);
 		}
 	}
 
@@ -105,35 +150,17 @@ public:
 			return;
 
 		auto workerThreadCount = static_cast<DWORD>(m_WorkerThreadHandles.size());
-		auto releaseResult = ReleaseSemaphore(m_WorkSemaphore, workerThreadCount, nullptr);
+		auto releaseResult = ReleaseSemaphore(MyBase::GetWorkSemaphore(), workerThreadCount, nullptr);
 		Assert(releaseResult != FALSE);
 
 		auto waitResult = WaitForMultipleObjects(workerThreadCount, reinterpret_cast<const HANDLE*>(m_WorkerThreadHandles.data()), TRUE, INFINITE);
 		Assert(waitResult >= WAIT_OBJECT_0 && waitResult <= WAIT_OBJECT_0 + workerThreadCount - 1);
 
+		m_WorkerThreadHandles = HeapArray<ThreadHandleHolder>();
+
 		// If our threads due to their queues being drained, there is a slight chance that work producers
 		// keep producing work for a little bit longer. By the time we get to CompleteAllWork, all producers
 		// will have been halted but they could have added work before this method got called.
-		DrainWorkQueue();
-
-		Assert(QueryDepthSList(m_WorkList) == 0); // If this fires, something went very very wrong
-		_aligned_free(m_WorkList);
-
-		m_WorkerThreadHandles = HeapArray<ThreadHandleHolder>();
-	}
-
-	inline void DrainWorkQueue()
-	{
-		if (m_WorkerThreadHandles.empty())
-			return;
-
-		for (;;)
-		{
-			auto workEntry = PopWorkEntry();
-			if (workEntry == nullptr)
-				break;
-
-			DeleteWorkEntry(workEntry);
-		}
+		MyBase::DrainWorkQueue();
 	}
 };

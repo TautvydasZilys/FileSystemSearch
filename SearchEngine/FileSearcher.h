@@ -33,7 +33,7 @@ private:
 	SearchInstructions m_SearchInstructions;
 	StringSearcher m_StringSearcher;
 
-	WorkQueue<FileSearcher, FileOpenData> m_FileOpenWorkQueue;
+	ThreadedWorkQueue<FileSearcher, FileOpenData> m_FileOpenWorkQueue;
 	SearchResultReporter m_SearchResultReporter;
 	FileReadWorkQueue m_FileReadWorkQueue;
 

@@ -4,7 +4,7 @@
 #include "SearchResultData.h"
 #include "WorkQueue.h"
 
-class SearchResultReporter : WorkQueue<SearchResultReporter, SearchResultData>
+class SearchResultReporter : ThreadedWorkQueue<SearchResultReporter, SearchResultData>
 {
 public:
     SearchResultReporter(const SearchInstructions& searchInstructions);
@@ -23,7 +23,7 @@ public:
     inline void OnTotalFileSizeAddedThreadUnsafe(uint64_t value) { m_SearchStatistics.totalFileSize += value; }
 
 private:
-    typedef WorkQueue<SearchResultReporter, SearchResultData> MyBase;
+    typedef ThreadedWorkQueue<SearchResultReporter, SearchResultData> MyBase;
     friend class MyBase;
 
     double GetTotalSearchTimeInSeconds();

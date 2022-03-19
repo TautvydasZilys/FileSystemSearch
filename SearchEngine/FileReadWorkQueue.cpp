@@ -3,6 +3,7 @@
 #include "FileReadWorkQueue.h"
 #include "SearchInstructions.h"
 #include "SearchResultReporter.h"
+#include "ScopedStackAllocator.h"
 #include "StringSearcher.h"
 
 FileReadWorkQueue::FileReadWorkQueue(const StringSearcher& stringSearcher, const SearchInstructions& searchInstructions, SearchResultReporter& searchResultReporter) :
@@ -11,7 +12,8 @@ FileReadWorkQueue::FileReadWorkQueue(const StringSearcher& stringSearcher, const
     m_ReadBufferSize(0),
     m_FenceEvent(false),
     m_FenceValue(0),
-    m_IsTerminating(false)
+    m_IsTerminating(false),
+    m_FreeReadSlotCount(ARRAYSIZE(m_FileReadSlots))
 {
     if (searchInstructions.SearchInFileContents())
         m_ReadBufferSize = kFileReadBufferBaseSize + std::max(searchInstructions.utf8SearchString.length(), searchInstructions.searchString.length() * sizeof(wchar_t));
@@ -46,27 +48,47 @@ void FileReadWorkQueue::Initialize()
 
     m_FenceEvent.Initialize();
 
-    MyBase::Initialize<&FileReadWorkQueue::FileReadThread>(this, 1);
+    SYSTEM_INFO systemInfo;
+    GetNativeSystemInfo(&systemInfo);
+
+    MyFileReadBase::Initialize();
+    m_SearchWorkQueue.Initialize<&FileReadWorkQueue::ContentsSearchThread>(this, systemInfo.dwNumberOfProcessors - 1);
+    MySearchResultBase::Initialize<&FileReadWorkQueue::FileReadThread>(this, 1);
 }
 
 void FileReadWorkQueue::DrainWorkQueue()
 {
     m_IsTerminating = true;
-    MyBase::DrainWorkQueue();
+    MyFileReadBase::DrainWorkQueue();
+    m_SearchWorkQueue.DrainWorkQueue();
+    MySearchResultBase::DrainWorkQueue();
+}
+
+void FileReadWorkQueue::CompleteAllWork()
+{
+    ReleaseSemaphore(MyFileReadBase::GetWorkSemaphore(), 1, nullptr);
+    WaitForSingleObject(m_FileReadsCompletedEvent, INFINITE);
+
+    m_SearchWorkQueue.CompleteAllWork();
+    MySearchResultBase::CompleteAllWork();
 }
 
 void FileReadWorkQueue::FileReadThread()
 {
-    bool hasWorkItems = true;
+    bool readSubmissionCompleted = false;
+    bool fileContentSearchCompleted = false;
     SetThreadDescription(GetCurrentThread(), L"FileSystemSearch Read Submission Thread");
 
     for (;;)
     {
         uint32_t handleCount = 0;
-        HANDLE waitHandles[3];
+        HANDLE waitHandles[4];
 
-        if (hasWorkItems)
-            waitHandles[handleCount++] = m_WorkSemaphore;
+        if (!readSubmissionCompleted)
+            waitHandles[handleCount++] = MyFileReadBase::GetWorkSemaphore();
+
+        if (!fileContentSearchCompleted)
+            waitHandles[handleCount++] = MySearchResultBase::GetWorkSemaphore();
 
         if (!m_CurrentBatch.slots.empty())
         {
@@ -97,20 +119,36 @@ void FileReadWorkQueue::FileReadThread()
         }
 
         auto signaledHandle = waitHandles[waitResult - WAIT_OBJECT_0];
-        if (signaledHandle == m_WorkSemaphore)
+        if (signaledHandle == MyFileReadBase::GetWorkSemaphore())
         {
-            auto workEntry = PopWorkEntry();
+            auto workEntry = MyFileReadBase::PopWorkEntry();
             if (workEntry != nullptr)
             {
                 m_FilesToRead.push_back(std::move(workEntry->workItem));
                 QueueFileReads();
 
-                DeleteWorkEntry(workEntry);
+                MyFileReadBase::DeleteWorkEntry(workEntry);
             }
             else
             {
-                hasWorkItems = false;
+                readSubmissionCompleted = true;
             }
+        }
+        else if (signaledHandle == MySearchResultBase::GetWorkSemaphore())
+        {
+            auto workEntry = MySearchResultBase::PopWorkEntry();
+            if (workEntry != nullptr)
+            {
+                ProcessSearchCompletion(workEntry->workItem);
+                MySearchResultBase::DeleteWorkEntry(workEntry);
+            }
+            else
+            {
+                fileContentSearchCompleted = true;
+            }
+
+            if (readSubmissionCompleted && m_CurrentBatch.slots.empty() && m_FreeReadSlotCount == ARRAYSIZE(m_FileReadSlots))
+                m_FileReadsCompletedEvent.Set();
         }
         else if (signaledHandle == m_WaitableTimer)
         {
@@ -168,10 +206,11 @@ void FileReadWorkQueue::QueueFileReads()
         auto& file = m_FilesWithReadProgress[fileIndex];
         file.readsInProgress++;
 
+        Assert(slot < kFileReadSlotCount);
         m_FileReadSlots[slot] = fileIndex;
         m_FreeReadSlots[slot / 64] &= ~(1ULL << (slot % 64));
+        m_FreeReadSlotCount--;
 
-        const auto maxSearchStringLength = 1; // m_SearchInstructions.searchString.length() * sizeof(wchar_t);
         const auto fileOffset = (file.chunksRead++) * kFileReadBufferBaseSize;
 
         uint32_t bytesToRead = static_cast<uint32_t>(std::min(file.fileSize - fileOffset, m_ReadBufferSize));
@@ -187,6 +226,7 @@ void FileReadWorkQueue::QueueFileReads()
         request.UncompressedSize = bytesToRead;
 
         memset(request.Destination.Memory.Buffer, 0, m_ReadBufferSize); // TO DO: profile if this is impactful
+
         m_DStorageQueue->EnqueueRequest(&request);
         m_CurrentBatch.slots.push_back(slot);
     }
@@ -212,54 +252,74 @@ void FileReadWorkQueue::ProcessReadCompletion()
     uint32_t batchIndex = 0;
     for (; batchIndex < m_SubmittedBatches.size() && m_SubmittedBatches[batchIndex].fenceValue <= m_Fence->GetCompletedValue(); batchIndex++)
     {
-        const auto& batch = m_SubmittedBatches[batchIndex];
+        auto& batch = m_SubmittedBatches[batchIndex];
 
         for (auto slot : batch.slots)
-        {
-            auto& fileIndex = m_FileReadSlots[slot];
-            auto& file = m_FilesWithReadProgress[fileIndex];
+            m_SearchWorkQueue.PushWorkItem(slot);
 
-            Assert(file.readsInProgress > 0);
-            file.readsInProgress--;
-            m_FreeReadSlots[slot / 64] |= 1ULL << (slot % 64);
-
-            if (!file.dispatchedToResults)
-            {
-                auto buffer = m_FileReadBuffers.get() + slot * m_ReadBufferSize;
-                if (m_StringSearcher.PerformFileContentSearch(buffer, static_cast<uint32_t>(m_ReadBufferSize), m_StackAllocator))
-                {
-                    m_SearchResultReporter.DispatchSearchResult(file.fileFindData, std::move(file.filePath));
-
-                    m_SearchResultReporter.AddToScannedFileSize(file.fileSize - file.totalScannedSize);
-                    file.totalScannedSize = file.fileSize;
-                    file.chunksRead = GetChunkCount(file);
-                    file.dispatchedToResults = true;
-                }
-                else if (file.readsInProgress == 0 && file.chunksRead == GetChunkCount(file))
-                {
-                    m_SearchResultReporter.AddToScannedFileSize(file.fileSize - file.totalScannedSize);
-                    file.totalScannedSize = file.fileSize;
-                }
-                else
-                {
-                    m_SearchResultReporter.AddToScannedFileSize(kFileReadBufferBaseSize);
-                    file.totalScannedSize += kFileReadBufferBaseSize;
-                }
-            }
-        }
+        batch.slots.clear();
+        m_BatchPool.PoolObject(std::move(batch));
     }
 
     m_SubmittedBatches.erase(m_SubmittedBatches.begin(), m_SubmittedBatches.begin() + batchIndex);
     if (!m_SubmittedBatches.empty())
         m_Fence->SetEventOnCompletion(m_SubmittedBatches.front().fenceValue, m_FenceEvent);
+}
+
+void FileReadWorkQueue::ContentsSearchThread()
+{
+    ScopedStackAllocator allocator;
+    SetThreadDescription(GetCurrentThread(), L"FileSystemSearch Content Search Thread");
+
+    m_SearchWorkQueue.DoWork([this, &allocator](uint16_t slot)
+    {
+        SlotSearchData result(slot);
+        result.found = m_StringSearcher.PerformFileContentSearch(m_FileReadBuffers.get() + slot * m_ReadBufferSize, static_cast<uint32_t>(m_ReadBufferSize), allocator);
+        MySearchResultBase::PushWorkItem(result);
+    });
+}
+
+void FileReadWorkQueue::ProcessSearchCompletion(SlotSearchData searchData)
+{
+    auto& fileIndex = m_FileReadSlots[searchData.slot];
+    auto& file = m_FilesWithReadProgress[fileIndex];
+
+    Assert(file.readsInProgress > 0);
+    file.readsInProgress--;
+    m_FreeReadSlots[searchData.slot / 64] |= 1ULL << (searchData.slot % 64);
+    m_FreeReadSlotCount++;
+
+    if (!file.dispatchedToResults)
+    {
+        if (searchData.found)
+        {
+            m_SearchResultReporter.AddToScannedFileCount();
+            m_SearchResultReporter.AddToScannedFileSize(file.fileSize - file.totalScannedSize);
+            m_SearchResultReporter.DispatchSearchResult(file.fileFindData, std::move(file.filePath));
+
+            file.totalScannedSize = file.fileSize;
+            file.chunksRead = GetChunkCount(file);
+            file.dispatchedToResults = true;
+        }
+        else if (file.readsInProgress == 0 && file.chunksRead == GetChunkCount(file))
+        {
+            m_SearchResultReporter.AddToScannedFileCount();
+            m_SearchResultReporter.AddToScannedFileSize(file.fileSize - file.totalScannedSize);
+            file.totalScannedSize = file.fileSize;
+        }
+        else
+        {
+            m_SearchResultReporter.AddToScannedFileSize(kFileReadBufferBaseSize);
+            file.totalScannedSize += kFileReadBufferBaseSize;
+        }
+    }
 
     while (!m_FilesWithReadProgress.empty())
     {
         auto& lastFile = m_FilesWithReadProgress.back();
-        
+
         if (lastFile.chunksRead == GetChunkCount(lastFile) && lastFile.readsInProgress == 0)
         {
-            m_SearchResultReporter.AddToScannedFileCount();
             m_FilesWithReadProgress.pop_back();
         }
         else
