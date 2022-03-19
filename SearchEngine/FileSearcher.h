@@ -24,8 +24,8 @@ private:
 
 	ComPtr<IDStorageFactory> m_DStorageFactory;
 
-	volatile bool m_FinishedSearchingFileSystem;
-	volatile bool m_IsFinished;
+	std::atomic<bool> m_FinishedSearchingFileSystem;
+	std::atomic<bool> m_IsFinished;
 	bool m_SearchStringIsAscii;
 	bool m_FailedInit;
 

@@ -11,7 +11,7 @@ private:
 	ThreadHandleHolder m_TimerThread;
 	Callback m_Callback;
 	uint32_t m_Interval;
-	volatile bool m_Done;
+	std::atomic<bool> m_Done;
 
 	inline void TimerLoop()
 	{
