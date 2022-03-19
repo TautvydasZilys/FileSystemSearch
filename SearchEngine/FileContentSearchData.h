@@ -63,26 +63,34 @@ struct FileReadData : FileOpenData
 
 struct FileReadStateData : FileReadData
 {
-	uint32_t readsInProgress;
 	uint32_t chunksRead;
+	uint16_t readsInProgress;
+	bool dispatchedToResults;
+	uint64_t totalScannedSize;
 
 	FileReadStateData() :
+		chunksRead(0),
 		readsInProgress(0),
-		chunksRead(0)
+		dispatchedToResults(false),
+		totalScannedSize(0)
 	{
 	}
 
 	FileReadStateData(FileReadData&& other) :
 		FileReadData(std::move(other)),
+		chunksRead(0),
 		readsInProgress(0),
-		chunksRead(0)
+		dispatchedToResults(false),
+		totalScannedSize(0)
 	{
 	}
 
 	FileReadStateData(FileReadStateData&& other) :
 		FileReadData(std::move(other)),
+		chunksRead(other.chunksRead),
 		readsInProgress(other.readsInProgress),
-		chunksRead(other.chunksRead)
+		dispatchedToResults(other.dispatchedToResults),
+		totalScannedSize(other.totalScannedSize)
 	{
 	}
 
@@ -90,6 +98,9 @@ struct FileReadStateData : FileReadData
 	{
 		static_cast<FileReadData&>(*this) = std::move(other);
 		chunksRead = other.chunksRead;
+		readsInProgress = other.readsInProgress;
+		dispatchedToResults = other.dispatchedToResults;
+		totalScannedSize = other.totalScannedSize;
 		return *this;
 	}
 };

@@ -1,45 +1,13 @@
 #pragma once
 
 #include "HandleHolder.h"
+#include "HeapArray.h"
 #include "NonCopyable.h"
 
-template <typename TOwner, typename TWorkQueue>
-class WorkQueueOwnerStorage
+template <typename Owner, typename WorkItem>
+class WorkQueue : public NonCopyable
 {
-public:
-	WorkQueueOwnerStorage(TOwner& owner) : 
-		m_Owner(owner)
-	{
-	}
-
-	inline TOwner& GetOwner()
-	{
-		return m_Owner;
-	}
-
-private:
-	TOwner& m_Owner;
-};
-
-template <typename TOwnerIsWorkQueue>
-class WorkQueueOwnerStorage<TOwnerIsWorkQueue, TOwnerIsWorkQueue>
-{
-public:
-	WorkQueueOwnerStorage(TOwnerIsWorkQueue&)
-	{
-	}
-
-	inline TOwnerIsWorkQueue& GetOwner() 
-	{
-		static_assert(std::is_base_of_v<WorkQueueOwnerStorage<TOwnerIsWorkQueue, TOwnerIsWorkQueue>, TOwnerIsWorkQueue>, "TOwnerIsWorkQueue type must derive from WorkQueueBase!");
-		return *static_cast<TOwnerIsWorkQueue*>(this);
-	}
-};
-
-template <typename Owner, typename WorkItem, typename TWorkQueue>
-class __declspec(empty_bases) WorkQueueBase : public WorkQueueOwnerStorage<Owner, TWorkQueue>, public NonCopyable
-{
-private:
+protected:
 	SemaphoreHandleHolder m_WorkSemaphore;
 	SLIST_HEADER* m_WorkList;
 	HeapArray<ThreadHandleHolder> m_WorkerThreadHandles;
@@ -62,20 +30,18 @@ private:
 	}
 
 public:
-	inline WorkQueueBase(Owner& owner) :
-		WorkQueueOwnerStorage<Owner, TWorkQueue>(owner),
+	inline WorkQueue() :
 		m_WorkList(nullptr)
 	{
-		static_assert(std::is_base_of_v<WorkQueueBase<Owner, WorkItem, TWorkQueue>, TWorkQueue>, "WorkQueue type must derive from WorkQueueBase!");
 	}
 
-	inline ~WorkQueueBase()
+	inline ~WorkQueue()
 	{
-		static_cast<TWorkQueue*>(this)->GetOwner().Cleanup();
+		CompleteAllWork();
 	}
 
-	template <void (Owner::* WorkerThreadInitializer)(TWorkQueue& workQueue)>
-	inline void Initialize(uint32_t workerThreadCount)
+	template <void (Owner::* WorkerThreadInitializer)()>
+	inline void Initialize(Owner* owner, uint32_t workerThreadCount)
 	{
 		Assert(workerThreadCount > 0);
 
@@ -90,10 +56,10 @@ public:
 		{
 			auto threadHandle = CreateThread(nullptr, 64 * 1024, [](void* context) -> DWORD
 			{
-				auto _this = static_cast<TWorkQueue*>(context);
-				(_this->GetOwner().*WorkerThreadInitializer)(*_this);
+				auto owner = static_cast<Owner*>(context);
+				(owner->*WorkerThreadInitializer)();
 				return 0;
-			}, this, 0, nullptr);
+			}, owner, 0, nullptr);
 			Assert(threadHandle != nullptr);
 
 			auto setThreadPriorityResult = SetThreadPriority(threadHandle, THREAD_PRIORITY_BELOW_NORMAL);
@@ -121,7 +87,8 @@ public:
 	{
 		for (;;)
 		{
-			static_cast<TWorkQueue*>(this)->WaitForWork(m_WorkSemaphore);
+			auto waitResult = WaitForSingleObject(m_WorkSemaphore, INFINITE);
+			Assert(waitResult == WAIT_OBJECT_0);
 
 			auto workEntry = PopWorkEntry();
 			if (workEntry == nullptr)
@@ -132,7 +99,30 @@ public:
 		}
 	}
 
-	inline void Cleanup()
+	inline void CompleteAllWork()
+	{
+		if (m_WorkerThreadHandles.empty())
+			return;
+
+		auto workerThreadCount = static_cast<DWORD>(m_WorkerThreadHandles.size());
+		auto releaseResult = ReleaseSemaphore(m_WorkSemaphore, workerThreadCount, nullptr);
+		Assert(releaseResult != FALSE);
+
+		auto waitResult = WaitForMultipleObjects(workerThreadCount, reinterpret_cast<const HANDLE*>(m_WorkerThreadHandles.data()), TRUE, INFINITE);
+		Assert(waitResult >= WAIT_OBJECT_0 && waitResult <= WAIT_OBJECT_0 + workerThreadCount - 1);
+
+		// If our threads due to their queues being drained, there is a slight chance that work producers
+		// keep producing work for a little bit longer. By the time we get to CompleteAllWork, all producers
+		// will have been halted but they could have added work before this method got called.
+		DrainWorkQueue();
+
+		Assert(QueryDepthSList(m_WorkList) == 0); // If this fires, something went very very wrong
+		_aligned_free(m_WorkList);
+
+		m_WorkerThreadHandles = HeapArray<ThreadHandleHolder>();
+	}
+
+	inline void DrainWorkQueue()
 	{
 		if (m_WorkerThreadHandles.empty())
 			return;
@@ -145,37 +135,5 @@ public:
 
 			DeleteWorkEntry(workEntry);
 		}
-
-		auto workerThreadCount = static_cast<DWORD>(m_WorkerThreadHandles.size());
-		auto releaseResult = ReleaseSemaphore(m_WorkSemaphore, workerThreadCount, nullptr);
-		Assert(releaseResult != FALSE);
-
-		auto waitResult = WaitForMultipleObjects(workerThreadCount, reinterpret_cast<const HANDLE*>(m_WorkerThreadHandles.data()), TRUE, INFINITE);
-		Assert(waitResult >= WAIT_OBJECT_0 && waitResult <= WAIT_OBJECT_0 + workerThreadCount - 1);
-
-		Assert(QueryDepthSList(m_WorkList) == 0); // If this fires, something went very very wrong
-		_aligned_free(m_WorkList);
-
-		m_WorkerThreadHandles = HeapArray<ThreadHandleHolder>();
 	}
 };
-
-template <typename Owner, typename WorkItem>
-class WorkQueue : public WorkQueueBase<Owner, WorkItem, WorkQueue<Owner, WorkItem>>
-{
-public:
-	inline WorkQueue(Owner& owner) :
-		WorkQueueBase<Owner, WorkItem, WorkQueue<Owner, WorkItem>>(owner)
-	{
-	}
-
-private:
-	inline void WaitForWork(HANDLE workSemaphore)
-	{
-		auto waitResult = WaitForSingleObject(workSemaphore, INFINITE);
-		Assert(waitResult == WAIT_OBJECT_0);
-	}
-
-	friend class WorkQueueBase<Owner, WorkItem, WorkQueue<Owner, WorkItem>>;
-};
-

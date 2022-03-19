@@ -64,7 +64,7 @@ public:
 	}
 
 	template <typename TextIterator>
-	bool HasSubstring(TextIterator textBegin, TextIterator textEnd)
+	bool HasSubstring(TextIterator textBegin, TextIterator textEnd) const
 	{
 		for (;;)
 		{

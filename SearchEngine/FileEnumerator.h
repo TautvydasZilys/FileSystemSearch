@@ -12,10 +12,10 @@ enum class FileSystemEnumerationFlags
 MAKE_BIT_OPERATORS_FOR_ENUM_CLASS(FileSystemEnumerationFlags)
 
 template <typename Allocator, typename EnumerationCallback>
-inline void EnumerateFileSystem(const std::wstring& searchPath, const wchar_t* searchPattern, size_t searchPatternLength, FileSystemEnumerationFlags enumerationFlags, Allocator& allocator, EnumerationCallback onFileEnumerated)
+inline void EnumerateFileSystem(const std::wstring& searchPath, std::wstring_view searchPattern, FileSystemEnumerationFlags enumerationFlags, Allocator& allocator, EnumerationCallback onFileEnumerated)
 {
 	WIN32_FIND_DATAW findData;
-	auto tempSearchPath = PathUtils::CombinePathsTemporary(searchPath, searchPattern, searchPatternLength, allocator);
+	auto tempSearchPath = PathUtils::CombinePathsTemporary(searchPath, searchPattern, allocator);
 	FINDEX_SEARCH_OPS searchOp = (enumerationFlags & FileSystemEnumerationFlags::kEnumerateFiles) == FileSystemEnumerationFlags::kEnumerateNone ? FindExSearchLimitToDirectories : FindExSearchNameMatch;
 
 	auto findHandle = FindFirstFileExW(tempSearchPath, FindExInfoBasic, &findData, searchOp, nullptr, FIND_FIRST_EX_LARGE_FETCH);

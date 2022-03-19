@@ -34,15 +34,26 @@ static void Initialize()
 
         Assert(SUCCEEDED(hr));
 
-        ComPtr<IUnknown> warpAdapter;
-        hr = dxgiFactory->EnumWarpAdapter(__uuidof(warpAdapter), &warpAdapter);
-        Assert(SUCCEEDED(hr));
+        if (SUCCEEDED(hr))
+        {
+            ComPtr<IUnknown> warpAdapter;
+            hr = dxgiFactory->EnumWarpAdapter(__uuidof(warpAdapter), &warpAdapter);
+            Assert(SUCCEEDED(hr));
 
-        hr = D3D12CreateDevice(warpAdapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(s_D3D12Device), &s_D3D12Device);
-        Assert(SUCCEEDED(hr));
+            if (SUCCEEDED(hr))
+            {
+                hr = D3D12CreateDevice(warpAdapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(s_D3D12Device), &s_D3D12Device);
+                Assert(SUCCEEDED(hr));
+            }
+        }
 
         hr = DStorageGetFactory(__uuidof(s_DStorageFactory), &s_DStorageFactory);
         Assert(SUCCEEDED(hr));
+
+#if _DEBUG
+        if (SUCCEEDED(hr))
+            s_DStorageFactory->SetDebugFlags(DSTORAGE_DEBUG_SHOW_ERRORS | DSTORAGE_DEBUG_BREAK_ON_ERROR);
+#endif
     });
 }
 

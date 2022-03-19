@@ -181,9 +181,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ScopedStackAllocator.cpp" />
     <ClCompile Include="SearchEngine.cpp">
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level4</WarningLevel>
     </ClCompile>
+    <ClCompile Include="SearchResultReporter.cpp" />
+    <ClCompile Include="StringSearcher.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\Event.h" />
@@ -203,6 +206,8 @@
     <ClInclude Include="OrdinalStringSearcher.h" />
     <ClInclude Include="SearchInstructions.h" />
     <ClInclude Include="SearchResultData.h" />
+    <ClInclude Include="SearchResultReporter.h" />
+    <ClInclude Include="StringSearcher.h" />
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="UnicodeUtf16StringSearcher.h" />
     <ClInclude Include="WorkQueue.h" />

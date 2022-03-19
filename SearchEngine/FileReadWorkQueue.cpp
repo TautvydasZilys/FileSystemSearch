@@ -1,60 +1,127 @@
 #include "PrecompiledHeader.h"
 #include "DirectXContext.h"
 #include "FileReadWorkQueue.h"
+#include "SearchInstructions.h"
+#include "SearchResultReporter.h"
+#include "StringSearcher.h"
 
-static void NTAPI OnFileReadComplete(PTP_CALLBACK_INSTANCE instance, PVOID context, PTP_WAIT wait, TP_WAIT_RESULT waitResult);
-
-FileReadWorkQueue::FileReadWorkQueue(size_t searchStringLength) :
-    MyBase(*this),
-    m_ReadBufferSize(kFileReadBufferBaseSize + searchStringLength * sizeof(wchar_t)),
-    m_FileReadBuffers(new uint8_t[m_ReadBufferSize * kFileReadSlotCount]),
-    m_WaitableTimer(CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS)),
-    m_FenceValue(0)
+FileReadWorkQueue::FileReadWorkQueue(const StringSearcher& stringSearcher, const SearchInstructions& searchInstructions, SearchResultReporter& searchResultReporter) :
+    m_SearchResultReporter(searchResultReporter),
+    m_StringSearcher(stringSearcher),
+    m_ReadBufferSize(0),
+    m_FenceEvent(false),
+    m_FenceValue(0),
+    m_IsTerminating(false)
 {
-    memset(m_FreeReadSlots, 0xFF, sizeof(m_FreeReadSlots));
-
-    auto d3d12Device = DirectXContext::GetD3D12Device();
-
-    auto hr = d3d12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(m_Fence), &m_Fence);
-    Assert(SUCCEEDED(hr));
-
-    DSTORAGE_QUEUE_DESC queueDesc = {};
-    queueDesc.SourceType = DSTORAGE_REQUEST_SOURCE_FILE;
-    queueDesc.Capacity = DSTORAGE_MAX_QUEUE_CAPACITY;
-    queueDesc.Priority = DSTORAGE_PRIORITY_NORMAL;
-
-    hr = DirectXContext::GetDStorageFactory()->CreateQueue(&queueDesc, __uuidof(m_DStorageQueue), &m_DStorageQueue);
-    Assert(SUCCEEDED(hr));
+    if (searchInstructions.SearchInFileContents())
+        m_ReadBufferSize = kFileReadBufferBaseSize + std::max(searchInstructions.utf8SearchString.length(), searchInstructions.searchString.length() * sizeof(wchar_t));
 }
 
 FileReadWorkQueue::~FileReadWorkQueue()
-{
-    Cleanup();
-}
-
-void FileReadWorkQueue::Initialize()
-{
-    MyBase::Initialize<&FileReadWorkQueue::InitializeFileReadThread>(1);
-}
-
-void FileReadWorkQueue::Cleanup()
 {
     if (m_DStorageQueue != nullptr)
     {
         m_DStorageQueue->Close();
         m_DStorageQueue = nullptr;
     }
-
-    MyBase::Cleanup();
 }
 
-void FileReadWorkQueue::InitializeFileReadThread(FileReadWorkQueue&)
+void FileReadWorkQueue::Initialize()
 {
-    DoWork([this](FileReadData& searchData)
+    m_FileReadBuffers.reset(new uint8_t[m_ReadBufferSize * kFileReadSlotCount]);
+    m_WaitableTimer = CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+
+    memset(m_FreeReadSlots, 0xFF, sizeof(m_FreeReadSlots));
+
+    DSTORAGE_QUEUE_DESC queueDesc = {};
+    queueDesc.SourceType = DSTORAGE_REQUEST_SOURCE_FILE;
+    queueDesc.Capacity = DSTORAGE_MAX_QUEUE_CAPACITY;
+    queueDesc.Priority = DSTORAGE_PRIORITY_NORMAL;
+
+    auto hr = DirectXContext::GetDStorageFactory()->CreateQueue(&queueDesc, __uuidof(m_DStorageQueue), &m_DStorageQueue);
+    Assert(SUCCEEDED(hr));
+
+    hr = DirectXContext::GetD3D12Device()->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(m_Fence), &m_Fence);
+    Assert(SUCCEEDED(hr));
+
+    m_FenceEvent.Initialize();
+
+    MyBase::Initialize<&FileReadWorkQueue::FileReadThread>(this, 1);
+}
+
+void FileReadWorkQueue::DrainWorkQueue()
+{
+    m_IsTerminating = true;
+    MyBase::DrainWorkQueue();
+}
+
+void FileReadWorkQueue::FileReadThread()
+{
+    bool hasWorkItems = true;
+    SetThreadDescription(GetCurrentThread(), L"FileSystemSearch Read Submission Thread");
+
+    for (;;)
     {
-        m_FilesToRead.push_back(std::move(searchData));
-        QueueFileReads();
-    });
+        uint32_t handleCount = 0;
+        HANDLE waitHandles[3];
+
+        if (hasWorkItems)
+            waitHandles[handleCount++] = m_WorkSemaphore;
+
+        if (!m_CurrentBatch.slots.empty())
+        {
+            LARGE_INTEGER timer;
+            timer.QuadPart = -10000; // 1 ms
+            auto result = SetWaitableTimer(m_WaitableTimer, &timer, 0, nullptr, nullptr, FALSE);
+            Assert(result);
+
+            waitHandles[handleCount++] = m_WaitableTimer;
+        }
+
+        if (!m_SubmittedBatches.empty())
+            waitHandles[handleCount++] = m_FenceEvent;
+
+        if (handleCount == 0)
+            break;
+
+        auto waitResult = WaitForMultipleObjects(handleCount, waitHandles, FALSE, INFINITE);
+        Assert(waitResult >= WAIT_OBJECT_0 && waitResult < WAIT_OBJECT_0 + handleCount);
+
+        if (waitResult < WAIT_OBJECT_0 || waitResult >= WAIT_OBJECT_0 + handleCount)
+            break;
+
+        if (m_IsTerminating)
+        {
+            DrainWorkQueue();
+            break;
+        }
+
+        auto signaledHandle = waitHandles[waitResult - WAIT_OBJECT_0];
+        if (signaledHandle == m_WorkSemaphore)
+        {
+            auto workEntry = PopWorkEntry();
+            if (workEntry != nullptr)
+            {
+                m_FilesToRead.push_back(std::move(workEntry->workItem));
+                QueueFileReads();
+
+                DeleteWorkEntry(workEntry);
+            }
+            else
+            {
+                hasWorkItems = false;
+            }
+        }
+        else if (signaledHandle == m_WaitableTimer)
+        {
+            // No requests for 1 ms, submit outstanding work
+            SubmitReadRequests();
+        }
+        else
+        {
+            ProcessReadCompletion();
+        }
+    }
 }
 
 static uint32_t GetChunkCount(const FileReadStateData& file)
@@ -73,7 +140,6 @@ void FileReadWorkQueue::QueueFileReads()
     while (true)
     {
         uint16_t slot = std::numeric_limits<uint16_t>::max();
-        uint32_t fileIndex = std::numeric_limits<uint32_t>::max();
 
         // TO DO: use a trie if this is too slow
         for (uint16_t i = 0; i < ARRAYSIZE(m_FreeReadSlots); i++)
@@ -89,20 +155,17 @@ void FileReadWorkQueue::QueueFileReads()
         if (slot == std::numeric_limits<uint16_t>::max())
             return;
 
-        const auto fileCount = m_FilesToRead.size();
-        for (uint32_t i = 0; i < fileCount; i++)
+        if (m_FilesWithReadProgress.empty() || m_FilesWithReadProgress.back().chunksRead == GetChunkCount(m_FilesWithReadProgress.back()))
         {
-            if (m_FilesToRead[i].chunksRead < GetChunkCount(m_FilesToRead[i]))
-            {
-                fileIndex = i;
-                break;
-            }
+            if (m_FilesToRead.empty())
+                return;
+
+            m_FilesWithReadProgress.push_back(std::move(m_FilesToRead.back()));
+            m_FilesToRead.pop_back();
         }
 
-        if (fileIndex == std::numeric_limits<uint32_t>::max())
-            return;
-
-        auto& file = m_FilesToRead[fileIndex];
+        uint32_t fileIndex = static_cast<uint32_t>(m_FilesWithReadProgress.size() - 1);
+        auto& file = m_FilesWithReadProgress[fileIndex];
         file.readsInProgress++;
 
         m_FileReadSlots[slot] = fileIndex;
@@ -131,6 +194,7 @@ void FileReadWorkQueue::QueueFileReads()
 
 void FileReadWorkQueue::SubmitReadRequests()
 {
+    Assert(m_CurrentBatch.slots.size() > 0);
     m_CurrentBatch.fenceValue = m_FenceValue++;
 
     m_DStorageQueue->EnqueueSignal(m_Fence.Get(), m_CurrentBatch.fenceValue);
@@ -143,50 +207,6 @@ void FileReadWorkQueue::SubmitReadRequests()
     m_CurrentBatch = m_BatchPool.GetNewObject();
 }
 
-void FileReadWorkQueue::WaitForWork(HANDLE workSemaphore)
-{
-    while (true)
-    {
-        uint32_t handleCount = 0;
-        HANDLE waitHandles[3];
-
-        waitHandles[handleCount++] = workSemaphore;
-
-        if (!m_CurrentBatch.slots.empty())
-        {
-            LARGE_INTEGER timer;
-            timer.QuadPart = -10000; // 1 ms
-            auto result = SetWaitableTimer(m_WaitableTimer, &timer, 0, nullptr, nullptr, FALSE);
-            Assert(result);
-
-            waitHandles[handleCount++] = m_WaitableTimer;
-        }
-
-        if (!m_SubmittedBatches.empty())
-            waitHandles[handleCount++] = m_FenceEvent;
-
-        auto waitResult = WaitForMultipleObjects(handleCount, waitHandles, FALSE, INFINITE);
-        Assert(waitResult >= WAIT_OBJECT_0 && waitResult < WAIT_OBJECT_0 + handleCount);
-
-        if (waitResult >= WAIT_OBJECT_0 && waitResult < WAIT_OBJECT_0 + handleCount)
-        {
-            switch (waitResult - WAIT_OBJECT_0)
-            {
-            case 0: // we got more work
-                return;
-
-            case 1: // No requests for 1 ms, submit outstanding work
-                SubmitReadRequests();
-                break;
-
-            case 2:
-                ProcessReadCompletion();
-                break;
-            }
-        }
-    }
-}
-
 void FileReadWorkQueue::ProcessReadCompletion()
 {
     uint32_t batchIndex = 0;
@@ -197,13 +217,35 @@ void FileReadWorkQueue::ProcessReadCompletion()
         for (auto slot : batch.slots)
         {
             auto& fileIndex = m_FileReadSlots[slot];
-            auto& file = m_FilesToRead[fileIndex];
+            auto& file = m_FilesWithReadProgress[fileIndex];
 
             Assert(file.readsInProgress > 0);
             file.readsInProgress--;
             m_FreeReadSlots[slot / 64] |= 1ULL << (slot % 64);
 
-            // auto buffer = m_FileReadBuffers.get() + slot * m_ReadBufferSize;
+            if (!file.dispatchedToResults)
+            {
+                auto buffer = m_FileReadBuffers.get() + slot * m_ReadBufferSize;
+                if (m_StringSearcher.PerformFileContentSearch(buffer, static_cast<uint32_t>(m_ReadBufferSize), m_StackAllocator))
+                {
+                    m_SearchResultReporter.DispatchSearchResult(file.fileFindData, std::move(file.filePath));
+
+                    m_SearchResultReporter.AddToScannedFileSize(file.fileSize - file.totalScannedSize);
+                    file.totalScannedSize = file.fileSize;
+                    file.chunksRead = GetChunkCount(file);
+                    file.dispatchedToResults = true;
+                }
+                else if (file.readsInProgress == 0 && file.chunksRead == GetChunkCount(file))
+                {
+                    m_SearchResultReporter.AddToScannedFileSize(file.fileSize - file.totalScannedSize);
+                    file.totalScannedSize = file.fileSize;
+                }
+                else
+                {
+                    m_SearchResultReporter.AddToScannedFileSize(kFileReadBufferBaseSize);
+                    file.totalScannedSize += kFileReadBufferBaseSize;
+                }
+            }
         }
     }
 
@@ -211,13 +253,14 @@ void FileReadWorkQueue::ProcessReadCompletion()
     if (!m_SubmittedBatches.empty())
         m_Fence->SetEventOnCompletion(m_SubmittedBatches.front().fenceValue, m_FenceEvent);
 
-    while (!m_FilesToRead.empty())
+    while (!m_FilesWithReadProgress.empty())
     {
-        auto& lastFile = m_FilesToRead.back();
+        auto& lastFile = m_FilesWithReadProgress.back();
         
         if (lastFile.chunksRead == GetChunkCount(lastFile) && lastFile.readsInProgress == 0)
         {
-            m_FilesToRead.pop_back();
+            m_SearchResultReporter.AddToScannedFileCount();
+            m_FilesWithReadProgress.pop_back();
         }
         else
         {

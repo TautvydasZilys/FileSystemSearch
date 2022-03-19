@@ -6,6 +6,9 @@
     <ClCompile Include="PrecompiledHeader.cpp" />
     <ClCompile Include="FileReadWorkQueue.cpp" />
     <ClCompile Include="DirectXContext.cpp" />
+    <ClCompile Include="StringSearcher.cpp" />
+    <ClCompile Include="ScopedStackAllocator.cpp" />
+    <ClCompile Include="SearchResultReporter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileSearcher.h" />
@@ -28,6 +31,8 @@
     <ClInclude Include="ObjectPool.h" />
     <ClInclude Include="..\Common\Event.h" />
     <ClInclude Include="ReadBatch.h" />
+    <ClInclude Include="StringSearcher.h" />
+    <ClInclude Include="SearchResultReporter.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

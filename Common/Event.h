@@ -11,10 +11,11 @@ template <EventType eventType>
 class Event : public EventHandleHolder
 {
 public:
-    Event() :
-        HandleHolder(CreateEventW(nullptr, eventType == EventType::ManualReset ? TRUE : FALSE, FALSE, nullptr))
+    Event(bool initialize = true) :
+        HandleHolder(initialize ? CreateEventW(nullptr, eventType == EventType::ManualReset ? TRUE : FALSE, FALSE, nullptr) : nullptr)
     {
-        Assert(*this);
+        if (initialize)
+            Assert(*this);
     }
 
     Event(Event&& other) :
@@ -25,6 +26,12 @@ public:
     Event& operator=(Event&& other)
     {
         return EventHandleHolder::operator=(std::move(other));
+    }
+
+    void Initialize()
+    {
+        Assert(!*this);
+        EventHandleHolder::operator=(CreateEventW(nullptr, eventType == EventType::ManualReset ? TRUE : FALSE, FALSE, nullptr));
     }
 
     void Set()

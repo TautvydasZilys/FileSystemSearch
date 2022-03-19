@@ -9,33 +9,39 @@
 #include "ScopedStackAllocator.h"
 #include "WorkQueue.h"
 
-class FileReadWorkQueue : public WorkQueueBase<FileReadWorkQueue, FileReadData, FileReadWorkQueue>
+struct SearchInstructions;
+class SearchResultReporter;
+class StringSearcher;
+
+class FileReadWorkQueue : public WorkQueue<FileReadWorkQueue, FileReadData>
 {
 public:
-    FileReadWorkQueue(size_t searchStringLength);
+    FileReadWorkQueue(const StringSearcher& stringSearcher, const SearchInstructions& searchInstructions, SearchResultReporter& searchResultReporter);
     ~FileReadWorkQueue();
 
     void Initialize();
-    void Cleanup();
+    void DrainWorkQueue();
 
     static constexpr uint16_t kFileReadSlotCount = DSTORAGE_MAX_QUEUE_CAPACITY;
     static constexpr size_t kFileReadBufferBaseSize = 512 * 1024 * 1024 / kFileReadSlotCount; // 512 MB total
 
 private:
-    typedef WorkQueueBase<FileReadWorkQueue, FileReadData, FileReadWorkQueue> MyBase;
+    typedef WorkQueue<FileReadWorkQueue, FileReadData> MyBase;
     friend class MyBase;
 
 private:
-    void InitializeFileReadThread(FileReadWorkQueue& fileReadWorkQueue);
+    void FileReadThread();
     void QueueFileReads();
     void SubmitReadRequests();
-    void WaitForWork(HANDLE workSemaphore);
     void ProcessReadCompletion();
 
 private:
-    size_t m_ReadBufferSize;
+    SearchResultReporter& m_SearchResultReporter;
+    const StringSearcher& m_StringSearcher;
     ScopedStackAllocator m_StackAllocator;
+    size_t m_ReadBufferSize;
     std::vector<FileReadStateData> m_FilesToRead; // TO DO: ring buffer
+    std::vector<FileReadStateData> m_FilesWithReadProgress; // TO DO: ring buffer
     std::vector<ReadBatch> m_SubmittedBatches; // TO DO: ring buffer
     ObjectPool<ReadBatch> m_BatchPool;
     ReadBatch m_CurrentBatch;
@@ -46,6 +52,7 @@ private:
     uint64_t m_FenceValue;
 
     TimerHandleHolder m_WaitableTimer;
+    bool m_IsTerminating;
 
     std::unique_ptr<uint8_t[]> m_FileReadBuffers;
     uint64_t m_FreeReadSlots[kFileReadSlotCount / 64];

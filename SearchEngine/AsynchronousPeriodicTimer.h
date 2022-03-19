@@ -60,6 +60,7 @@ public:
 		m_Done = false;
 		m_TimerThread = CreateThread(nullptr, 64 * 1024, [](void* ctx) -> DWORD
 		{
+			SetThreadDescription(GetCurrentThread(), L"FileSystemSearch Periodic Timer Thread");
 			static_cast<AsynchronousPeriodicTimer<Callback>*>(ctx)->TimerLoop();
 			return 0;
 		}, this, 0, nullptr);
