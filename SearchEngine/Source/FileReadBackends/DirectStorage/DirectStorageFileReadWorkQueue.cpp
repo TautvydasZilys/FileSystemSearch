@@ -261,7 +261,7 @@ void DirectStorageFileReadWorkQueue::QueueFileReads()
 void DirectStorageFileReadWorkQueue::SubmitReadRequests()
 {
     Assert(m_CurrentBatch.slots.size() > 0);
-    m_CurrentBatch.fenceValue = m_FenceValue++;
+    m_CurrentBatch.fenceValue = ++m_FenceValue;
 
     m_DStorageQueue->EnqueueSignal(m_Fence.Get(), m_CurrentBatch.fenceValue);
     m_DStorageQueue->Submit();
