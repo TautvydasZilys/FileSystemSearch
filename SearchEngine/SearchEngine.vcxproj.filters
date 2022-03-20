@@ -33,6 +33,8 @@
     <ClInclude Include="ReadBatch.h" />
     <ClInclude Include="StringSearcher.h" />
     <ClInclude Include="SearchResultReporter.h" />
+    <ClInclude Include="..\Common\CriticalSection.h" />
+    <ClInclude Include="..\Common\HeapArray.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

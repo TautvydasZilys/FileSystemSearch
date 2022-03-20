@@ -189,8 +189,10 @@
     <ClCompile Include="StringSearcher.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\CriticalSection.h" />
     <ClInclude Include="..\Common\Event.h" />
     <ClInclude Include="..\Common\HandleHolder.h" />
+    <ClInclude Include="..\Common\HeapArray.h" />
     <ClInclude Include="..\Common\NonCopyable.h" />
     <ClInclude Include="DirectXContext.h" />
     <ClInclude Include="FileContentSearchData.h" />
