@@ -19,9 +19,6 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 {
 	if (m_SearchInstructions.SearchInFileContents())
 	{
-		SYSTEM_INFO systemInfo;
-		GetNativeSystemInfo(&systemInfo);
-
 		if (DirectXContext::GetDStorageFactory() == nullptr)
 		{
 			m_SearchInstructions.onError(L"Failed to initialize DirectStorage!");
