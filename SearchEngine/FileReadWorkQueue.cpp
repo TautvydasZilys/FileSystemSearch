@@ -52,6 +52,7 @@ void FileReadWorkQueue::Initialize()
     GetNativeSystemInfo(&systemInfo);
 
     MyFileReadBase::Initialize();
+    m_FileOpenWorkQueue.Initialize<&FileReadWorkQueue::FileOpenThread>(this, systemInfo.dwNumberOfProcessors - 2);
     m_SearchWorkQueue.Initialize<&FileReadWorkQueue::ContentsSearchThread>(this, systemInfo.dwNumberOfProcessors - 1);
     MySearchResultBase::Initialize<&FileReadWorkQueue::FileReadThread>(this, 1);
 }
@@ -59,6 +60,7 @@ void FileReadWorkQueue::Initialize()
 void FileReadWorkQueue::DrainWorkQueue()
 {
     m_IsTerminating = true;
+    m_FileOpenWorkQueue.DrainWorkQueue();
     MyFileReadBase::DrainWorkQueue();
     m_SearchWorkQueue.DrainWorkQueue();
     MySearchResultBase::DrainWorkQueue();
@@ -66,11 +68,35 @@ void FileReadWorkQueue::DrainWorkQueue()
 
 void FileReadWorkQueue::CompleteAllWork()
 {
+    m_FileOpenWorkQueue.CompleteAllWork();
+
     ReleaseSemaphore(MyFileReadBase::GetWorkSemaphore(), 1, nullptr);
     WaitForSingleObject(m_FileReadsCompletedEvent, INFINITE);
 
     m_SearchWorkQueue.CompleteAllWork();
     MySearchResultBase::CompleteAllWork();
+}
+
+void FileReadWorkQueue::FileOpenThread()
+{
+    SetThreadDescription(GetCurrentThread(), L"FileSystemSearch File Open Thread");
+
+    m_FileOpenWorkQueue.DoWork([this](FileOpenData& searchData)
+    {
+        if (m_IsTerminating)
+            return;
+
+        FileReadData readData(std::move(searchData));
+        auto hr = DirectXContext::GetDStorageFactory()->OpenFile(readData.filePath.c_str(), __uuidof(readData.file), &readData.file);
+        if (FAILED(hr))
+        {
+            m_SearchResultReporter.AddToScannedFileCount();
+            m_SearchResultReporter.AddToScannedFileSize(readData.fileSize);
+            return;
+        }
+
+        MyFileReadBase::PushWorkItem(std::move(readData));
+    });
 }
 
 void FileReadWorkQueue::FileReadThread()

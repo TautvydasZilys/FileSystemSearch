@@ -27,13 +27,10 @@ private:
 	void OnFileFound(const std::wstring& directory, const WIN32_FIND_DATAW& findData, ScopedStackAllocator& stackAllocator);
 	bool SearchInFileName(const std::wstring& directory, const WIN32_FIND_DATAW& findData, bool searchInPath, ScopedStackAllocator& stackAllocator);
 
-	void InitializeFileOpenThread();
-
 private:
 	SearchInstructions m_SearchInstructions;
 	StringSearcher m_StringSearcher;
 
-	ThreadedWorkQueue<FileSearcher, FileOpenData> m_FileOpenWorkQueue;
 	SearchResultReporter m_SearchResultReporter;
 	FileReadWorkQueue m_FileReadWorkQueue;
 

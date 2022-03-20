@@ -22,6 +22,11 @@ public:
     void DrainWorkQueue();
     void CompleteAllWork();
 
+    inline void ScanFile(FileOpenData fileOpenData)
+    {
+        m_FileOpenWorkQueue.PushWorkItem(std::move(fileOpenData));
+    }
+
     static constexpr size_t kTargetTotalBufferSize = 512 * 1024 * 1024; // 512 MB total
     static constexpr size_t kFileReadBufferBaseSize = 128 * 1024;
     static constexpr uint16_t kFileReadSlotCount = kTargetTotalBufferSize / kFileReadBufferBaseSize;
@@ -32,10 +37,8 @@ private:
     friend class MyFileReadBase;
     friend class MySearchResultBase;
 
-public:
-    using MyFileReadBase::PushWorkItem;
-
 private:
+    void FileOpenThread();
     void FileReadThread();
     void QueueFileReads();
     void SubmitReadRequests();
@@ -46,6 +49,7 @@ private:
 private:
     SearchResultReporter& m_SearchResultReporter;
     const StringSearcher& m_StringSearcher;
+    ThreadedWorkQueue<FileReadWorkQueue, FileOpenData> m_FileOpenWorkQueue;
     ThreadedWorkQueue<FileReadWorkQueue, SlotSearchData> m_SearchWorkQueue;
     size_t m_ReadBufferSize;
     std::vector<FileReadStateData> m_FilesToRead; // TO DO: ring buffer

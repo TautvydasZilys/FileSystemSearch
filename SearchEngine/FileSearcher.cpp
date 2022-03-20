@@ -34,7 +34,6 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 		}
 		else
 		{
-			m_FileOpenWorkQueue.Initialize<&FileSearcher::InitializeFileOpenThread>(this, systemInfo.dwNumberOfProcessors - 2);
 			m_FileReadWorkQueue.Initialize();
 		}
 	}
@@ -66,7 +65,6 @@ void FileSearcher::Search()
 	SearchFileSystem();
 
 	// Wait for worker threads to finish
-	m_FileOpenWorkQueue.CompleteAllWork();
 	m_FileReadWorkQueue.CompleteAllWork();
 
 	// Stop reporting progress
@@ -170,7 +168,7 @@ void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_D
 	if (!m_SearchInstructions.SearchInFileContents() || fileSize == 0)
 		return;
 
-	m_FileOpenWorkQueue.PushWorkItem(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData);
+	m_FileReadWorkQueue.ScanFile(FileOpenData(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData));
 }
 
 bool FileSearcher::SearchInFileName(const std::wstring& directory, const WIN32_FIND_DATAW& findData, bool searchInPath, ScopedStackAllocator& stackAllocator)
@@ -200,28 +198,6 @@ bool FileSearcher::SearchInFileName(const std::wstring& directory, const WIN32_F
 	return false;
 }
 
-void FileSearcher::InitializeFileOpenThread()
-{
-	SetThreadDescription(GetCurrentThread(), L"FileSystemSearch File Open Thread");
-
-	m_FileOpenWorkQueue.DoWork([this](FileOpenData& searchData)
-	{
-		if (m_IsFinished)
-			return;
-
-		FileReadData readData(std::move(searchData));
-		auto hr = DirectXContext::GetDStorageFactory()->OpenFile(readData.filePath.c_str(), __uuidof(readData.file), &readData.file);
-		if (FAILED(hr))
-		{
-			m_SearchResultReporter.AddToScannedFileCount();
-			m_SearchResultReporter.AddToScannedFileSize(readData.fileSize);
-			return;
-		}
-
-		m_FileReadWorkQueue.PushWorkItem(std::move(readData));
-	});
-}
-
 FileSearcher* FileSearcher::BeginSearch(SearchInstructions&& searchInstructions)
 {
 	FileSearcher* searcher = new FileSearcher(std::forward<SearchInstructions>(searchInstructions));
@@ -248,7 +224,6 @@ void FileSearcher::Cleanup()
 {
 	m_IsFinished = true;
 
-	m_FileOpenWorkQueue.DrainWorkQueue();
 	m_FileReadWorkQueue.DrainWorkQueue();
 	m_SearchResultReporter.DrainWorkQueue();
 
