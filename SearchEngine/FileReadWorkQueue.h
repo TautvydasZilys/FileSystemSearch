@@ -22,8 +22,9 @@ public:
     void DrainWorkQueue();
     void CompleteAllWork();
 
-    static constexpr uint16_t kFileReadSlotCount = DSTORAGE_MAX_QUEUE_CAPACITY;
-    static constexpr size_t kFileReadBufferBaseSize = 512 * 1024 * 1024 / kFileReadSlotCount; // 512 MB total
+    static constexpr size_t kTargetTotalBufferSize = 512 * 1024 * 1024; // 512 MB total
+    static constexpr size_t kFileReadBufferBaseSize = 128 * 1024;
+    static constexpr uint16_t kFileReadSlotCount = kTargetTotalBufferSize / kFileReadBufferBaseSize;
 
 private:
     typedef WorkQueue<FileReadData> MyFileReadBase;
