@@ -4,9 +4,9 @@
 #include "FileContentSearchData.h"
 #include "HandleHolder.h"
 #include "HeapArray.h"
-#include "ObjectPool.h"
 #include "ReadBatch.h"
-#include "WorkQueue.h"
+#include "Utilities/ObjectPool.h"
+#include "Utilities/WorkQueue.h"
 
 struct SearchInstructions;
 class SearchResultReporter;

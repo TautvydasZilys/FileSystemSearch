@@ -2,7 +2,7 @@
 
 #include "SearchInstructions.h"
 #include "SearchResultData.h"
-#include "WorkQueue.h"
+#include "Utilities/WorkQueue.h"
 
 class SearchResultReporter : ThreadedWorkQueue<SearchResultReporter, SearchResultData>
 {

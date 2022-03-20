@@ -1,8 +1,8 @@
 #include "PrecompiledHeader.h"
-#include "PathUtils.h"
-#include "ScopedStackAllocator.h"
 #include "StringSearcher.h"
-#include "StringUtils.h"
+#include "Utilities/PathUtils.h"
+#include "Utilities/ScopedStackAllocator.h"
+#include "Utilities/StringUtils.h"
 
 StringSearcher::StringSearcher(const SearchInstructions& searchInstructions) :
 	m_SearchInstructions(searchInstructions)

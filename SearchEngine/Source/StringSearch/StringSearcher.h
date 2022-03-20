@@ -4,8 +4,8 @@
 #include "OrdinalStringSearcher.h"
 #include "SearchInstructions.h"
 #include "SearchResultData.h"
-#include "WorkQueue.h"
 #include "UnicodeUtf16StringSearcher.h"
+#include "Utilities/WorkQueue.h"
 
 class ScopedStackAllocator;
 

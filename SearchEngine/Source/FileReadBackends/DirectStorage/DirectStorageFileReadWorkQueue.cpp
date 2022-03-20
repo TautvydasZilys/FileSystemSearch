@@ -3,8 +3,8 @@
 #include "DirectXContext.h"
 #include "SearchInstructions.h"
 #include "SearchResultReporter.h"
-#include "ScopedStackAllocator.h"
-#include "StringSearcher.h"
+#include "StringSearch/StringSearcher.h"
+#include "Utilities/ScopedStackAllocator.h"
 
 DirectStorageFileReadWorkQueue::DirectStorageFileReadWorkQueue(const StringSearcher& stringSearcher, const SearchInstructions& searchInstructions, SearchResultReporter& searchResultReporter) :
     m_SearchResultReporter(searchResultReporter),

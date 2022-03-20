@@ -1,5 +1,6 @@
 #pragma once
-#include "StringUtils.h"
+
+#include "Utilities/StringUtils.h"
 
 struct SearchStatistics
 {

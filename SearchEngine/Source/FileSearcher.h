@@ -1,11 +1,11 @@
 #pragma once
 
 #include "FileContentSearchData.h"
-#include "DirectStorageFileReadWorkQueue.h"
+#include "FileReadBackends/DirectStorage/DirectStorageFileReadWorkQueue.h"
 #include "HandleHolder.h"
 #include "SearchResultReporter.h"
-#include "StringSearcher.h"
-#include "WorkQueue.h"
+#include "StringSearch/StringSearcher.h"
+#include "Utilities/WorkQueue.h"
 
 class ScopedStackAllocator;
 
