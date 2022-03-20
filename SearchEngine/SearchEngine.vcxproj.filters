@@ -4,7 +4,7 @@
     <ClCompile Include="FileSearcher.cpp" />
     <ClCompile Include="SearchEngine.cpp" />
     <ClCompile Include="PrecompiledHeader.cpp" />
-    <ClCompile Include="FileReadWorkQueue.cpp" />
+    <ClCompile Include="DirectStorageFileReadWorkQueue.cpp" />
     <ClCompile Include="DirectXContext.cpp" />
     <ClCompile Include="StringSearcher.cpp" />
     <ClCompile Include="ScopedStackAllocator.cpp" />
@@ -25,7 +25,7 @@
     <ClInclude Include="FileContentSearchData.h" />
     <ClInclude Include="SearchResultData.h" />
     <ClInclude Include="AsynchronousPeriodicTimer.h" />
-    <ClInclude Include="FileReadWorkQueue.h" />
+    <ClInclude Include="DirectStorageFileReadWorkQueue.h" />
     <ClInclude Include="..\Common\NonCopyable.h" />
     <ClInclude Include="DirectXContext.h" />
     <ClInclude Include="ObjectPool.h" />

@@ -173,7 +173,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DirectXContext.cpp" />
-    <ClCompile Include="FileReadWorkQueue.cpp" />
+    <ClCompile Include="DirectStorageFileReadWorkQueue.cpp" />
     <ClCompile Include="FileSearcher.cpp" />
     <ClCompile Include="PrecompiledHeader.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -197,7 +197,7 @@
     <ClInclude Include="DirectXContext.h" />
     <ClInclude Include="FileContentSearchData.h" />
     <ClInclude Include="FileEnumerator.h" />
-    <ClInclude Include="FileReadWorkQueue.h" />
+    <ClInclude Include="DirectStorageFileReadWorkQueue.h" />
     <ClInclude Include="FileSearcher.h" />
     <ClInclude Include="ObjectPool.h" />
     <ClInclude Include="PathUtils.h" />

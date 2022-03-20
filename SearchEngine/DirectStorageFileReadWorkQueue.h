@@ -12,11 +12,11 @@ struct SearchInstructions;
 class SearchResultReporter;
 class StringSearcher;
 
-class FileReadWorkQueue : WorkQueue<FileReadData>, ThreadedWorkQueue<FileReadWorkQueue, SlotSearchData>
+class DirectStorageFileReadWorkQueue : WorkQueue<FileReadData>, ThreadedWorkQueue<DirectStorageFileReadWorkQueue, SlotSearchData>
 {
 public:
-    FileReadWorkQueue(const StringSearcher& stringSearcher, const SearchInstructions& searchInstructions, SearchResultReporter& searchResultReporter);
-    ~FileReadWorkQueue();
+    DirectStorageFileReadWorkQueue(const StringSearcher& stringSearcher, const SearchInstructions& searchInstructions, SearchResultReporter& searchResultReporter);
+    ~DirectStorageFileReadWorkQueue();
 
     void Initialize();
     void DrainWorkQueue();
@@ -33,7 +33,7 @@ public:
 
 private:
     typedef WorkQueue<FileReadData> MyFileReadBase;
-    typedef ThreadedWorkQueue<FileReadWorkQueue, SlotSearchData> MySearchResultBase;
+    typedef ThreadedWorkQueue<DirectStorageFileReadWorkQueue, SlotSearchData> MySearchResultBase;
     friend class MyFileReadBase;
     friend class MySearchResultBase;
 
@@ -49,8 +49,8 @@ private:
 private:
     SearchResultReporter& m_SearchResultReporter;
     const StringSearcher& m_StringSearcher;
-    ThreadedWorkQueue<FileReadWorkQueue, FileOpenData> m_FileOpenWorkQueue;
-    ThreadedWorkQueue<FileReadWorkQueue, SlotSearchData> m_SearchWorkQueue;
+    ThreadedWorkQueue<DirectStorageFileReadWorkQueue, FileOpenData> m_FileOpenWorkQueue;
+    ThreadedWorkQueue<DirectStorageFileReadWorkQueue, SlotSearchData> m_SearchWorkQueue;
     size_t m_ReadBufferSize;
     std::vector<FileReadStateData> m_FilesToRead; // TO DO: ring buffer
     std::vector<FileReadStateData> m_FilesWithReadProgress; // TO DO: ring buffer

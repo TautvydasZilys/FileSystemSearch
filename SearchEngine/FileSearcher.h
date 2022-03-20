@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FileContentSearchData.h"
-#include "FileReadWorkQueue.h"
+#include "DirectStorageFileReadWorkQueue.h"
 #include "HandleHolder.h"
 #include "SearchResultReporter.h"
 #include "StringSearcher.h"
@@ -32,7 +32,7 @@ private:
 	StringSearcher m_StringSearcher;
 
 	SearchResultReporter m_SearchResultReporter;
-	FileReadWorkQueue m_FileReadWorkQueue;
+	DirectStorageFileReadWorkQueue m_FileReadWorkQueue;
 
 	ThreadHandleHolder m_FileSystemSearchThread;
 	uint32_t m_RefCount;

@@ -1,12 +1,12 @@
 #include "PrecompiledHeader.h"
+#include "DirectStorageFileReadWorkQueue.h"
 #include "DirectXContext.h"
-#include "FileReadWorkQueue.h"
 #include "SearchInstructions.h"
 #include "SearchResultReporter.h"
 #include "ScopedStackAllocator.h"
 #include "StringSearcher.h"
 
-FileReadWorkQueue::FileReadWorkQueue(const StringSearcher& stringSearcher, const SearchInstructions& searchInstructions, SearchResultReporter& searchResultReporter) :
+DirectStorageFileReadWorkQueue::DirectStorageFileReadWorkQueue(const StringSearcher& stringSearcher, const SearchInstructions& searchInstructions, SearchResultReporter& searchResultReporter) :
     m_SearchResultReporter(searchResultReporter),
     m_StringSearcher(stringSearcher),
     m_ReadBufferSize(0),
@@ -19,7 +19,7 @@ FileReadWorkQueue::FileReadWorkQueue(const StringSearcher& stringSearcher, const
         m_ReadBufferSize = kFileReadBufferBaseSize + std::max(searchInstructions.utf8SearchString.length(), searchInstructions.searchString.length() * sizeof(wchar_t));
 }
 
-FileReadWorkQueue::~FileReadWorkQueue()
+DirectStorageFileReadWorkQueue::~DirectStorageFileReadWorkQueue()
 {
     if (m_DStorageQueue != nullptr)
     {
@@ -28,7 +28,7 @@ FileReadWorkQueue::~FileReadWorkQueue()
     }
 }
 
-void FileReadWorkQueue::Initialize()
+void DirectStorageFileReadWorkQueue::Initialize()
 {
     m_FileReadBuffers.reset(new uint8_t[m_ReadBufferSize * kFileReadSlotCount]);
     m_WaitableTimer = CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
@@ -52,12 +52,12 @@ void FileReadWorkQueue::Initialize()
     GetNativeSystemInfo(&systemInfo);
 
     MyFileReadBase::Initialize();
-    m_FileOpenWorkQueue.Initialize<&FileReadWorkQueue::FileOpenThread>(this, systemInfo.dwNumberOfProcessors - 2);
-    m_SearchWorkQueue.Initialize<&FileReadWorkQueue::ContentsSearchThread>(this, systemInfo.dwNumberOfProcessors - 1);
-    MySearchResultBase::Initialize<&FileReadWorkQueue::FileReadThread>(this, 1);
+    m_FileOpenWorkQueue.Initialize<&DirectStorageFileReadWorkQueue::FileOpenThread>(this, systemInfo.dwNumberOfProcessors - 2);
+    m_SearchWorkQueue.Initialize<&DirectStorageFileReadWorkQueue::ContentsSearchThread>(this, systemInfo.dwNumberOfProcessors - 1);
+    MySearchResultBase::Initialize<&DirectStorageFileReadWorkQueue::FileReadThread>(this, 1);
 }
 
-void FileReadWorkQueue::DrainWorkQueue()
+void DirectStorageFileReadWorkQueue::DrainWorkQueue()
 {
     m_IsTerminating = true;
     m_FileOpenWorkQueue.DrainWorkQueue();
@@ -66,7 +66,7 @@ void FileReadWorkQueue::DrainWorkQueue()
     MySearchResultBase::DrainWorkQueue();
 }
 
-void FileReadWorkQueue::CompleteAllWork()
+void DirectStorageFileReadWorkQueue::CompleteAllWork()
 {
     m_FileOpenWorkQueue.CompleteAllWork();
 
@@ -77,7 +77,7 @@ void FileReadWorkQueue::CompleteAllWork()
     MySearchResultBase::CompleteAllWork();
 }
 
-void FileReadWorkQueue::FileOpenThread()
+void DirectStorageFileReadWorkQueue::FileOpenThread()
 {
     SetThreadDescription(GetCurrentThread(), L"FSS File Open Thread");
 
@@ -99,7 +99,7 @@ void FileReadWorkQueue::FileOpenThread()
     });
 }
 
-void FileReadWorkQueue::FileReadThread()
+void DirectStorageFileReadWorkQueue::FileReadThread()
 {
     bool readSubmissionCompleted = false;
     bool fileContentSearchCompleted = false;
@@ -191,15 +191,15 @@ void FileReadWorkQueue::FileReadThread()
 static uint32_t GetChunkCount(const FileReadStateData& file)
 {
     const auto fileSize = file.fileSize;
-    auto chunkCount = file.fileSize / FileReadWorkQueue::kFileReadBufferBaseSize;
-    if (file.fileSize % FileReadWorkQueue::kFileReadBufferBaseSize)
+    auto chunkCount = file.fileSize / DirectStorageFileReadWorkQueue::kFileReadBufferBaseSize;
+    if (file.fileSize % DirectStorageFileReadWorkQueue::kFileReadBufferBaseSize)
         chunkCount++;
 
     Assert(chunkCount < std::numeric_limits<uint32_t>::max());
     return static_cast<uint32_t>(chunkCount);
 }
 
-void FileReadWorkQueue::QueueFileReads()
+void DirectStorageFileReadWorkQueue::QueueFileReads()
 {
     while (true)
     {
@@ -258,7 +258,7 @@ void FileReadWorkQueue::QueueFileReads()
     }
 }
 
-void FileReadWorkQueue::SubmitReadRequests()
+void DirectStorageFileReadWorkQueue::SubmitReadRequests()
 {
     Assert(m_CurrentBatch.slots.size() > 0);
     m_CurrentBatch.fenceValue = m_FenceValue++;
@@ -273,7 +273,7 @@ void FileReadWorkQueue::SubmitReadRequests()
     m_CurrentBatch = m_BatchPool.GetNewObject();
 }
 
-void FileReadWorkQueue::ProcessReadCompletion()
+void DirectStorageFileReadWorkQueue::ProcessReadCompletion()
 {
     uint32_t batchIndex = 0;
     for (; batchIndex < m_SubmittedBatches.size() && m_SubmittedBatches[batchIndex].fenceValue <= m_Fence->GetCompletedValue(); batchIndex++)
@@ -292,7 +292,7 @@ void FileReadWorkQueue::ProcessReadCompletion()
         m_Fence->SetEventOnCompletion(m_SubmittedBatches.front().fenceValue, m_FenceEvent);
 }
 
-void FileReadWorkQueue::ContentsSearchThread()
+void DirectStorageFileReadWorkQueue::ContentsSearchThread()
 {
     ScopedStackAllocator allocator;
     SetThreadDescription(GetCurrentThread(), L"FSS Content Search Thread");
@@ -304,7 +304,7 @@ void FileReadWorkQueue::ContentsSearchThread()
     });
 }
 
-void FileReadWorkQueue::ProcessSearchCompletion(SlotSearchData searchData)
+void DirectStorageFileReadWorkQueue::ProcessSearchCompletion(SlotSearchData searchData)
 {
     auto& fileIndex = m_FileReadSlots[searchData.slot];
     auto& file = m_FilesWithReadProgress[fileIndex];
