@@ -107,10 +107,12 @@ struct FileReadStateData : FileReadData
 
 struct SlotSearchData
 {
+	uint32_t size;
 	uint16_t slot;
 	bool found;
 
-	SlotSearchData(uint16_t slot) :
+	SlotSearchData(uint16_t slot, uint32_t size) :
+		size(size),
 		slot(slot),
 		found(false)
 	{

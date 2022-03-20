@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FileContentSearchData.h"
+
 struct ReadBatch : NonCopyable
 {
 public:
@@ -22,6 +24,6 @@ public:
     }
 
 public:
-    std::vector<uint16_t> slots;
+    std::vector<SlotSearchData> slots;
     uint64_t fenceValue;
 };

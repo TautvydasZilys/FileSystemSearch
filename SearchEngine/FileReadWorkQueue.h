@@ -45,7 +45,7 @@ private:
 private:
     SearchResultReporter& m_SearchResultReporter;
     const StringSearcher& m_StringSearcher;
-    ThreadedWorkQueue<FileReadWorkQueue, uint16_t> m_SearchWorkQueue;
+    ThreadedWorkQueue<FileReadWorkQueue, SlotSearchData> m_SearchWorkQueue;
     size_t m_ReadBufferSize;
     std::vector<FileReadStateData> m_FilesToRead; // TO DO: ring buffer
     std::vector<FileReadStateData> m_FilesWithReadProgress; // TO DO: ring buffer

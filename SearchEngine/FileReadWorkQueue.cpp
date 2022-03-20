@@ -212,7 +212,6 @@ void FileReadWorkQueue::QueueFileReads()
         m_FreeReadSlotCount--;
 
         const auto fileOffset = (file.chunksRead++) * kFileReadBufferBaseSize;
-
         uint32_t bytesToRead = static_cast<uint32_t>(std::min(file.fileSize - fileOffset, m_ReadBufferSize));
 
         DSTORAGE_REQUEST request = {};
@@ -225,10 +224,8 @@ void FileReadWorkQueue::QueueFileReads()
         request.Destination.Memory.Size = bytesToRead;
         request.UncompressedSize = bytesToRead;
 
-        memset(request.Destination.Memory.Buffer, 0, m_ReadBufferSize); // TO DO: profile if this is impactful
-
         m_DStorageQueue->EnqueueRequest(&request);
-        m_CurrentBatch.slots.push_back(slot);
+        m_CurrentBatch.slots.emplace_back(slot, bytesToRead);
     }
 }
 
@@ -271,11 +268,10 @@ void FileReadWorkQueue::ContentsSearchThread()
     ScopedStackAllocator allocator;
     SetThreadDescription(GetCurrentThread(), L"FileSystemSearch Content Search Thread");
 
-    m_SearchWorkQueue.DoWork([this, &allocator](uint16_t slot)
+    m_SearchWorkQueue.DoWork([this, &allocator](SlotSearchData& searchData)
     {
-        SlotSearchData result(slot);
-        result.found = m_StringSearcher.PerformFileContentSearch(m_FileReadBuffers.get() + slot * m_ReadBufferSize, static_cast<uint32_t>(m_ReadBufferSize), allocator);
-        MySearchResultBase::PushWorkItem(result);
+        searchData.found = m_StringSearcher.PerformFileContentSearch(m_FileReadBuffers.get() + searchData.slot * m_ReadBufferSize, searchData.size, allocator);
+        MySearchResultBase::PushWorkItem(searchData);
     });
 }
 
