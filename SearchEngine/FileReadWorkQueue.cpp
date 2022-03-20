@@ -226,6 +226,9 @@ void FileReadWorkQueue::QueueFileReads()
 
         m_DStorageQueue->EnqueueRequest(&request);
         m_CurrentBatch.slots.emplace_back(slot, bytesToRead);
+
+        if (m_CurrentBatch.slots.size() >= ARRAYSIZE(m_FileReadSlots) / 2)
+            SubmitReadRequests();
     }
 }
 
