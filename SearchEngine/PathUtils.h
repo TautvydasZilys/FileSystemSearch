@@ -3,10 +3,13 @@
 namespace PathUtils
 {
 
-inline std::wstring CombinePaths(std::wstring left, const wchar_t* right)
+inline std::wstring CombinePaths(std::wstring left, std::wstring_view right)
 {
 	if (left[left.length() - 1] != L'\\')
+	{
+		left.reserve(left.length() + right.length() + 1);
 		left += L'\\';
+	}
 
 	left += right;
 	return left;
