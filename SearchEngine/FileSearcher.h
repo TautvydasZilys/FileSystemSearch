@@ -28,7 +28,7 @@ private:
 	bool SearchInFileName(const std::wstring& directory, const WIN32_FIND_DATAW& findData, bool searchInPath, ScopedStackAllocator& stackAllocator);
 
 private:
-	SearchInstructions m_SearchInstructions;
+	const SearchInstructions m_SearchInstructions;
 	StringSearcher m_StringSearcher;
 
 	SearchResultReporter m_SearchResultReporter;

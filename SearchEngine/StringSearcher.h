@@ -12,7 +12,7 @@ class ScopedStackAllocator;
 class StringSearcher : NonCopyable
 {
 public:
-	StringSearcher(SearchInstructions& searchInstructions);
+	StringSearcher(const SearchInstructions& searchInstructions);
 
 	bool SearchForString(std::wstring_view str, ScopedStackAllocator& stackAllocator) const;
 	bool PerformFileContentSearch(uint8_t* fileBytes, uint32_t bufferLength, ScopedStackAllocator& stackAllocator) const;
@@ -23,5 +23,4 @@ private:
 	OrdinalStringSearcher<char> m_OrdinalUtf8Searcher;
 	UnicodeUtf16StringSearcher m_UnicodeUtf16Searcher;
 	OrdinalStringSearcher<wchar_t> m_OrdinalUtf16Searcher;
-	bool m_SearchStringIsAscii;
 };

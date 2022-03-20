@@ -4,7 +4,7 @@
 #include "StringSearcher.h"
 #include "StringUtils.h"
 
-StringSearcher::StringSearcher(SearchInstructions& searchInstructions) :
+StringSearcher::StringSearcher(const SearchInstructions& searchInstructions) :
 	m_SearchInstructions(searchInstructions)
 {
 	// Sanity checks
@@ -14,28 +14,20 @@ StringSearcher::StringSearcher(SearchInstructions& searchInstructions) :
 	if (searchInstructions.searchString.length() > std::numeric_limits<int32_t>::max())
 		__fastfail(1);
 
-	m_SearchStringIsAscii = StringUtils::IsAscii(searchInstructions.searchString);
-
-	if (searchInstructions.IgnoreCase() && m_SearchStringIsAscii)
-		StringUtils::ToLowerAsciiInline(searchInstructions.searchString);
-
-	if (m_SearchStringIsAscii || !searchInstructions.IgnoreCase())
+	if (searchInstructions.SearchStringIsAscii() || !searchInstructions.IgnoreCase())
 		m_OrdinalUtf16Searcher.Initialize(searchInstructions.searchString.c_str(), searchInstructions.searchString.length());
 	else
 		m_UnicodeUtf16Searcher.Initialize(searchInstructions.searchString.c_str(), searchInstructions.searchString.length());
 
 	if (searchInstructions.SearchInFileContents() && searchInstructions.SearchContentsAsUtf8())
-	{
-		searchInstructions.utf8SearchString = StringUtils::Utf16ToUtf8(searchInstructions.searchString);
 		m_OrdinalUtf8Searcher.Initialize(searchInstructions.utf8SearchString.c_str(), searchInstructions.utf8SearchString.length());
-	}
 }
 
 bool StringSearcher::SearchForString(std::wstring_view str, ScopedStackAllocator& stackAllocator) const
 {
 	if (m_SearchInstructions.IgnoreCase())
 	{
-		if (m_SearchStringIsAscii)
+		if (m_SearchInstructions.SearchStringIsAscii())
 		{
 			auto memory = stackAllocator.Allocate(sizeof(wchar_t) * str.length());
 			auto lowerCase = static_cast<wchar_t*>(memory);
@@ -62,7 +54,7 @@ bool StringSearcher::PerformFileContentSearch(uint8_t* fileBytes, uint32_t buffe
 	if (!m_SearchInstructions.SearchContentsAsUtf8())
 		return false;
 
-	if (!m_SearchStringIsAscii && m_SearchInstructions.IgnoreCase())
+	if (!m_SearchInstructions.SearchStringIsAscii() && m_SearchInstructions.IgnoreCase())
 		__fastfail(1); // Not implemented
 
 	if (m_SearchInstructions.IgnoreCase())

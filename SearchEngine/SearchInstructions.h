@@ -1,4 +1,5 @@
 #pragma once
+#include "StringUtils.h"
 
 struct SearchStatistics
 {
@@ -28,7 +29,8 @@ typedef void(__stdcall *ErrorCallback)(const wchar_t* errorMessage);
 	EnumValue(SearchInDirectoryName, 1 << 8) \
 	EnumValue(SearchRecursively,     1 << 9) \
 	EnumValue(IgnoreCase,            1 << 10) \
-	EnumValue(IgnoreDotStart,        1 << 11)
+	EnumValue(IgnoreDotStart,        1 << 11) \
+	EnumValue(SearchStringIsAscii,   1 << 12)
 
 enum class SearchFlags
 {
@@ -66,6 +68,16 @@ struct SearchInstructions
 		searchFlags(searchFlags),
 		ignoreFilesLargerThan(ignoreFilesLargerThan)
 	{
+		if (StringUtils::IsAscii(this->searchString))
+		{
+			this->searchFlags |= SearchFlags::kSearchStringIsAscii;
+
+			if (IgnoreCase())
+				StringUtils::ToLowerAsciiInline(this->searchString);
+		}
+
+		if (SearchInFileContents() && SearchContentsAsUtf8())
+			this->utf8SearchString = StringUtils::Utf16ToUtf8(this->searchString);
 	}
 
 	SearchInstructions(SearchInstructions&& other):
