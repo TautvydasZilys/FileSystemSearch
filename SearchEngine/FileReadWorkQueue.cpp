@@ -79,7 +79,7 @@ void FileReadWorkQueue::CompleteAllWork()
 
 void FileReadWorkQueue::FileOpenThread()
 {
-    SetThreadDescription(GetCurrentThread(), L"FileSystemSearch File Open Thread");
+    SetThreadDescription(GetCurrentThread(), L"FSS File Open Thread");
 
     m_FileOpenWorkQueue.DoWork([this](FileOpenData& searchData)
     {
@@ -103,7 +103,7 @@ void FileReadWorkQueue::FileReadThread()
 {
     bool readSubmissionCompleted = false;
     bool fileContentSearchCompleted = false;
-    SetThreadDescription(GetCurrentThread(), L"FileSystemSearch Read Submission Thread");
+    SetThreadDescription(GetCurrentThread(), L"FSS Read Submission Thread");
 
     for (;;)
     {
@@ -295,7 +295,7 @@ void FileReadWorkQueue::ProcessReadCompletion()
 void FileReadWorkQueue::ContentsSearchThread()
 {
     ScopedStackAllocator allocator;
-    SetThreadDescription(GetCurrentThread(), L"FileSystemSearch Content Search Thread");
+    SetThreadDescription(GetCurrentThread(), L"FSS Content Search Thread");
 
     m_SearchWorkQueue.DoWork([this, &allocator](SlotSearchData& searchData)
     {

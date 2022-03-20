@@ -211,7 +211,7 @@ FileSearcher* FileSearcher::BeginSearch(SearchInstructions&& searchInstructions)
 
 	auto fileSystemSearchThread = CreateThread(nullptr, 64 * 1024, [](void* ctx) -> DWORD
 	{
-		SetThreadDescription(GetCurrentThread(), L"FileSystemSearch File System Enumeration Thread");
+		SetThreadDescription(GetCurrentThread(), L"FSS File System Enumeration Thread");
 		static_cast<FileSearcher*>(ctx)->Search();
 		return 0;
 	}, searcher, 0, nullptr);

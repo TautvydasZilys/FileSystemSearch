@@ -48,7 +48,7 @@ double SearchResultReporter::GetTotalSearchTimeInSeconds()
 
 void SearchResultReporter::InitializeSearchResultDispatcherWorkerThread()
 {
-	SetThreadDescription(GetCurrentThread(), L"FileSystemSearch Search Result Dispatcher Thread");
+	SetThreadDescription(GetCurrentThread(), L"FSS Search Result Dispatcher Thread");
 
 	DoWork([this](const SearchResultData& searchResult)
 	{
