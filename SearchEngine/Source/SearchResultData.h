@@ -1,17 +1,18 @@
 #pragma once
 
 #include "NonCopyable.h"
+#include "FileContentSearchData.h"
 
 struct SearchResultData : NonCopyable
 {
 	std::wstring resultPath;
-	WIN32_FIND_DATAW resultFindData;
+	FileFindData resultFindData;
 
 	SearchResultData()
 	{
 	}
 
-	SearchResultData(std::wstring&& resultPath, const WIN32_FIND_DATAW& resultFindData) :
+	SearchResultData(std::wstring&& resultPath, const FileFindData& resultFindData) :
 		resultPath(std::move(resultPath)),
 		resultFindData(resultFindData)
 	{

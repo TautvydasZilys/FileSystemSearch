@@ -10,7 +10,7 @@ public:
     SearchResultReporter(const SearchInstructions& searchInstructions);
 
     void ReportProgress(bool finishedScanningFileSystem);
-    void DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::wstring&& path);
+    void DispatchSearchResult(const FileFindData& findData, std::wstring&& path);
     void FinishSearch();
 
     inline void DrainWorkQueue() { MyBase::DrainWorkQueue(); }

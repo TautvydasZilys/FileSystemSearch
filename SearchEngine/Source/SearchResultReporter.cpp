@@ -1,5 +1,6 @@
 #include "PrecompiledHeader.h"
 #include "SearchResultReporter.h"
+#include "Utilities/PathUtils.h"
 
 SearchResultReporter::SearchResultReporter(const SearchInstructions& searchInstructions) :
 	m_FoundPathCallback(searchInstructions.onFoundPath),
@@ -52,11 +53,12 @@ void SearchResultReporter::InitializeSearchResultDispatcherWorkerThread()
 
 	DoWork([this](const SearchResultData& searchResult)
 	{
-		m_FoundPathCallback(&searchResult.resultFindData, searchResult.resultPath.c_str());
+		auto win32FindData = searchResult.resultFindData.ToWin32FindData(PathUtils::GetFileName(searchResult.resultPath));
+		m_FoundPathCallback(&win32FindData, searchResult.resultPath.c_str());
 	});
 }
 
-void SearchResultReporter::DispatchSearchResult(const WIN32_FIND_DATAW& findData, std::wstring&& path)
+void SearchResultReporter::DispatchSearchResult(const FileFindData& findData, std::wstring&& path)
 {
     InterlockedIncrement(&m_SearchStatistics.resultsFound);
 	PushWorkItem(std::forward<std::wstring>(path), findData);

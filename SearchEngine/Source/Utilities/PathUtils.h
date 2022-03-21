@@ -43,4 +43,13 @@ inline auto CombinePathsTemporary(std::wstring_view left, std::wstring_view righ
 	return CombinePathsTemporary(left, right, allocator, outLength);
 }
 
+inline std::wstring_view GetFileName(std::wstring_view path)
+{
+	auto backslashIndex = path.find_last_of(L'\\');
+	if (backslashIndex == std::wstring_view::npos)
+		return path;
+
+	return path.substr(backslashIndex + 1);
+}
+
 }
