@@ -62,7 +62,8 @@ void FileSearcher::Search()
 	SearchFileSystem();
 
 	// Wait for worker threads to finish
-	m_FileReadWorkQueue.CompleteAllWork();
+	if (m_SearchInstructions.SearchInFileContents())
+		m_FileReadWorkQueue.CompleteAllWork();
 
 	// Stop reporting progress
 	progressTimer.Stop();
@@ -221,7 +222,9 @@ void FileSearcher::Cleanup()
 {
 	m_IsFinished = true;
 
-	m_FileReadWorkQueue.DrainWorkQueue();
+	if (m_SearchInstructions.SearchInFileContents())
+		m_FileReadWorkQueue.DrainWorkQueue();
+
 	m_SearchResultReporter.DrainWorkQueue();
 
 	WaitForSingleObject(m_FileSystemSearchThread, INFINITE);
