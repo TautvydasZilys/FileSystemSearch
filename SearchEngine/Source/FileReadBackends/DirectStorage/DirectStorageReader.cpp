@@ -86,7 +86,7 @@ void DirectStorageReader::FileOpenThread()
         if (m_IsTerminating)
             return;
 
-        FileReadData readData(std::move(searchData));
+        DirectStorageFileReadData readData(std::move(searchData));
         auto hr = DirectXContext::GetDStorageFactory()->OpenFile(readData.filePath.c_str(), __uuidof(readData.file), &readData.file);
         if (FAILED(hr))
         {
@@ -188,7 +188,7 @@ void DirectStorageReader::FileReadThread()
     }
 }
 
-static uint32_t GetChunkCount(const FileReadStateData& file)
+static uint32_t GetChunkCount(const DirectStorageFileReadStateData& file)
 {
     const auto fileSize = file.fileSize;
     auto chunkCount = file.fileSize / DirectStorageReader::kFileReadBufferBaseSize;

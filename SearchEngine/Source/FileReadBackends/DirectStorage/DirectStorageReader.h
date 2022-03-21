@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DirectStorageFileReadData.h"
 #include "Event.h"
 #include "FileContentSearchData.h"
 #include "HandleHolder.h"
@@ -12,7 +13,7 @@ struct SearchInstructions;
 class SearchResultReporter;
 class StringSearcher;
 
-class DirectStorageReader : WorkQueue<FileReadData>, ThreadedWorkQueue<DirectStorageReader, SlotSearchData>
+class DirectStorageReader : WorkQueue<DirectStorageFileReadData>, ThreadedWorkQueue<DirectStorageReader, SlotSearchData>
 {
 public:
     DirectStorageReader(const StringSearcher& stringSearcher, const SearchInstructions& searchInstructions, SearchResultReporter& searchResultReporter);
@@ -32,7 +33,7 @@ public:
     static constexpr uint16_t kFileReadSlotCount = kTargetTotalBufferSize / kFileReadBufferBaseSize;
 
 private:
-    typedef WorkQueue<FileReadData> MyFileReadBase;
+    typedef WorkQueue<DirectStorageFileReadData> MyFileReadBase;
     typedef ThreadedWorkQueue<DirectStorageReader, SlotSearchData> MySearchResultBase;
     friend class MyFileReadBase;
     friend class MySearchResultBase;
@@ -52,9 +53,9 @@ private:
     ThreadedWorkQueue<DirectStorageReader, FileOpenData> m_FileOpenWorkQueue;
     ThreadedWorkQueue<DirectStorageReader, SlotSearchData> m_SearchWorkQueue;
     size_t m_ReadBufferSize;
-    std::vector<FileReadStateData> m_FilesToRead; // TO DO: ring buffer
-    IndexStableRingBuffer<FileReadStateData, uint32_t> m_FilesWithReadProgress; // TO DO: ring buffer
-    std::vector<ReadBatch> m_SubmittedBatches; // TO DO: ring buffer
+    std::vector<DirectStorageFileReadStateData> m_FilesToRead;
+    IndexStableRingBuffer<DirectStorageFileReadStateData, uint32_t> m_FilesWithReadProgress;
+    std::vector<ReadBatch> m_SubmittedBatches;
     ObjectPool<ReadBatch> m_BatchPool;
     ReadBatch m_CurrentBatch;
     Event<EventType::ManualReset> m_FileReadsCompletedEvent;

@@ -88,6 +88,9 @@
     <ClInclude Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.h">
       <Filter>FileReadBackends\OverlappedIO</Filter>
     </ClInclude>
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadData.h">
+      <Filter>FileReadBackends\DirectStorage</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

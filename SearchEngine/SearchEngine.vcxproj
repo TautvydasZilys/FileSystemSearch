@@ -194,6 +194,7 @@
     <ClInclude Include="..\Common\HeapArray.h" />
     <ClInclude Include="..\Common\NonCopyable.h" />
     <ClInclude Include="Source\FileContentSearchData.h" />
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadData.h" />
     <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.h" />
     <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectXContext.h" />
     <ClInclude Include="Source\FileReadBackends\DirectStorage\ReadBatch.h" />
