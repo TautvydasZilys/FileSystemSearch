@@ -12,26 +12,34 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_SearchInstructions(std::move(searchInstructions)),
 	m_StringSearcher(m_SearchInstructions),
 	m_SearchResultReporter(m_SearchInstructions),
-	m_FileReadWorkQueue(m_StringSearcher, m_SearchInstructions, m_SearchResultReporter),
+	m_DirectStorageReader(m_StringSearcher, m_SearchInstructions, m_SearchResultReporter),
+	m_OverlappedIOReader(m_StringSearcher, m_SearchInstructions, m_SearchResultReporter),
 	m_FinishedSearchingFileSystem(false),
 	m_IsFinished(false),
 	m_FailedInit(false)
 {
 	if (m_SearchInstructions.SearchInFileContents())
 	{
-		if (DirectXContext::GetDStorageFactory() == nullptr)
+		if (m_SearchInstructions.UseDirectStorage())
 		{
-			m_SearchInstructions.onError(L"Failed to initialize DirectStorage!");
-			m_FailedInit = true;
-		}
-		else if (DirectXContext::GetD3D12Device() == nullptr)
-		{
-			m_SearchInstructions.onError(L"Failed to initialize DirectX 12!");
-			m_FailedInit = true;
+			if (DirectXContext::GetDStorageFactory() == nullptr)
+			{
+				m_SearchInstructions.onError(L"Failed to initialize DirectStorage!");
+				m_FailedInit = true;
+			}
+			else if (DirectXContext::GetD3D12Device() == nullptr)
+			{
+				m_SearchInstructions.onError(L"Failed to initialize DirectX 12!");
+				m_FailedInit = true;
+			}
+			else
+			{
+				m_DirectStorageReader.Initialize();
+			}
 		}
 		else
 		{
-			m_FileReadWorkQueue.Initialize();
+			m_OverlappedIOReader.Initialize();
 		}
 	}
 }
@@ -63,7 +71,16 @@ void FileSearcher::Search()
 
 	// Wait for worker threads to finish
 	if (m_SearchInstructions.SearchInFileContents())
-		m_FileReadWorkQueue.CompleteAllWork();
+	{
+		if (m_SearchInstructions.UseDirectStorage())
+		{
+			m_DirectStorageReader.CompleteAllWork();
+		}
+		else
+		{
+			m_OverlappedIOReader.CompleteAllWork();
+		}
+	}
 
 	// Stop reporting progress
 	progressTimer.Stop();
@@ -166,7 +183,14 @@ void FileSearcher::OnFileFound(const std::wstring& directory, const WIN32_FIND_D
 	if (!m_SearchInstructions.SearchInFileContents() || fileSize == 0)
 		return;
 
-	m_FileReadWorkQueue.ScanFile(FileOpenData(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData));
+	if (m_SearchInstructions.UseDirectStorage())
+	{
+		m_DirectStorageReader.ScanFile(FileOpenData(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData));
+	}
+	else
+	{
+		m_OverlappedIOReader.ScanFile(FileOpenData(PathUtils::CombinePaths(directory, findData.cFileName), fileSize, findData));
+	}
 }
 
 bool FileSearcher::SearchInFileName(const std::wstring& directory, const WIN32_FIND_DATAW& findData, bool searchInPath, ScopedStackAllocator& stackAllocator)
@@ -223,7 +247,16 @@ void FileSearcher::Cleanup()
 	m_IsFinished = true;
 
 	if (m_SearchInstructions.SearchInFileContents())
-		m_FileReadWorkQueue.DrainWorkQueue();
+	{
+		if (m_SearchInstructions.UseDirectStorage())
+		{
+			m_DirectStorageReader.DrainWorkQueue();
+		}
+		else
+		{
+			m_OverlappedIOReader.DrainWorkQueue();
+		}
+	}
 
 	m_SearchResultReporter.DrainWorkQueue();
 

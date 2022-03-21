@@ -2,6 +2,7 @@
 
 #include "FileContentSearchData.h"
 #include "FileReadBackends/DirectStorage/DirectStorageFileReadWorkQueue.h"
+#include "FileReadBackends/OverlappedIO/OverlappedIOReader.h"
 #include "HandleHolder.h"
 #include "SearchResultReporter.h"
 #include "StringSearch/StringSearcher.h"
@@ -32,7 +33,8 @@ private:
 	StringSearcher m_StringSearcher;
 
 	SearchResultReporter m_SearchResultReporter;
-	DirectStorageFileReadWorkQueue m_FileReadWorkQueue;
+	DirectStorageFileReadWorkQueue m_DirectStorageReader;
+	OverlappedIOReader m_OverlappedIOReader;
 
 	ThreadHandleHolder m_FileSystemSearchThread;
 	uint32_t m_RefCount;

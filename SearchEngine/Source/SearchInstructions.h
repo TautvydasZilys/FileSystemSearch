@@ -31,7 +31,8 @@ typedef void(__stdcall *ErrorCallback)(const wchar_t* errorMessage);
 	EnumValue(SearchRecursively,     1 << 9) \
 	EnumValue(IgnoreCase,            1 << 10) \
 	EnumValue(IgnoreDotStart,        1 << 11) \
-	EnumValue(SearchStringIsAscii,   1 << 12)
+	EnumValue(UseDirectStorage,      1 << 12) \
+	EnumValue(SearchStringIsAscii,   1 << 31) // Internal
 
 enum class SearchFlags
 {

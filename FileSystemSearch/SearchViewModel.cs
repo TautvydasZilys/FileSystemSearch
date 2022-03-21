@@ -68,6 +68,8 @@ namespace FileSystemSearch
 		public bool SearchIgnoreCase { get; set; }
 		public bool SearchIgnoreDotStart { get; set; }
 
+		public bool SearchUseDirectStorage { get; set; }
+
 		public double IgnoreFilesLargerThan
 		{
 			get

@@ -113,6 +113,9 @@ namespace FileSystemSearch
 			if (searchViewModel.SearchIgnoreDotStart)
 				searchFlags |= SearchFlags.SearchIgnoreDotStart;
 
+			if (searchViewModel.SearchUseDirectStorage)
+				searchFlags |= SearchFlags.UseDirectStorage;
+
 			return Search(foundPathCallback, searchProgressUpdated, searchDoneCallback, errorCallback, searchViewModel.SearchPath, searchViewModel.SearchPattern, searchViewModel.SearchString, searchFlags, searchViewModel.IgnoreFilesLargerThanInBytes);
 		}
 
@@ -131,6 +134,7 @@ namespace FileSystemSearch
 			SearchRecursively = 1 << 9,
 			SearchIgnoreCase = 1 << 10,
 			SearchIgnoreDotStart = 1 << 11,
+			UseDirectStorage = 1 << 12,
 		};
 
 		[DllImport("SearchEngine.dll")]

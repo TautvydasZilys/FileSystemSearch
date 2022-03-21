@@ -17,6 +17,9 @@
     <ClCompile Include="Source\SearchEngine.cpp" />
     <ClCompile Include="Source\SearchResultReporter.cpp" />
     <ClCompile Include="Source\PrecompiledHeader.cpp" />
+    <ClCompile Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.cpp">
+      <Filter>FileReadBackends\OverlappedIO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\CriticalSection.h">
@@ -82,6 +85,9 @@
     <ClInclude Include="Source\Utilities\IndexStableRingBuffer.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.h">
+      <Filter>FileReadBackends\OverlappedIO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -101,6 +107,9 @@
     </Filter>
     <Filter Include="FileReadBackends\DirectStorage">
       <UniqueIdentifier>{933e929d-7693-41ff-9ccc-a2d4608a9d0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileReadBackends\OverlappedIO">
+      <UniqueIdentifier>{223f9f1a-099a-4c29-9233-c50bf9f77784}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

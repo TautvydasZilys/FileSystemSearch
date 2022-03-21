@@ -3,7 +3,6 @@
 #include "Event.h"
 #include "FileContentSearchData.h"
 #include "HandleHolder.h"
-#include "HeapArray.h"
 #include "ReadBatch.h"
 #include "Utilities/IndexStableRingBuffer.h"
 #include "Utilities/ObjectPool.h"
@@ -67,7 +66,7 @@ private:
 
     TimerHandleHolder m_WaitableTimer;
     uint16_t m_FreeReadSlotCount;
-    bool m_IsTerminating;
+    std::atomic<bool> m_IsTerminating;
 
     std::unique_ptr<uint8_t[]> m_FileReadBuffers;
     uint64_t m_FreeReadSlots[kFileReadSlotCount / 64];
