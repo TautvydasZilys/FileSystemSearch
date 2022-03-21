@@ -206,6 +206,7 @@
     <ClInclude Include="Source\StringSearch\UnicodeUtf16StringSearcher.h" />
     <ClInclude Include="Source\Utilities\AsynchronousPeriodicTimer.h" />
     <ClInclude Include="Source\Utilities\FileEnumerator.h" />
+    <ClInclude Include="Source\Utilities\IndexStableRingBuffer.h" />
     <ClInclude Include="Source\Utilities\ObjectPool.h" />
     <ClInclude Include="Source\Utilities\PathUtils.h" />
     <ClInclude Include="Source\Utilities\ScopedStackAllocator.h" />

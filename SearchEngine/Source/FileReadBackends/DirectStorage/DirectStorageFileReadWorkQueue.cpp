@@ -219,17 +219,21 @@ void DirectStorageFileReadWorkQueue::QueueFileReads()
         if (slot == std::numeric_limits<uint16_t>::max())
             return;
 
-        if (m_FilesWithReadProgress.empty() || m_FilesWithReadProgress.back().chunksRead == GetChunkCount(m_FilesWithReadProgress.back()))
+        uint32_t fileIndex;
+        if (m_FilesWithReadProgress.IsEmpty() || m_FilesWithReadProgress.Back().chunksRead == GetChunkCount(m_FilesWithReadProgress.Back()))
         {
             if (m_FilesToRead.empty())
                 return;
 
-            m_FilesWithReadProgress.push_back(std::move(m_FilesToRead.back()));
+            fileIndex = m_FilesWithReadProgress.PushBack(std::move(m_FilesToRead.back()));
             m_FilesToRead.pop_back();
         }
+        else
+        {
+            fileIndex = m_FilesWithReadProgress.BackIndex();
+        }
 
-        uint32_t fileIndex = static_cast<uint32_t>(m_FilesWithReadProgress.size() - 1);
-        auto& file = m_FilesWithReadProgress[fileIndex];
+        auto& file = m_FilesWithReadProgress.Back();
         file.readsInProgress++;
 
         Assert(slot < kFileReadSlotCount);
@@ -339,13 +343,13 @@ void DirectStorageFileReadWorkQueue::ProcessSearchCompletion(SlotSearchData sear
         }
     }
 
-    while (!m_FilesWithReadProgress.empty())
+    while (!m_FilesWithReadProgress.IsEmpty())
     {
-        auto& lastFile = m_FilesWithReadProgress.back();
+        auto& firstFile = m_FilesWithReadProgress.Front();
 
-        if (lastFile.chunksRead == GetChunkCount(lastFile) && lastFile.readsInProgress == 0)
+        if (firstFile.chunksRead == GetChunkCount(firstFile) && firstFile.readsInProgress == 0)
         {
-            m_FilesWithReadProgress.pop_back();
+            m_FilesWithReadProgress.PopFront();
         }
         else
         {

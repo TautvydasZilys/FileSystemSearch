@@ -5,6 +5,7 @@
 #include "HandleHolder.h"
 #include "HeapArray.h"
 #include "ReadBatch.h"
+#include "Utilities/IndexStableRingBuffer.h"
 #include "Utilities/ObjectPool.h"
 #include "Utilities/WorkQueue.h"
 
@@ -53,7 +54,7 @@ private:
     ThreadedWorkQueue<DirectStorageFileReadWorkQueue, SlotSearchData> m_SearchWorkQueue;
     size_t m_ReadBufferSize;
     std::vector<FileReadStateData> m_FilesToRead; // TO DO: ring buffer
-    std::vector<FileReadStateData> m_FilesWithReadProgress; // TO DO: ring buffer
+    IndexStableRingBuffer<FileReadStateData, uint32_t> m_FilesWithReadProgress; // TO DO: ring buffer
     std::vector<ReadBatch> m_SubmittedBatches; // TO DO: ring buffer
     ObjectPool<ReadBatch> m_BatchPool;
     ReadBatch m_CurrentBatch;

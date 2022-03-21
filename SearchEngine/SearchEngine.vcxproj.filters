@@ -79,6 +79,9 @@
     <ClInclude Include="Source\SearchResultData.h" />
     <ClInclude Include="Source\SearchResultReporter.h" />
     <ClInclude Include="Source\PrecompiledHeader.h" />
+    <ClInclude Include="Source\Utilities\IndexStableRingBuffer.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
