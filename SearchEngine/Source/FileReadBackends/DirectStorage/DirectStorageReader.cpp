@@ -51,9 +51,17 @@ void DirectStorageReader::Initialize()
     SYSTEM_INFO systemInfo;
     GetNativeSystemInfo(&systemInfo);
 
+    uint32_t fileOpenThreads = 1;
+    uint32_t contentSearchThreads = 1;
+    if (systemInfo.dwNumberOfProcessors >= 3)
+    {
+        fileOpenThreads = systemInfo.dwNumberOfProcessors - 2;
+        contentSearchThreads = systemInfo.dwNumberOfProcessors - 1;
+    }
+
     MyFileReadBase::Initialize();
-    m_FileOpenWorkQueue.Initialize<&DirectStorageReader::FileOpenThread>(this, systemInfo.dwNumberOfProcessors - 2);
-    m_SearchWorkQueue.Initialize<&DirectStorageReader::ContentsSearchThread>(this, systemInfo.dwNumberOfProcessors - 1);
+    m_FileOpenWorkQueue.Initialize<&DirectStorageReader::FileOpenThread>(this, fileOpenThreads);
+    m_SearchWorkQueue.Initialize<&DirectStorageReader::ContentsSearchThread>(this, contentSearchThreads);
     MySearchResultBase::Initialize<&DirectStorageReader::FileReadThread>(this, 1);
 }
 
