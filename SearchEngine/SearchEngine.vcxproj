@@ -172,7 +172,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadWorkQueue.cpp" />
+    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.cpp" />
     <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectXContext.cpp" />
     <ClCompile Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.cpp" />
     <ClCompile Include="Source\FileSearcher.cpp" />
@@ -194,7 +194,7 @@
     <ClInclude Include="..\Common\HeapArray.h" />
     <ClInclude Include="..\Common\NonCopyable.h" />
     <ClInclude Include="Source\FileContentSearchData.h" />
-    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadWorkQueue.h" />
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.h" />
     <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectXContext.h" />
     <ClInclude Include="Source\FileReadBackends\DirectStorage\ReadBatch.h" />
     <ClInclude Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.h" />

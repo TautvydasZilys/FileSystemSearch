@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FileContentSearchData.h"
-#include "FileReadBackends/DirectStorage/DirectStorageFileReadWorkQueue.h"
+#include "FileReadBackends/DirectStorage/DirectStorageReader.h"
 #include "FileReadBackends/OverlappedIO/OverlappedIOReader.h"
 #include "HandleHolder.h"
 #include "SearchResultReporter.h"
@@ -33,7 +33,7 @@ private:
 	StringSearcher m_StringSearcher;
 
 	SearchResultReporter m_SearchResultReporter;
-	DirectStorageFileReadWorkQueue m_DirectStorageReader;
+	DirectStorageReader m_DirectStorageReader;
 	OverlappedIOReader m_OverlappedIOReader;
 
 	ThreadHandleHolder m_FileSystemSearchThread;

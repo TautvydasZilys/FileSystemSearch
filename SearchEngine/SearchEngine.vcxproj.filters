@@ -7,7 +7,7 @@
     <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectXContext.cpp">
       <Filter>FileReadBackends\DirectStorage</Filter>
     </ClCompile>
-    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadWorkQueue.cpp">
+    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.cpp">
       <Filter>FileReadBackends\DirectStorage</Filter>
     </ClCompile>
     <ClCompile Include="Source\Utilities\ScopedStackAllocator.cpp">
@@ -46,7 +46,7 @@
     <ClInclude Include="Source\StringSearch\UnicodeUtf16StringSearcher.h">
       <Filter>StringSearch</Filter>
     </ClInclude>
-    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadWorkQueue.h">
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.h">
       <Filter>FileReadBackends\DirectStorage</Filter>
     </ClInclude>
     <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectXContext.h">
