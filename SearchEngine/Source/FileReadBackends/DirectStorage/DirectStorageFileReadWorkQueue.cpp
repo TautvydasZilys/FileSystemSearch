@@ -79,7 +79,7 @@ void DirectStorageFileReadWorkQueue::CompleteAllWork()
 
 void DirectStorageFileReadWorkQueue::FileOpenThread()
 {
-    SetThreadDescription(GetCurrentThread(), L"FSS File Open Thread");
+    SetThreadDescription(GetCurrentThread(), L"FSS DirectStorage File Open Thread");
 
     m_FileOpenWorkQueue.DoWork([this](FileOpenData& searchData)
     {
@@ -103,7 +103,7 @@ void DirectStorageFileReadWorkQueue::FileReadThread()
 {
     bool readSubmissionCompleted = false;
     bool fileContentSearchCompleted = false;
-    SetThreadDescription(GetCurrentThread(), L"FSS Read Submission Thread");
+    SetThreadDescription(GetCurrentThread(), L"FSS DirectStorage Read Submission Thread");
 
     for (;;)
     {

@@ -30,6 +30,8 @@ void OverlappedIOReader::DrainWorkQueue()
 
 void OverlappedIOReader::ContentsSearchThread()
 {
+	SetThreadDescription(GetCurrentThread(), L"FSS Overlapped I/O Reader Thread");
+
 	ScopedStackAllocator stackAllocator;
 	std::unique_ptr<uint8_t[]> fileReadBuffers[2] =
 	{
