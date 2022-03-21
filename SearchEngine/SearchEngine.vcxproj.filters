@@ -1,24 +1,118 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="FileSearcher.cpp" />
-    <ClCompile Include="SearchEngine.cpp" />
-    <ClCompile Include="PrecompiledHeader.cpp" />
+    <ClCompile Include="Source\StringSearch\StringSearcher.cpp">
+      <Filter>StringSearch</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectXContext.cpp">
+      <Filter>FileReadBackends\DirectStorage</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.cpp">
+      <Filter>FileReadBackends\DirectStorage</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Utilities\ScopedStackAllocator.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\FileSearcher.cpp" />
+    <ClCompile Include="Source\SearchEngine.cpp" />
+    <ClCompile Include="Source\SearchResultReporter.cpp" />
+    <ClCompile Include="Source\PrecompiledHeader.cpp" />
+    <ClCompile Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.cpp">
+      <Filter>FileReadBackends\OverlappedIO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FileSearcher.h" />
-    <ClInclude Include="FileEnumerator.h" />
-    <ClInclude Include="PrecompiledHeader.h" />
-    <ClInclude Include="PathUtils.h" />
-    <ClInclude Include="StringUtils.h" />
-    <ClInclude Include="ScopedStackAllocator.h" />
-    <ClInclude Include="OrdinalStringSearcher.h" />
-    <ClInclude Include="UnicodeUtf16StringSearcher.h" />
-    <ClInclude Include="..\Common\HandleHolder.h" />
-    <ClInclude Include="WorkQueue.h" />
-    <ClInclude Include="SearchInstructions.h" />
-    <ClInclude Include="FileContentSearchData.h" />
-    <ClInclude Include="SearchResultData.h" />
-    <ClInclude Include="AsynchronousPeriodicTimer.h" />
+    <ClInclude Include="..\Common\CriticalSection.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Event.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\HandleHolder.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\HeapArray.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\NonCopyable.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\StringSearch\OrdinalStringSearcher.h">
+      <Filter>StringSearch</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\StringSearch\StringSearcher.h">
+      <Filter>StringSearch</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\StringSearch\UnicodeUtf16StringSearcher.h">
+      <Filter>StringSearch</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.h">
+      <Filter>FileReadBackends\DirectStorage</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectXContext.h">
+      <Filter>FileReadBackends\DirectStorage</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\ReadBatch.h">
+      <Filter>FileReadBackends\DirectStorage</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\AsynchronousPeriodicTimer.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\FileEnumerator.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\ObjectPool.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\PathUtils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\ScopedStackAllocator.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\StringUtils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\WorkQueue.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FileContentSearchData.h" />
+    <ClInclude Include="Source\FileSearcher.h" />
+    <ClInclude Include="Source\SearchInstructions.h" />
+    <ClInclude Include="Source\SearchResultData.h" />
+    <ClInclude Include="Source\SearchResultReporter.h" />
+    <ClInclude Include="Source\PrecompiledHeader.h" />
+    <ClInclude Include="Source\Utilities\IndexStableRingBuffer.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.h">
+      <Filter>FileReadBackends\OverlappedIO</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadData.h">
+      <Filter>FileReadBackends\DirectStorage</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{e511a06a-f90a-457f-92b7-b3445e7adf4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{e15ddfa1-c706-4885-82eb-d2bc3945b731}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="StringSearch">
+      <UniqueIdentifier>{a40d6b8a-7168-451c-84cd-a44e8560c84c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileReadBackends">
+      <UniqueIdentifier>{9307f58c-2a01-47e3-b63a-70bad6f741ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileReadBackends\DirectStorage">
+      <UniqueIdentifier>{933e929d-7693-41ff-9ccc-a2d4608a9d0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileReadBackends\OverlappedIO">
+      <UniqueIdentifier>{223f9f1a-099a-4c29-9233-c50bf9f77784}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

@@ -1,6 +1,8 @@
 #pragma once
 
-class WindowClassHolder
+#include "NonCopyable.h"
+
+class WindowClassHolder : NonCopyable
 {
 private:
 	ATOM m_WindowClass;
@@ -28,9 +30,6 @@ public:
 		m_WindowClass = windowClass;
 		return *this;
 	}
-
-	WindowClassHolder(const WindowClassHolder&) = delete;
-	WindowClassHolder& operator=(const WindowClassHolder&) = delete;
 
 	inline operator ATOM() const
 	{

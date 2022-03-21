@@ -96,11 +96,13 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <PrecompiledHeaderFile>PrecompiledHeader.h</PrecompiledHeaderFile>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dxgi.lib;d3d12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -112,11 +114,13 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <PrecompiledHeaderFile>PrecompiledHeader.h</PrecompiledHeaderFile>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dxgi.lib;d3d12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -131,7 +135,8 @@
       <PrecompiledHeaderFile>PrecompiledHeader.h</PrecompiledHeaderFile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,6 +144,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dxgi.lib;d3d12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -153,7 +159,8 @@
       <PrecompiledHeaderFile>PrecompiledHeader.h</PrecompiledHeaderFile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -161,37 +168,67 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dxgi.lib;d3d12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="FileSearcher.cpp" />
-    <ClCompile Include="PrecompiledHeader.cpp">
+    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.cpp" />
+    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectXContext.cpp" />
+    <ClCompile Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.cpp" />
+    <ClCompile Include="Source\FileSearcher.cpp" />
+    <ClCompile Include="Source\PrecompiledHeader.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SearchEngine.cpp">
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level4</WarningLevel>
-    </ClCompile>
+    <ClCompile Include="Source\SearchEngine.cpp" />
+    <ClCompile Include="Source\SearchResultReporter.cpp" />
+    <ClCompile Include="Source\StringSearch\StringSearcher.cpp" />
+    <ClCompile Include="Source\Utilities\ScopedStackAllocator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\CriticalSection.h" />
+    <ClInclude Include="..\Common\Event.h" />
     <ClInclude Include="..\Common\HandleHolder.h" />
-    <ClInclude Include="FileContentSearchData.h" />
-    <ClInclude Include="FileEnumerator.h" />
-    <ClInclude Include="FileSearcher.h" />
-    <ClInclude Include="PathUtils.h" />
-    <ClInclude Include="PrecompiledHeader.h" />
-    <ClInclude Include="AsynchronousPeriodicTimer.h" />
-    <ClInclude Include="ScopedStackAllocator.h" />
-    <ClInclude Include="OrdinalStringSearcher.h" />
-    <ClInclude Include="SearchInstructions.h" />
-    <ClInclude Include="SearchResultData.h" />
-    <ClInclude Include="StringUtils.h" />
-    <ClInclude Include="UnicodeUtf16StringSearcher.h" />
-    <ClInclude Include="WorkQueue.h" />
+    <ClInclude Include="..\Common\HeapArray.h" />
+    <ClInclude Include="..\Common\NonCopyable.h" />
+    <ClInclude Include="Source\FileContentSearchData.h" />
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadData.h" />
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.h" />
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectXContext.h" />
+    <ClInclude Include="Source\FileReadBackends\DirectStorage\ReadBatch.h" />
+    <ClInclude Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.h" />
+    <ClInclude Include="Source\FileSearcher.h" />
+    <ClInclude Include="Source\PrecompiledHeader.h" />
+    <ClInclude Include="Source\SearchInstructions.h" />
+    <ClInclude Include="Source\SearchResultData.h" />
+    <ClInclude Include="Source\SearchResultReporter.h" />
+    <ClInclude Include="Source\StringSearch\OrdinalStringSearcher.h" />
+    <ClInclude Include="Source\StringSearch\StringSearcher.h" />
+    <ClInclude Include="Source\StringSearch\UnicodeUtf16StringSearcher.h" />
+    <ClInclude Include="Source\Utilities\AsynchronousPeriodicTimer.h" />
+    <ClInclude Include="Source\Utilities\FileEnumerator.h" />
+    <ClInclude Include="Source\Utilities\IndexStableRingBuffer.h" />
+    <ClInclude Include="Source\Utilities\ObjectPool.h" />
+    <ClInclude Include="Source\Utilities\PathUtils.h" />
+    <ClInclude Include="Source\Utilities\ScopedStackAllocator.h" />
+    <ClInclude Include="Source\Utilities\StringUtils.h" />
+    <ClInclude Include="Source\Utilities\WorkQueue.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.Direct3D.DirectStorage.1.0.0\build\Microsoft.Direct3D.DirectStorage.targets" Condition="Exists('..\packages\Microsoft.Direct3D.DirectStorage.1.0.0\build\Microsoft.Direct3D.DirectStorage.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.DirectStorage.1.0.0\build\Microsoft.Direct3D.DirectStorage.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.DirectStorage.1.0.0\build\Microsoft.Direct3D.DirectStorage.targets'))" />
+  </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

@@ -1,13 +1,15 @@
 #pragma once
+#include "NonCopyable.h"
 
-struct HandleHolder
+template <HANDLE InvalidValue>
+struct HandleHolder : NonCopyable
 {
 private:
 	HANDLE m_Handle;
 
 public:
 	inline HandleHolder() :
-		m_Handle(INVALID_HANDLE_VALUE)
+		m_Handle(InvalidValue)
 	{
 	}
 
@@ -16,24 +18,16 @@ public:
 	{
 	}
 
-	inline ~HandleHolder()
-	{
-		if (m_Handle != INVALID_HANDLE_VALUE)
-			CloseHandle(m_Handle);
-	}
-
-	inline operator HANDLE() const
-	{
-		return m_Handle;
-	}
-
-	HandleHolder(const HandleHolder&) = delete;
-	HandleHolder& operator=(const HandleHolder&) = delete;
-
 	HandleHolder(HandleHolder&& other) :
 		m_Handle(other)
 	{
-		other.m_Handle = INVALID_HANDLE_VALUE;
+		other.m_Handle = InvalidValue;
+	}
+
+	inline ~HandleHolder()
+	{
+		if (m_Handle != InvalidValue)
+			CloseHandle(m_Handle);
 	}
 
 	HandleHolder& operator=(HandleHolder&& other)
@@ -42,12 +36,28 @@ public:
 		return *this;
 	}
 
+	inline operator HANDLE() const
+	{
+		return m_Handle;
+	}
+
+	inline operator bool() const
+	{
+		return m_Handle != InvalidValue;
+	}
+
 	HandleHolder& operator=(HANDLE handle)
 	{
-		if (m_Handle != INVALID_HANDLE_VALUE)
+		if (m_Handle != InvalidValue)
 			CloseHandle(m_Handle);
 		
 		m_Handle = handle;
 		return *this;
 	}
 };
+
+using EventHandleHolder = HandleHolder<nullptr>;
+using FileHandleHolder = HandleHolder<INVALID_HANDLE_VALUE>;
+using SemaphoreHandleHolder = HandleHolder<nullptr>;
+using ThreadHandleHolder = HandleHolder<nullptr>;
+using TimerHandleHolder = HandleHolder<nullptr>;

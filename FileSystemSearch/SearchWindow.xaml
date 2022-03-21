@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="File System Search - Search" 
         Height="620" Width="425"
-        MinHeight="640" MinWidth="425"
-        MaxHeight="640" MaxWidth="425">
+        MinHeight="680" MinWidth="425"
+        MaxHeight="680" MaxWidth="425">
 	<Grid x:Name="LayoutRoot">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="30" />
@@ -15,6 +15,8 @@
 			<RowDefinition Height="30" />
 			<RowDefinition Height="30" />
 			<RowDefinition Height="30" />
+			<RowDefinition Height="20" />
+			<RowDefinition Height="20" />
 			<RowDefinition Height="20" />
 			<RowDefinition Height="20" />
 			<RowDefinition Height="20" />
@@ -68,6 +70,8 @@
 		<CheckBox Grid.Row="20" Content="Ignore case" HorizontalContentAlignment="Left" IsChecked="{Binding SearchIgnoreCase, Mode=TwoWay}" Margin="40,2" />
 		<CheckBox Grid.Row="21" Content="Ignore files and folders starting with '.'" HorizontalContentAlignment="Left" IsChecked="{Binding SearchIgnoreDotStart, Mode=TwoWay}" Margin="40,2" />
 
-		<Button Grid.Row="23" x:Name="buttonSearch" Click="ButtonSearch_Click" IsDefault="True" Content="Search!" Margin="40,2" />
+        <CheckBox Grid.Row="23" Content="Use DirectStorage for reading files" HorizontalContentAlignment="Left" IsChecked="{Binding SearchUseDirectStorage, Mode=TwoWay}" Margin="40,2" />
+
+		<Button Grid.Row="25" x:Name="buttonSearch" Click="ButtonSearch_Click" IsDefault="True" Content="Search!" Margin="40,2" />
 	</Grid>
 </Window>

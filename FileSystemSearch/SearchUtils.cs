@@ -11,6 +11,7 @@ namespace FileSystemSearch
 		public delegate void FoundPathCallbackDelegate(IntPtr findData, IntPtr path);
 		public delegate void SearchProgressUpdatedDelegate([In] ref SearchStatistics searchStatistics, double progress);
 		public delegate void SearchDoneCallbackDelegate([In] ref SearchStatistics searchStatistics);
+		public delegate void ErrorCallbackDelegate([In] [MarshalAs(UnmanagedType.LPWStr)] string message);
 
 		public static bool ValidateSearchViewModel(SearchViewModel searchViewModel, out string validationFailedReason)
 		{
@@ -72,7 +73,7 @@ namespace FileSystemSearch
 			return true;
 		}
 
-		public static IntPtr SearchAsync(SearchViewModel searchViewModel, FoundPathCallbackDelegate foundPathCallback, SearchProgressUpdatedDelegate searchProgressUpdated, SearchDoneCallbackDelegate searchDoneCallback)
+		public static IntPtr SearchAsync(SearchViewModel searchViewModel, FoundPathCallbackDelegate foundPathCallback, SearchProgressUpdatedDelegate searchProgressUpdated, SearchDoneCallbackDelegate searchDoneCallback, ErrorCallbackDelegate errorCallback)
 		{
 			SearchFlags searchFlags = SearchFlags.None;
 
@@ -112,7 +113,10 @@ namespace FileSystemSearch
 			if (searchViewModel.SearchIgnoreDotStart)
 				searchFlags |= SearchFlags.SearchIgnoreDotStart;
 
-			return Search(foundPathCallback, searchProgressUpdated, searchDoneCallback, searchViewModel.SearchPath, searchViewModel.SearchPattern, searchViewModel.SearchString, searchFlags, searchViewModel.IgnoreFilesLargerThanInBytes);
+			if (searchViewModel.SearchUseDirectStorage)
+				searchFlags |= SearchFlags.UseDirectStorage;
+
+			return Search(foundPathCallback, searchProgressUpdated, searchDoneCallback, errorCallback, searchViewModel.SearchPath, searchViewModel.SearchPattern, searchViewModel.SearchString, searchFlags, searchViewModel.IgnoreFilesLargerThanInBytes);
 		}
 
 		enum SearchFlags
@@ -130,6 +134,7 @@ namespace FileSystemSearch
 			SearchRecursively = 1 << 9,
 			SearchIgnoreCase = 1 << 10,
 			SearchIgnoreDotStart = 1 << 11,
+			UseDirectStorage = 1 << 12,
 		};
 
 		[DllImport("SearchEngine.dll")]
@@ -137,6 +142,7 @@ namespace FileSystemSearch
 			FoundPathCallbackDelegate foundPathCallback,
 			SearchProgressUpdatedDelegate progressUpdatedCallback,
 			SearchDoneCallbackDelegate searchDoneCallback,
+			ErrorCallbackDelegate errorCallback,
 			[MarshalAs(UnmanagedType.LPWStr)]string searchPath,
 			[MarshalAs(UnmanagedType.LPWStr)]string searchPattern,
 			[MarshalAs(UnmanagedType.LPWStr)]string searchString,

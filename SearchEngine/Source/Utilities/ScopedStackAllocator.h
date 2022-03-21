@@ -1,10 +1,12 @@
 #pragma once
 
-class ScopedStackAllocator
+#include "NonCopyable.h"
+
+class ScopedStackAllocator : NonCopyable
 {
 private:
-	static const size_t kFirstBlockSize = 4096;
-	static const size_t kAlignment = 4096;
+	static constexpr size_t kFirstBlockSize = 4096;
+	static constexpr size_t kAlignment = 4096;
 
 	struct BlockHeader
 	{
@@ -14,7 +16,7 @@ private:
 		uint8_t* m_CurrentPtr;
 
 	public:
-		inline BlockHeader(uint8_t* ptrBegin, uint8_t* ptrEnd) :
+		BlockHeader(uint8_t* ptrBegin, uint8_t* ptrEnd) :
 			m_PtrBegin(ptrBegin),
 			m_PtrEnd(ptrEnd),
 			m_CurrentPtr(ptrBegin)
@@ -51,6 +53,8 @@ private:
 		}
 	};
 
+	static BlockHeader s_EmptyHeader;
+
 	std::vector<BlockHeader*> m_Blocks;
 	size_t m_NextBlockSize;
 	size_t m_CurrentBlock;
@@ -69,7 +73,7 @@ private:
 		auto memory = VirtualAlloc(nullptr, allocationSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 		auto blockHeader = new (memory)BlockHeader(static_cast<uint8_t*>(memory) + sizeof(BlockHeader), static_cast<uint8_t*>(memory) + allocationSize);
 		m_Blocks.push_back(blockHeader);
-		m_CurrentBlockPtr = m_Blocks[m_CurrentBlock];
+		m_CurrentBlockPtr = blockHeader;
 
 		m_NextBlockSize = allocationSize * 2;
 	}
@@ -108,7 +112,7 @@ private:
 	}
 
 public:
-	struct ScopedMemory
+	struct ScopedMemory : NonCopyable
 	{
 	private:
 		ScopedStackAllocator& m_Allocator;
@@ -121,9 +125,6 @@ public:
 		{
 
 		}
-
-		ScopedMemory(const ScopedMemory&) = delete;
-		ScopedMemory& operator=(const ScopedMemory&) = delete;
 
 		inline ScopedMemory(ScopedMemory&& other) :
 			m_Allocator(other.m_Allocator),
@@ -147,13 +148,10 @@ public:
 
 	inline ScopedStackAllocator() :
 		m_NextBlockSize(kFirstBlockSize),
-		m_CurrentBlock(0)
+		m_CurrentBlock(std::numeric_limits<decltype(m_CurrentBlock)>::max()),
+		m_CurrentBlockPtr(&s_EmptyHeader)
 	{
-		AllocateBlock(kFirstBlockSize);
 	}
-
-	ScopedStackAllocator(const ScopedStackAllocator&) = delete;
-	ScopedStackAllocator& operator=(const ScopedStackAllocator&) = delete;
 
 	inline ~ScopedStackAllocator()
 	{

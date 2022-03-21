@@ -1,6 +1,8 @@
 #pragma once
 
-class CriticalSection
+#include "NonCopyable.h"
+
+class CriticalSection : NonCopyable
 {
 private:
 	CRITICAL_SECTION m_CriticalSection;
@@ -21,15 +23,12 @@ public:
 		InitializeCriticalSection(&m_CriticalSection);
 	}
 
-	CriticalSection(const CriticalSection&) = delete;
-	CriticalSection& operator=(const CriticalSection&) = delete;
-
 	inline ~CriticalSection()
 	{
 		DeleteCriticalSection(&m_CriticalSection);
 	}
 
-	struct Lock
+	struct Lock : NonCopyable
 	{
 	private:
 		CriticalSection& m_CriticalSection;
@@ -45,9 +44,6 @@ public:
 		{
 			m_CriticalSection.Leave();
 		}
-
-		Lock(const Lock&) = delete;
-		Lock& operator=(const Lock&) = delete;
 	};
 };
 

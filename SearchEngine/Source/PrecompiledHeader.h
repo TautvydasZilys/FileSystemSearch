@@ -9,10 +9,22 @@
 
 #include <Windows.h>
 
+#include <dstorage.h>
+#include <dstorageerr.h>
+#include <d3d12.h>
+#include <dxgi1_4.h>
+#include <threadpoolapiset.h>
+#include <wrl.h>
+
+using Microsoft::WRL::ComPtr;
+
 #include <algorithm>
+#include <concepts>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #define MAKE_BIT_OPERATORS_FOR_ENUM_CLASS(T) \
