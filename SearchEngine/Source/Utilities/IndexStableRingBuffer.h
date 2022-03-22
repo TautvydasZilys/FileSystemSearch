@@ -8,7 +8,7 @@ class IndexStableRingBuffer : NonCopyable
 public:
     IndexStableRingBuffer() :
         m_Capacity(0),
-        m_NextIndex(0),
+        m_TailIndex(0),
         m_Head(0),
         m_Tail(0)
     {
@@ -19,15 +19,15 @@ public:
         if (m_Tail >= m_Head)
         {
             for (TSize i = m_Head; i < m_Tail; i++)
-                GetElementPointer(i)->~Element();
+                GetPointer(i)->~T();
         }
         else
         {
             for (TSize i = m_Head; i < m_Capacity; i++)
-                GetElementPointer(i)->~Element();
+                GetPointer(i)->~T();
 
             for (TSize i = 0; i < m_Tail; i++)
-                GetElementPointer(i)->~Element();
+                GetPointer(i)->~T();
         }
     }
 
@@ -39,36 +39,12 @@ public:
     T& operator[](TSize index)
     {
         Assert(Size() > 0);
-        Assert(GetElementPointer(m_Head)->index <= index);
-        Assert(GetElementPointer(m_Tail - 1)->index >= index);
 
-        Element* begin;
-        Element* end;
+        const auto indexFromEnd = m_TailIndex - index;
+        if (m_Tail >= m_Head || indexFromEnd <= m_Tail)
+            return *GetPointer(m_Tail - indexFromEnd);
 
-        if (m_Tail >= m_Head)
-        {
-            begin = GetElementPointer(m_Head);
-            end = GetElementPointer(m_Tail);
-        }
-        else if (GetElementPointer(0)->index > index)
-        {
-            begin = GetElementPointer(m_Head);
-            end = GetElementPointer(m_Capacity);
-        }
-        else
-        {
-            begin = GetElementPointer(0);
-            end = GetElementPointer(m_Tail);
-        }
-
-        auto result = std::lower_bound(begin, end, index, [](const Element& element, TSize index)
-        {
-            return element.index < index;
-        });
-
-        Assert(result != GetElementPointer(m_Tail));
-        Assert(result->index == index);
-        return result->item;
+        return *GetPointer(m_Capacity + m_Tail - indexFromEnd);
     }
 
     TSize Size() const
@@ -82,19 +58,19 @@ public:
     T& Front()
     {
         Assert(Size() > 0);
-        return GetElementPointer(m_Head)->item;
+        return *GetPointer(m_Head);
     }
 
     T& Back()
     {
         Assert(Size() > 0);
-        return GetElementPointer(m_Tail - 1)->item;
+        return *GetPointer(m_Tail - 1);
     }
 
     TSize BackIndex() const
     {
         Assert(Size() > 0);
-        return GetElementPointer(m_Tail - 1)->index;
+        return m_TailIndex - 1;
     }
 
     TSize PushBack(T&& item)
@@ -115,14 +91,13 @@ public:
             Grow();
         }
 
-        auto index = m_NextIndex++;
-        new (GetElementPointer(m_Tail++)) Element(std::move(item), index);
-        return index;
+        new (GetPointer(m_Tail++)) T(std::move(item));
+        return m_TailIndex++;
     }
 
     void PopFront()
     {
-        GetElementPointer(m_Head)->~Element();
+        GetPointer(m_Head)->~T();
         m_Head++;
 
         if (m_Head == m_Tail)
@@ -136,34 +111,34 @@ public:
     }
 
 private:
-    inline static void TransferElement(uint8_t* srcBuffer, TSize srcIndex, uint8_t* dstBuffer, TSize dstIndex)
+    inline static void TransferT(uint8_t* srcBuffer, TSize srcIndex, uint8_t* dstBuffer, TSize dstIndex)
     {
-        auto oldElement = reinterpret_cast<Element*>(&srcBuffer[srcIndex * sizeof(Element)]);
-        auto destination = &dstBuffer[dstIndex * sizeof(Element)];
-        new (destination) Element(std::move(*oldElement));
-        oldElement->~Element();
+        auto oldT = reinterpret_cast<T*>(&srcBuffer[srcIndex * sizeof(T)]);
+        auto destination = &dstBuffer[dstIndex * sizeof(T)];
+        new (destination) T(std::move(*oldT));
+        oldT->~T();
     }
 
     inline void Grow()
     {
         const auto newCapacity = m_Capacity > 0 ? m_Capacity * 2 : 4;
         const auto size = Size();
-        std::unique_ptr<uint8_t[]> newBuffer(new uint8_t[newCapacity * sizeof(Element)]);
+        std::unique_ptr<uint8_t[]> newBuffer(new uint8_t[newCapacity * sizeof(T)]);
 
         if (m_Tail >= m_Head)
         {
             TSize dstIndex = 0;
             for (TSize i = m_Head; i < m_Tail; i++, dstIndex++)
-                TransferElement(m_Buffer.get(), i, newBuffer.get(), dstIndex);
+                TransferT(m_Buffer.get(), i, newBuffer.get(), dstIndex);
         }
         else
         {
             TSize dstIndex = 0;
             for (TSize i = m_Head; i < m_Capacity; i++, dstIndex++)
-                TransferElement(m_Buffer.get(), i, newBuffer.get(), dstIndex);
+                TransferT(m_Buffer.get(), i, newBuffer.get(), dstIndex);
 
             for (TSize i = 0; i < m_Tail; i++, dstIndex++)
-                TransferElement(m_Buffer.get(), i, newBuffer.get(), dstIndex);
+                TransferT(m_Buffer.get(), i, newBuffer.get(), dstIndex);
         }
 
         m_Buffer = std::move(newBuffer);
@@ -173,39 +148,14 @@ private:
     }
 
 private:
-    struct Element : NonCopyable
+    T* GetPointer(TSize index)
     {
-        T item;
-        TSize index;
-
-        Element(T item, TSize index) :
-            item(std::move(item)),
-            index(index)
-        {
-        }
-
-        Element(Element&& other) :
-            item(std::move(other.item)),
-            index(other.index)
-        {
-        }
-
-        Element& operator=(Element&& other)
-        {
-            item = std::move(other.item);
-            index = other.index;
-            return *this;
-        }
-    };
-
-    Element* GetElementPointer(TSize index)
-    {
-        return reinterpret_cast<Element*>(&m_Buffer[index * sizeof(Element)]);
+        return reinterpret_cast<T*>(&m_Buffer[index * sizeof(T)]);
     }
 
-    const Element* GetElementPointer(TSize index) const
+    const T* GetPointer(TSize index) const
     {
-        return reinterpret_cast<const Element*>(&m_Buffer[index * sizeof(Element)]);
+        return reinterpret_cast<const T*>(&m_Buffer[index * sizeof(T)]);
     }
 
 private:
@@ -213,5 +163,5 @@ private:
     TSize m_Capacity;
     TSize m_Head;
     TSize m_Tail;
-    TSize m_NextIndex;
+    TSize m_TailIndex;
 };
