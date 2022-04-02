@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSystemSearch", "FileSystemSearch\FileSystemSearch.csproj", "{47151F80-E3E7-459B-B8A0-830BC7302F2D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSystemSearch_WPF", "FileSystemSearch_WPF\FileSystemSearch_WPF.csproj", "{47151F80-E3E7-459B-B8A0-830BC7302F2D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{42CB7641-3FF2-4973-B1BE-1AE94123FD10} = {42CB7641-3FF2-4973-B1BE-1AE94123FD10}
 		{8847E348-4C53-4017-B9F8-9201D59F1B9C} = {8847E348-4C53-4017-B9F8-9201D59F1B9C}
@@ -48,5 +48,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2F5518D0-93A3-4F65-8C2F-AA6EB83E939C}
 	EndGlobalSection
 EndGlobal
