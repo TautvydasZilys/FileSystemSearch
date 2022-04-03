@@ -38,14 +38,10 @@ void ExplorerWindow::EnsureWindowClassIsCreated()
 ExplorerWindow::ExplorerWindow(HWND parent, int width, int height) :
 	m_Hwnd(nullptr),
 	m_Width(width),
-	m_Height(height),
-	m_ShcoreDll(nullptr),
-	m_GetDpiForMonitor(nullptr)
+	m_Height(height)
 {
 	auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 	Assert(SUCCEEDED(hr));
-
-	InitializeDpiResources();
 
 	EnsureWindowClassIsCreated();
 	
@@ -65,7 +61,6 @@ ExplorerWindow::~ExplorerWindow()
 	m_BindCtx = nullptr;
 	m_FileSystemBindData = nullptr;
 
-	FreeDpiResources();
 	CoUninitialize();
 
 	DestroyWindow(m_Hwnd);
@@ -125,37 +120,13 @@ void ExplorerWindow::Destroy()
 	delete this;
 }
 
-void ExplorerWindow::InitializeDpiResources()
-{
-	m_ShcoreDll = LoadLibraryW(L"Shcore.dll");
-
-	if (m_ShcoreDll != nullptr)
-		m_GetDpiForMonitor = reinterpret_cast<GetDpiForMonitorFunc>(GetProcAddress(m_ShcoreDll, "GetDpiForMonitor"));
-}
-
-void ExplorerWindow::FreeDpiResources()
-{
-	if (m_ShcoreDll != nullptr)
-	{
-		m_GetDpiForMonitor = nullptr;
-		FreeLibrary(m_ShcoreDll);
-		m_ShcoreDll = nullptr;
-	}
-}
-
 void ExplorerWindow::GetCurrentMonitorScale(float& scaleX, float& scaleY)
 {
-	if (m_GetDpiForMonitor != nullptr)
+	auto dpi = GetDpiForWindow(m_Hwnd);
+	if (dpi != 0)
 	{
-		auto hmonitor = MonitorFromWindow(m_Hwnd, m_Hwnd != nullptr ? MONITOR_DEFAULTTONEAREST : MONITOR_DEFAULTTOPRIMARY);
-
-		UINT dpiX, dpiY;
-		if (SUCCEEDED(m_GetDpiForMonitor(hmonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY)))
-		{
-			scaleX = dpiX / 96.0f;
-			scaleY = dpiY / 96.0f;
-			return;
-		}
+		scaleX = scaleY = dpi / 96.0f;
+		return;
 	}
 
 	// Default to no scaling

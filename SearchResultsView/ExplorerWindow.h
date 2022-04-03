@@ -2,8 +2,6 @@
 
 #include "HandleHolder.h"
 
-typedef HRESULT (WINAPI* GetDpiForMonitorFunc)(HMONITOR monitor, MONITOR_DPI_TYPE dpiType, UINT* dpiX, UINT* dpiY);
-
 class ExplorerWindow
 {
 private:
@@ -14,14 +12,10 @@ private:
 	WRL::ComPtr<IFileSystemBindData2> m_FileSystemBindData;
 	int m_Width;
 	int m_Height;
-	HMODULE m_ShcoreDll;
-	GetDpiForMonitorFunc m_GetDpiForMonitor;
 
 	~ExplorerWindow();
 	static void EnsureWindowClassIsCreated();
 
-	void InitializeDpiResources();
-	void FreeDpiResources();
 	void GetCurrentMonitorScale(float& scaleX, float& scaleY);
 
 public:
