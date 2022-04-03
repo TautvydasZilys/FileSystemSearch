@@ -27,7 +27,7 @@ private:
 private:
     #define DECLARE_SEARCH_WINDOW_CONTROLS                                                                                          \
     CONTROL(                                            TextBlock(L"Search Path", 40, 11, 320))                                     \
-    NAMED_CONTROL(SearchPathTextBox,                    TextBox(L"C:\\", 40, 30, 320))                                              \
+    NAMED_CONTROL(SearchPathTextBox,                    TextBox(L"C:", 40, 30, 320))                                                \
     CONTROL(                                            TextBlock(L"Search Pattern", 40, 71, 320))                                  \
     NAMED_CONTROL(SearchPatternTextBox,                 TextBox(L"*", 40, 90, 320))                                                 \
     CONTROL(                                            TextBlock(L"Search String", 40, 131, 320))                                  \
