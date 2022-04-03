@@ -3,6 +3,7 @@
 #include "NonCopyable.h"
 #include "Utilities/Control.h"
 #include "Utilities/HwndHolder.h"
+#include "Utilities/WndClassHolder.h"
 
 class ChildControl;
 class FontCache;
@@ -23,6 +24,8 @@ private:
 
     void AdjustSearchWindowPlacement(int positionX, int positionY, uint32_t dpi);
     void OnCreate(HWND hWnd);
+    void SearchButtonClicked();
+    void DisplayValidationFailure(const wchar_t* message);
 
 private:
     #define DECLARE_SEARCH_WINDOW_CONTROLS                                                                                          \
@@ -79,7 +82,7 @@ private:
 
 private:
     const FontCache& m_FontCache;
-    ATOM m_WindowClass;
-    HWND m_Hwnd;
+    WndClassHolder m_WindowClass;
+    HwndHolder m_Hwnd;
     HwndHolder m_Controls[m_ControlCount];
 };

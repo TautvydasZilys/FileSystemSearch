@@ -60,7 +60,7 @@ SearchWindow::SearchWindow(const FontCache& fontCache, int nCmdShow) :
     m_WindowClass = RegisterClassExW(&classDescription);
     Assert(m_WindowClass != 0);
 
-    auto hwnd = CreateWindowExW(kWindowExStyle, reinterpret_cast<LPCWSTR>(m_WindowClass), L"File System Search - Search", kWindowStyle, CW_USEDEFAULT, 0, 0, 0, nullptr, nullptr, GetHInstance(), nullptr);
+    auto hwnd = CreateWindowExW(kWindowExStyle, m_WindowClass, L"File System Search - Search", kWindowStyle, CW_USEDEFAULT, 0, 0, 0, nullptr, nullptr, GetHInstance(), nullptr);
     Assert(m_Hwnd == hwnd);
 
     auto wasVisible = ShowWindow(m_Hwnd, nCmdShow);
@@ -69,9 +69,6 @@ SearchWindow::SearchWindow(const FontCache& fontCache, int nCmdShow) :
 
 SearchWindow::~SearchWindow()
 {
-    DestroyWindow(m_Hwnd);
-    UnregisterClassW(reinterpret_cast<LPCWSTR>(m_WindowClass), GetHInstance());
-
     Assert(s_Instance == this);
     s_Instance = nullptr;
 }
@@ -102,6 +99,37 @@ LRESULT SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             s_Instance->AdjustSearchWindowPlacement(targetRect->left, targetRect->top, HIWORD(wParam));
 
             return 0;
+        }
+
+        case WM_COMMAND:
+        {
+            switch (wParam)
+            {
+                case IDOK:
+                    s_Instance->SearchButtonClicked();
+                    break;
+
+                default:
+                {
+                    switch (LOWORD(wParam))
+                    {
+                        case m_SearchButton:
+                        {
+                            switch (HIWORD(wParam))
+                            {
+                                case BN_CLICKED:
+                                    s_Instance->SearchButtonClicked();
+                                    break;
+                            }
+
+                            break;
+                        }
+                    }
+
+                }
+            }
+
+            break;
         }
     }
 
@@ -172,4 +200,101 @@ void SearchWindow::AdjustSearchWindowPlacement(int positionX, int positionY, uin
 
         SendMessageW(childHwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
     }
+}
+
+void SearchWindow::SearchButtonClicked()
+{
+    std::wstring searchPath = GetWindowTextW(m_Controls[m_SearchPathTextBox]);
+    std::wstring searchPattern = GetWindowTextW(m_Controls[m_SearchPatternTextBox]);
+    std::wstring searchString = GetWindowTextW(m_Controls[m_SearchStringTextBox]);
+
+    std::wstring ignoreFilesLargerThan = GetWindowTextW(m_Controls[m_IgnoreFilesLargerThanTextBox]);
+    ByteUnit ignoreFilesLargerThanUnit = static_cast<ByteUnit>(SendMessageW(m_Controls[m_IgnoreFilesLargerThanUnitComboBox], CB_GETCURSEL, 0, 0));
+    Assert(ignoreFilesLargerThanUnit <= ByteUnit::TB);
+
+    bool searchForFiles = IsChecked(m_Controls[m_SearchForFilesCheckBox]);
+    bool searchInFilePath = IsChecked(m_Controls[m_SearchInFilePathCheckBox]);
+    bool searchInFileName = IsChecked(m_Controls[m_SearchInFileNameCheckBox]);
+    bool searchInFileContents = IsChecked(m_Controls[m_SearchInFileContentsCheckBox]);
+    bool searchContentsAsUtf8 = IsChecked(m_Controls[m_SearchFileContentsAsUTF8CheckBox]);
+    bool searchContentsAsUtf16 = IsChecked(m_Controls[m_SearchFileContentsAsUTF16CheckBox]);
+
+    bool searchForDirectories = IsChecked(m_Controls[m_SearchForDirectoriesCheckBox]);
+    bool searchInDirectoryPath = IsChecked(m_Controls[m_SearchInDirectoryPathCheckBox]);
+    bool searchInDirectoryName = IsChecked(m_Controls[m_SearchInDirectoryNameCheckBox]);
+
+    bool searchRecursively = IsChecked(m_Controls[m_SearchRecursivelyCheckBox]);
+    bool ignoreCase = IsChecked(m_Controls[m_IgnoreCaseCheckBox]);
+    bool ignoreFilesStartingWithDot = IsChecked(m_Controls[m_IgnoreFilesStartingWithDotCheckBox]);
+
+    bool useDirectStorage = IsChecked(m_Controls[m_UseDirectStorageCheckBox]);
+
+    if (!searchForFiles && !searchForDirectories)
+    {
+        DisplayValidationFailure(L"Either 'Search for files', and/or 'Search for directories' must be selected.");
+        return;
+    }
+
+    if (searchForFiles && !searchInFilePath && !searchInFileName && !searchInFileContents)
+    {
+        DisplayValidationFailure(L"At least one file search mode must be selected if searching for files.");
+        return;
+    }
+
+    if (searchInFileContents && !searchContentsAsUtf8 && !searchContentsAsUtf16)
+    {
+        DisplayValidationFailure(L"When searching file contents, UTF8 and/or UTF16 search must be selected.");
+        return;
+    }
+
+    if (searchForDirectories && !searchInDirectoryPath && !searchInDirectoryName)
+    {
+        DisplayValidationFailure(L"At least one directory search mode must be selected if searching for directories.");
+        return;
+    }
+
+    if (searchPath.empty())
+    {
+        DisplayValidationFailure(L"Search path must not be empty.");
+        return;
+    }
+
+    if (searchPattern.empty())
+    {
+        DisplayValidationFailure(L"Search pattern must not be empty.");
+        return;
+    }
+
+    if (searchString.empty())
+    {
+        DisplayValidationFailure(L"Search string must not be empty.");
+        return;
+    }
+
+    if (searchString.length() > 1 << 26)
+    {
+        if (searchString.length() > (1 << 30) || 
+            WideCharToMultiByte(CP_UTF8, 0, searchString.c_str(), static_cast<int>(searchString.length()), nullptr, 0, nullptr, nullptr) > (1 << 30))
+        {
+            DisplayValidationFailure(L"Search string is too long.");
+            return;
+        }
+    }
+
+    if (searchInFileContents && searchContentsAsUtf8 && 
+        std::find_if(searchString.begin(), searchString.end(), [](wchar_t c) { return c < 0 || c > 127; }) != searchString.end())
+    {
+        DisplayValidationFailure(L"Searching for file contents as UTF8 with non-ascii string is not implemented.");
+        return;
+    }
+
+    (void)useDirectStorage;
+    (void)ignoreCase;
+    (void)ignoreFilesStartingWithDot;
+    (void)searchRecursively;
+}
+
+void SearchWindow::DisplayValidationFailure(const wchar_t* message)
+{
+    MessageBoxW(m_Hwnd, message, L"Search is not possible", MB_OK | MB_ICONERROR);
 }
