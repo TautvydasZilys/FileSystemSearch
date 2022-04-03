@@ -3,6 +3,9 @@
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\PrecompiledHeader.cpp" />
+    <ClCompile Include="Source\AppWindows\SearchWindow.cpp">
+      <Filter>AppWindows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\PrecompiledHeader.h" />
@@ -27,6 +30,12 @@
     <ClInclude Include="..\Common\Version.rc">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="Source\AppWindows\SearchWindow.h">
+      <Filter>AppWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\WindowUtilities.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -34,6 +43,12 @@
     </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{342e748c-7100-49d0-be9d-85dcb02255c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AppWindows">
+      <UniqueIdentifier>{4309b842-f1d2-4f09-91c4-3159ee7496c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{f3601572-69f9-46b4-a86f-db2c7776e8e1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

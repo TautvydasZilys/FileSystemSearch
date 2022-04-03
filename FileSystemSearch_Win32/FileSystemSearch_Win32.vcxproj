@@ -197,12 +197,15 @@
     <ClInclude Include="..\Common\HeapArray.h" />
     <ClInclude Include="..\Common\NonCopyable.h" />
     <ClInclude Include="..\Common\Version.rc" />
+    <ClCompile Include="Source\AppWindows\SearchWindow.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClInclude Include="Source\Utilities\WindowUtilities.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\AppWindows\SearchWindow.h" />
     <ClInclude Include="Source\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>

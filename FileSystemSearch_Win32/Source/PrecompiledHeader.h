@@ -9,6 +9,8 @@
 
 #include <Windows.h>
 
+#include <cstdint>
+
 #if _DEBUG
 #define Assert(x) do { if (!(x)) __debugbreak(); } while (false, false)
 #else
