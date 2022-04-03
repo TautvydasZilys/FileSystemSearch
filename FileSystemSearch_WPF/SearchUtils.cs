@@ -23,13 +23,13 @@ namespace FileSystemSearch
 
 			if (searchViewModel.SearchForFiles && !searchViewModel.SearchInFilePath && !searchViewModel.SearchInFileName && !searchViewModel.SearchInFileContents)
 			{
-				validationFailedReason = "At least one file search mode must be selected if searching for directories.";
+				validationFailedReason = "At least one file search mode must be selected if searching for files.";
 				return false;
 			}
 
 			if (searchViewModel.SearchInFileContents && !searchViewModel.SearchContentsAsUtf8 && !searchViewModel.SearchContentsAsUtf16)
 			{
-				validationFailedReason = "When searching file contents, either must be searched as either UTF8 and/or UTF16.";
+				validationFailedReason = "When searching file contents, UTF8 and/or UTF16 search must be selected.";
 				return false;
 			}
 
