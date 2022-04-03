@@ -16,10 +16,10 @@
     <ClCompile Include="Source\FileSearcher.cpp" />
     <ClCompile Include="Source\SearchEngine.cpp" />
     <ClCompile Include="Source\SearchResultReporter.cpp" />
-    <ClCompile Include="Source\PrecompiledHeader.cpp" />
     <ClCompile Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.cpp">
       <Filter>FileReadBackends\OverlappedIO</Filter>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\CriticalSection.h">
@@ -81,7 +81,6 @@
     <ClInclude Include="Source\SearchInstructions.h" />
     <ClInclude Include="Source\SearchResultData.h" />
     <ClInclude Include="Source\SearchResultReporter.h" />
-    <ClInclude Include="Source\PrecompiledHeader.h" />
     <ClInclude Include="Source\Utilities\IndexStableRingBuffer.h">
       <Filter>Utilities</Filter>
     </ClInclude>
@@ -96,6 +95,10 @@
     </ClInclude>
     <ClInclude Include="..\Common\Version.rc">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
+    <ClInclude Include="Include\SearchEngine.h">
+      <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -122,6 +125,9 @@
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{abecf734-c5bf-46fb-8bc2-e31136756d9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{d46b1b21-c133-40a8-bd19-c2ea7f6f9795}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

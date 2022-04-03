@@ -1,4 +1,5 @@
 #include "PrecompiledHeader.h"
+#include "SearchEngine.h"
 #include "SearchWindow.h"
 #include "Utilities/FontCache.h"
 #include "Utilities/WindowUtilities.h"
@@ -13,13 +14,13 @@ constexpr int kWindowClientHeight = 639;
 
 constexpr intptr_t kBackgroundColor = COLOR_WINDOW + 1;
 
-enum class ByteUnit
+enum class ByteUnit : uint64_t
 {
-    B,
-    KB,
-    MB,
-    GB,
-    TB
+    B = 1,
+    KB = 1024 * B,
+    MB = 1024 * KB,
+    GB = 1024 * MB,
+    TB = 1024 * GB,
 };
 
 struct NamedByteUnit
@@ -209,7 +210,8 @@ void SearchWindow::SearchButtonClicked()
     std::wstring searchString = GetWindowTextW(m_Controls[m_SearchStringTextBox]);
 
     std::wstring ignoreFilesLargerThan = GetWindowTextW(m_Controls[m_IgnoreFilesLargerThanTextBox]);
-    ByteUnit ignoreFilesLargerThanUnit = static_cast<ByteUnit>(SendMessageW(m_Controls[m_IgnoreFilesLargerThanUnitComboBox], CB_GETCURSEL, 0, 0));
+    auto comboBoxIndex = SendMessageW(m_Controls[m_IgnoreFilesLargerThanUnitComboBox], CB_GETCURSEL, 0, 0);
+    ByteUnit ignoreFilesLargerThanUnit = static_cast<ByteUnit>(SendMessageW(m_Controls[m_IgnoreFilesLargerThanUnitComboBox], CB_GETITEMDATA, comboBoxIndex, 0));
     Assert(ignoreFilesLargerThanUnit <= ByteUnit::TB);
 
     bool searchForFiles = IsChecked(m_Controls[m_SearchForFilesCheckBox]);
@@ -288,10 +290,96 @@ void SearchWindow::SearchButtonClicked()
         return;
     }
 
-    (void)useDirectStorage;
-    (void)ignoreCase;
-    (void)ignoreFilesStartingWithDot;
-    (void)searchRecursively;
+    SearchFlags searchFlags = {};
+
+    if (searchForFiles)
+        searchFlags |= SearchFlags::kSearchForFiles;
+
+    if (searchInFileName)
+        searchFlags |= SearchFlags::kSearchInFileName;
+
+    if (searchInFilePath)
+        searchFlags |= SearchFlags::kSearchInFilePath;
+
+    if (searchInFileContents)
+        searchFlags |= SearchFlags::kSearchInFileContents;
+
+    if (searchContentsAsUtf8)
+        searchFlags |= SearchFlags::kSearchContentsAsUtf8;
+
+    if (searchContentsAsUtf16)
+        searchFlags |= SearchFlags::kSearchContentsAsUtf16;
+
+    if (searchForDirectories)
+        searchFlags |= SearchFlags::kSearchForDirectories;
+
+    if (searchInDirectoryPath)
+        searchFlags |= SearchFlags::kSearchInDirectoryPath;
+
+    if (searchInDirectoryName)
+        searchFlags |= SearchFlags::kSearchInDirectoryName;
+
+    if (searchRecursively)
+        searchFlags |= SearchFlags::kSearchRecursively;
+
+    if (ignoreCase)
+        searchFlags |= SearchFlags::kIgnoreCase;
+
+    if (ignoreFilesStartingWithDot)
+        searchFlags |= SearchFlags::kIgnoreDotStart;
+
+    if (useDirectStorage)
+        searchFlags |= SearchFlags::kUseDirectStorage;
+
+    uint64_t ignoreLargerThan = 0;
+    for (auto c : ignoreFilesLargerThan)
+    {
+        Assert(c >= '0' && c <= '9');
+        if (c < '0' || c > '9')
+        {
+            ignoreLargerThan = std::numeric_limits<uint64_t>::max();
+            break;
+        }
+
+        if (ignoreLargerThan > std::numeric_limits<uint64_t>::max() / 10)
+        {
+            ignoreLargerThan = std::numeric_limits<uint64_t>::max();
+            break;
+        }
+
+        ignoreLargerThan = ignoreLargerThan * 10;
+        auto digit = (c - '0');
+
+        if (ignoreLargerThan > std::numeric_limits<uint64_t>::max() - digit)
+        {
+            ignoreLargerThan = std::numeric_limits<uint64_t>::max();
+            break;
+        }
+
+        ignoreLargerThan += digit;
+    }
+
+    if (ignoreLargerThan > std::numeric_limits<uint64_t>::max() / static_cast<uint64_t>(ignoreFilesLargerThanUnit))
+    {
+        ignoreLargerThan = std::numeric_limits<uint64_t>::max();
+    }
+    else
+    {
+        ignoreLargerThan *= static_cast<uint64_t>(ignoreFilesLargerThanUnit);
+    }
+
+    auto search = ::Search(
+        [](const WIN32_FIND_DATAW* /*findData*/, const wchar_t* path) { std::wstring result = L"Path found: '"; result += path; result += L"'\r\n"; OutputDebugStringW(result.c_str()); },
+        [](const SearchStatistics& /*searchStatistics*/, double /*progress*/) {},
+        [](const SearchStatistics& /*searchStatistics*/) { OutputDebugStringW(L"Search done!\r\n"); },
+        [](const wchar_t* errorMessage) { MessageBoxW(nullptr, errorMessage, L"Error", MB_OK | MB_ICONERROR); },
+        searchPath.c_str(),
+        searchPattern.c_str(),
+        searchString.c_str(),
+        searchFlags,
+        ignoreLargerThan);
+
+    CleanupSearchOperation(search);
 }
 
 void SearchWindow::DisplayValidationFailure(const wchar_t* message)

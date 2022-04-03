@@ -60,3 +60,9 @@ using Microsoft::WRL::ComPtr;
 
 #define CONCAT_(a, b) a ## b
 #define CONCAT(a, b) CONCAT_(a, b)
+
+#if BUILDING_SEARCHENGINE
+#define EXPORT_SEARCHENGINE __declspec(dllexport)
+#else
+#define EXPORT_SEARCHENGINE __declspec(dllimport)
+#endif
