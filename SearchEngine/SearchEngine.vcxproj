@@ -92,7 +92,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SEARCHENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_DSTORAGE=1;WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <PrecompiledHeaderFile>PrecompiledHeader.h</PrecompiledHeaderFile>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -111,7 +111,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SEARCHENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_DSTORAGE=1;WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <PrecompiledHeaderFile>PrecompiledHeader.h</PrecompiledHeaderFile>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -135,7 +135,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SEARCHENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_DSTORAGE=1;WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <PrecompiledHeaderFile>PrecompiledHeader.h</PrecompiledHeaderFile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -160,7 +160,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SEARCHENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_DSTORAGE=1;WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <PrecompiledHeaderFile>PrecompiledHeader.h</PrecompiledHeaderFile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -186,16 +186,13 @@
     <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectXContext.cpp" />
     <ClCompile Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.cpp" />
     <ClCompile Include="Source\FileSearcher.cpp" />
-    <ClCompile Include="Source\PrecompiledHeader.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="Source\SearchEngine.cpp" />
     <ClCompile Include="Source\SearchResultReporter.cpp" />
     <ClCompile Include="Source\StringSearch\StringSearcher.cpp" />
     <ClCompile Include="Source\Utilities\ScopedStackAllocator.cpp" />
+    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\CriticalSection.h" />
@@ -211,7 +208,6 @@
     <ClInclude Include="Source\FileReadBackends\DirectStorage\ReadBatch.h" />
     <ClInclude Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.h" />
     <ClInclude Include="Source\FileSearcher.h" />
-    <ClInclude Include="Source\PrecompiledHeader.h" />
     <ClInclude Include="Source\Resources\resource.h" />
     <ClInclude Include="Source\SearchInstructions.h" />
     <ClInclude Include="Source\SearchResultData.h" />
@@ -227,6 +223,7 @@
     <ClInclude Include="Source\Utilities\ScopedStackAllocator.h" />
     <ClInclude Include="Source\Utilities\StringUtils.h" />
     <ClInclude Include="Source\Utilities\WorkQueue.h" />
+    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

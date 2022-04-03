@@ -85,14 +85,14 @@ void ExplorerWindow::Initialize()
 	hr = m_ExplorerBrowser->FillFromObject(nullptr, EBF_NONE);
 	Assert(SUCCEEDED(hr));
 
-	WRL::ComPtr<IFolderView> folderView;
+	ComPtr<IFolderView> folderView;
 	hr = m_ExplorerBrowser->GetCurrentView(__uuidof(IFolderView), &folderView);
 	Assert(SUCCEEDED(hr));
 
 	hr = folderView->GetFolder(__uuidof(IResultsFolder), &m_ResultsFolder);
 	Assert(SUCCEEDED(hr));
 
-	WRL::ComPtr<IBindCtx> itemBindContext;
+	ComPtr<IBindCtx> itemBindContext;
 
 	hr = CreateBindCtx(0, &itemBindContext);
 	Assert(SUCCEEDED(hr));
@@ -103,7 +103,7 @@ void ExplorerWindow::Initialize()
 	hr = m_BindCtx->RegisterObjectParam(const_cast<wchar_t*>(STR_ITEM_CACHE_CONTEXT), itemBindContext.Get());
 	Assert(SUCCEEDED(hr));
 
-	m_FileSystemBindData = WRL::Make<FileSystemBindData>();
+	m_FileSystemBindData = Microsoft::WRL::Make<FileSystemBindData>();
 
 	hr = m_BindCtx->RegisterObjectParam(const_cast<wchar_t*>(STR_FILE_SYS_BIND_DATA), m_FileSystemBindData.Get());
 	Assert(SUCCEEDED(hr));
@@ -151,7 +151,7 @@ void ExplorerWindow::ResizeView(int width, int height)
 
 void ExplorerWindow::AddItem(const WIN32_FIND_DATAW* findData, const wchar_t* path)
 {
-	WRL::ComPtr<IShellItem2> shellItem;
+	ComPtr<IShellItem2> shellItem;
 
 	m_FileSystemBindData->SetFindData(findData);
 

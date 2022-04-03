@@ -6,10 +6,10 @@ class ExplorerWindow
 {
 private:
 	HWND m_Hwnd;
-	WRL::ComPtr<IExplorerBrowser> m_ExplorerBrowser;
-	WRL::ComPtr<IResultsFolder> m_ResultsFolder;
-	WRL::ComPtr<IBindCtx> m_BindCtx;
-	WRL::ComPtr<IFileSystemBindData2> m_FileSystemBindData;
+	ComPtr<IExplorerBrowser> m_ExplorerBrowser;
+	ComPtr<IResultsFolder> m_ResultsFolder;
+	ComPtr<IBindCtx> m_BindCtx;
+	ComPtr<IFileSystemBindData2> m_FileSystemBindData;
 	int m_Width;
 	int m_Height;
 

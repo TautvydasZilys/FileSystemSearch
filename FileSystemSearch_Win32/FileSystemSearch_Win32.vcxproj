@@ -195,7 +195,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Utilities\FontCache.cpp" />
     <ClInclude Include="..\Common\CriticalSection.h" />
     <ClInclude Include="..\Common\Event.h" />
     <ClInclude Include="..\Common\HandleHolder.h" />
@@ -204,16 +203,17 @@
     <ClInclude Include="..\Common\Version.rc" />
     <ClCompile Include="Source\AppWindows\SearchWindow.cpp" />
     <ClCompile Include="Source\Main.cpp" />
-    <ClCompile Include="Source\PrecompiledHeader.cpp">
+    <ClCompile Include="Source\Utilities\FontCache.cpp" />
+    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClInclude Include="Source\Utilities\Control.h" />
-    <ClInclude Include="Source\Utilities\FontCache.h" />
-    <ClInclude Include="Source\Utilities\WindowUtilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\AppWindows\SearchWindow.h" />
-    <ClInclude Include="Source\PrecompiledHeader.h" />
+    <ClInclude Include="Source\Utilities\Control.h" />
+    <ClInclude Include="Source\Utilities\FontCache.h" />
+    <ClInclude Include="Source\Utilities\WindowUtilities.h" />
+    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Resources\resource.h" />
