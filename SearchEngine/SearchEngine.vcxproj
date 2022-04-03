@@ -124,6 +124,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dxgi.lib;d3d12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -174,6 +177,9 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dxgi.lib;d3d12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.cpp" />
@@ -197,6 +203,7 @@
     <ClInclude Include="..\Common\HandleHolder.h" />
     <ClInclude Include="..\Common\HeapArray.h" />
     <ClInclude Include="..\Common\NonCopyable.h" />
+    <ClInclude Include="..\Common\Version.rc" />
     <ClInclude Include="Source\FileContentSearchData.h" />
     <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadData.h" />
     <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.h" />
@@ -205,6 +212,7 @@
     <ClInclude Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.h" />
     <ClInclude Include="Source\FileSearcher.h" />
     <ClInclude Include="Source\PrecompiledHeader.h" />
+    <ClInclude Include="Source\Resources\resource.h" />
     <ClInclude Include="Source\SearchInstructions.h" />
     <ClInclude Include="Source\SearchResultData.h" />
     <ClInclude Include="Source\SearchResultReporter.h" />
@@ -222,6 +230,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Source\Resources\SearchEngine.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

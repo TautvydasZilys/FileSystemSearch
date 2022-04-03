@@ -91,6 +91,12 @@
     <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadData.h">
       <Filter>FileReadBackends\DirectStorage</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Resources\resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Version.rc">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -114,5 +120,13 @@
     <Filter Include="FileReadBackends\OverlappedIO">
       <UniqueIdentifier>{223f9f1a-099a-4c29-9233-c50bf9f77784}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{abecf734-c5bf-46fb-8bc2-e31136756d9b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Source\Resources\SearchEngine.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

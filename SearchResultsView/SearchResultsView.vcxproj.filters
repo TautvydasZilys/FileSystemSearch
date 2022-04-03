@@ -16,5 +16,9 @@
     <ClInclude Include="..\Common\Event.h" />
     <ClInclude Include="..\Common\CriticalSection.h" />
     <ClInclude Include="..\Common\HeapArray.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SearchResultsView.rc" />
   </ItemGroup>
 </Project>

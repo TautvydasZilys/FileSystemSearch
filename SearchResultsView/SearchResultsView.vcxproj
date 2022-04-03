@@ -126,6 +126,9 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -176,6 +179,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ExplorerWindow.cpp" />
@@ -197,7 +203,11 @@
     <ClInclude Include="ExplorerWindow.h" />
     <ClInclude Include="FileSystemBindData.h" />
     <ClInclude Include="PrecompiledHeader.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="WindowClassHolder.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SearchResultsView.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
