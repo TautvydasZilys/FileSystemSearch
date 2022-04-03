@@ -6,6 +6,12 @@
     <ClCompile Include="Source\AppWindows\SearchWindow.cpp">
       <Filter>AppWindows</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Utilities\FontCache.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Utilities\ChildControl.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\PrecompiledHeader.h" />
@@ -34,6 +40,12 @@
       <Filter>AppWindows</Filter>
     </ClInclude>
     <ClInclude Include="Source\Utilities\WindowUtilities.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\FontCache.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\ChildControl.h">
       <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>

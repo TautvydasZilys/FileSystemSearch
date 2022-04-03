@@ -1,9 +1,18 @@
 #include "PrecompiledHeader.h"
 #include "AppWindows/SearchWindow.h"
+#include "Utilities/FontCache.h"
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int nCmdShow)
 {
-    SearchWindow searchWindow(nCmdShow);
+    INITCOMMONCONTROLSEX initCommonControls;
+    initCommonControls.dwSize = sizeof(initCommonControls);
+    initCommonControls.dwICC = ICC_STANDARD_CLASSES;
+
+    auto result = InitCommonControlsEx(&initCommonControls);
+    Assert(result != FALSE);
+
+    FontCache fontCache;
+    SearchWindow searchWindow(fontCache, nCmdShow);
 
     for (;;)
     {
@@ -14,8 +23,11 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int nCmdShow)
         if (getMessageResult == 0 || getMessageResult == -1)
             break;
 
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
+        if (!IsDialogMessageW(searchWindow, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
     }
 
     return 0;

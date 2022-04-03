@@ -8,8 +8,12 @@
 #define NOMINMAX
 
 #include <Windows.h>
+#include <commctrl.h>
 
+#include <cmath>
 #include <cstdint>
+#include <map>
+#include <vector>
 
 #if _DEBUG
 #define Assert(x) do { if (!(x)) __debugbreak(); } while (false, false)
