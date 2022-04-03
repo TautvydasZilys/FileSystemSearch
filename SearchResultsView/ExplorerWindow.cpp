@@ -105,12 +105,12 @@ void ExplorerWindow::Initialize()
 	hr = CreateBindCtx(0, &m_BindCtx);
 	Assert(SUCCEEDED(hr));
 
-	hr = m_BindCtx->RegisterObjectParam(STR_ITEM_CACHE_CONTEXT, itemBindContext.Get());
+	hr = m_BindCtx->RegisterObjectParam(const_cast<wchar_t*>(STR_ITEM_CACHE_CONTEXT), itemBindContext.Get());
 	Assert(SUCCEEDED(hr));
 
 	m_FileSystemBindData = WRL::Make<FileSystemBindData>();
 
-	hr = m_BindCtx->RegisterObjectParam(STR_FILE_SYS_BIND_DATA, m_FileSystemBindData.Get());
+	hr = m_BindCtx->RegisterObjectParam(const_cast<wchar_t*>(STR_FILE_SYS_BIND_DATA), m_FileSystemBindData.Get());
 	Assert(SUCCEEDED(hr));
 }
 
