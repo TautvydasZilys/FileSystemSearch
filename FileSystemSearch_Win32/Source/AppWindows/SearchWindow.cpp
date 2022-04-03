@@ -103,40 +103,14 @@ LRESULT SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_COMMAND:
-        {
-            switch (wParam)
-            {
-                case IDOK:
-                    s_Instance->SearchButtonClicked();
-                    break;
-
-                default:
-                {
-                    switch (LOWORD(wParam))
-                    {
-                        case m_SearchButton:
-                        {
-                            switch (HIWORD(wParam))
-                            {
-                                case BN_CLICKED:
-                                    s_Instance->SearchButtonClicked();
-                                    break;
-                            }
-
-                            break;
-                        }
-                    }
-
-                }
-            }
-
+            if (wParam == IDOK || (LOWORD(wParam) == m_SearchButton && HIWORD(wParam) == BN_CLICKED))
+                s_Instance->SearchButtonClicked();
+            
             break;
-        }
     }
 
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
-
 
 void SearchWindow::OnCreate(HWND hWnd)
 {
@@ -335,20 +309,14 @@ void SearchWindow::SearchButtonClicked()
     for (auto c : ignoreFilesLargerThan)
     {
         Assert(c >= '0' && c <= '9');
-        if (c < '0' || c > '9')
-        {
-            ignoreLargerThan = std::numeric_limits<uint64_t>::max();
-            break;
-        }
-
-        if (ignoreLargerThan > std::numeric_limits<uint64_t>::max() / 10)
+        if (c < '0' || c > '9' || ignoreLargerThan > std::numeric_limits<uint64_t>::max() / 10)
         {
             ignoreLargerThan = std::numeric_limits<uint64_t>::max();
             break;
         }
 
         ignoreLargerThan = ignoreLargerThan * 10;
-        auto digit = (c - '0');
+        auto digit = c - '0';
 
         if (ignoreLargerThan > std::numeric_limits<uint64_t>::max() - digit)
         {
