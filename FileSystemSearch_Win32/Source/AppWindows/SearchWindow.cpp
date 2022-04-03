@@ -1,6 +1,5 @@
 #include "PrecompiledHeader.h"
 #include "SearchWindow.h"
-#include "Utilities/ChildControl.h"
 #include "Utilities/FontCache.h"
 #include "Utilities/WindowUtilities.h"
 
@@ -70,8 +69,6 @@ SearchWindow::SearchWindow(const FontCache& fontCache, int nCmdShow) :
 
 SearchWindow::~SearchWindow()
 {
-    m_Children.clear();
-
     DestroyWindow(m_Hwnd);
     UnregisterClassW(reinterpret_cast<LPCWSTR>(m_WindowClass), GetHInstance());
 
@@ -111,6 +108,30 @@ LRESULT SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
+
+void SearchWindow::OnCreate(HWND hWnd)
+{
+    m_Hwnd = hWnd;
+
+    for (size_t i = 0; i < m_ControlCount; i++)
+        m_Controls[i] = kControls[i].Create(hWnd, i);
+    
+    HWND byteUnitComboBox = m_Controls[m_IgnoreFileLargerThanUnitComboBox];
+    for (size_t i = 0; i < ARRAYSIZE(kByteUnits); i++)
+    {
+        SendMessageW(byteUnitComboBox, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(kByteUnits[i].name));
+        SendMessageW(byteUnitComboBox, CB_SETITEMDATA, i, static_cast<LPARAM>(kByteUnits[i].unit));
+    }
+
+    SendMessageW(byteUnitComboBox, CB_SETCURSEL, 2 /* MB */, 0);
+
+    SendMessageW(m_Controls[m_SearchForFilesCheckBox], BM_SETCHECK, BST_CHECKED, 0);
+    SendMessageW(m_Controls[m_SearchInFileNameCheckBox], BM_SETCHECK, BST_CHECKED, 0);
+    SendMessageW(m_Controls[m_SearchRecursivelyCheckBox], BM_SETCHECK, BST_CHECKED, 0);
+    SendMessageW(m_Controls[m_IgnoreCaseCheckBox], BM_SETCHECK, BST_CHECKED, 0);
+    SendMessageW(m_Controls[m_IgnoreFilesStartingWithDotCheckBox], BM_SETCHECK, BST_CHECKED, 0);
+}
+
 void SearchWindow::AdjustSearchWindowPlacement(int positionX, int positionY, uint32_t dpi)
 {
     RECT adjustedWindowRect =
@@ -128,75 +149,20 @@ void SearchWindow::AdjustSearchWindowPlacement(int positionX, int positionY, uin
     Assert(result != FALSE);
 
     auto font = m_FontCache.GetFontForDpi(dpi);
-    for (const auto& child : m_Children)
-        child.Rescale(dpi, font);
-}
-
-static ChildControl TextBlock(const wchar_t* text, int x, int y, int width, HWND parent)
-{
-    return ChildControl(WC_STATIC, text, WS_VISIBLE | WS_CHILD, x, y, width, 16, parent);
-}
-
-static ChildControl TextBox(const wchar_t* text, int x, int y, int width, HWND parent)
-{
-    return ChildControl(WC_EDIT, text, WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, x, y, width, 19, parent);
-}
-
-static ChildControl CheckBox(const wchar_t* text, int x, int y, int width, HWND parent, bool checked)
-{
-    ChildControl control(WC_BUTTON, text, WS_VISIBLE | WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, x, y, width, 16, parent);
-
-    if (checked)
-        SendMessageW(control, BM_SETCHECK, BST_CHECKED, 0);
-
-    return control;
-}
-
-void SearchWindow::OnCreate(HWND hWnd)
-{
-    m_Hwnd = hWnd;
-
-    m_Children.push_back(TextBlock(L"Search Path", 40, 11, 320, hWnd));
-    m_Children.push_back(TextBox(L"C:\\", 40, 30, 320, hWnd));
-
-    m_Children.push_back(TextBlock(L"Search Pattern", 40, 71, 320, hWnd));
-    m_Children.push_back(TextBox(L"*", 40, 90, 320, hWnd));
-
-    m_Children.push_back(TextBlock(L"Search String", 40, 131, 320, hWnd));
-    m_Children.push_back(TextBox(L"", 40, 150, 320, hWnd));
-
-    m_Children.push_back(TextBlock(L"Ignore files larger than", 40, 191, 190, hWnd));
-    m_Children.push_back(TextBox(L"10", 40, 210, 190, hWnd));
-
-    m_Children.emplace_back(WC_COMBOBOX, L"", WS_VISIBLE | WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST, 250, 208, 45, 23, hWnd);
-    
-    HWND byteUnitComboBox = m_Children.back();
-
-    for (size_t i = 0; i < ARRAYSIZE(kByteUnits); i++)
+    for (size_t i = 0; i < m_ControlCount; i++)
     {
-        SendMessageW(byteUnitComboBox, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(kByteUnits[i].name));
-        SendMessageW(byteUnitComboBox, CB_SETITEMDATA, i, static_cast<LPARAM>(kByteUnits[i].unit));
+        HWND childHwnd = m_Controls[i];
+        Assert(childHwnd != nullptr);
+
+        const auto& desc = kControls[i];
+        auto x = DipsToPixels(desc.x, dpi);
+        auto y = DipsToPixels(desc.y, dpi);
+        auto width = DipsToPixels(desc.width, dpi);
+        auto height = DipsToPixels(desc.height, dpi);
+
+        result = SetWindowPos(childHwnd, nullptr, x, y, width, height, SWP_NOACTIVATE | SWP_NOZORDER);
+        Assert(result != FALSE);
+
+        SendMessageW(childHwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
     }
-
-    SendMessageW(byteUnitComboBox, CB_SETCURSEL, 2 /* MB */, 0);
-
-    m_Children.push_back(CheckBox(L"Search for files", 41, 240, 320, hWnd, true));
-    m_Children.push_back(CheckBox(L"Search in file path", 41, 260, 320, hWnd, false));
-    m_Children.push_back(CheckBox(L"Search in file name", 41, 280, 320, hWnd, true));
-    m_Children.push_back(CheckBox(L"Search in file contents", 41, 300, 320, hWnd, false));
-    m_Children.push_back(CheckBox(L"Search file contents as UTF8", 41, 320, 320, hWnd, false));
-    m_Children.push_back(CheckBox(L"Search file contents as UTF16", 41, 340, 320, hWnd, false));
-
-    m_Children.push_back(CheckBox(L"Search for directories", 41, 380, 320, hWnd, false));
-    m_Children.push_back(CheckBox(L"Search in directory path", 41, 400, 320, hWnd, false));
-    m_Children.push_back(CheckBox(L"Search in directory name", 41, 420, 320, hWnd, false));
-
-    m_Children.push_back(CheckBox(L"Search recursively", 41, 460, 320, hWnd, true));
-    m_Children.push_back(CheckBox(L"Ignore case", 41, 480, 320, hWnd, true));
-    m_Children.push_back(CheckBox(L"Ignore files and folders starting with '.'", 41, 500, 320, hWnd, true));
-
-    m_Children.push_back(CheckBox(L"Use DirectStorage for reading files", 41, 540, 320, hWnd, false));
-
-    m_Children.emplace_back(WC_BUTTON, L"Search!", WS_VISIBLE | WS_CHILD | WS_TABSTOP, 40, 580, 320, 26, hWnd);
 }
-

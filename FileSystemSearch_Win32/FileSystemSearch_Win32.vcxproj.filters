@@ -9,9 +9,6 @@
     <ClCompile Include="Source\Utilities\FontCache.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Utilities\ChildControl.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\PrecompiledHeader.h" />
@@ -45,7 +42,7 @@
     <ClInclude Include="Source\Utilities\FontCache.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Utilities\ChildControl.h">
+    <ClInclude Include="Source\Utilities\Control.h">
       <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>

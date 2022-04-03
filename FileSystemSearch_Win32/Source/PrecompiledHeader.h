@@ -20,3 +20,6 @@
 #else
 #define Assert(x) do { if (false, false) (void)(x); } while (false, false)
 #endif
+
+#define CONCAT_(a, b) a ## b
+#define CONCAT(a, b) CONCAT_(a, b)

@@ -195,7 +195,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Utilities\ChildControl.cpp" />
     <ClCompile Include="Source\Utilities\FontCache.cpp" />
     <ClInclude Include="..\Common\CriticalSection.h" />
     <ClInclude Include="..\Common\Event.h" />
@@ -208,7 +207,7 @@
     <ClCompile Include="Source\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClInclude Include="Source\Utilities\ChildControl.h" />
+    <ClInclude Include="Source\Utilities\Control.h" />
     <ClInclude Include="Source\Utilities\FontCache.h" />
     <ClInclude Include="Source\Utilities\WindowUtilities.h" />
   </ItemGroup>
