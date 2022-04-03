@@ -36,8 +36,8 @@ private:
     CONTROL(                                            TextBlock(L"Search String", 40, 131, 320))                                  \
     NAMED_CONTROL(SearchStringTextBox,                  TextBox(L"", 40, 150, 320))                                                 \
     CONTROL(                                            TextBlock(L"Ignore files larger than", 40, 191, 190))                       \
-    NAMED_CONTROL(IgnoreFilesLargerThanTextBox,          TextBox(L"10", 40, 210, 190))                                              \
-    NAMED_CONTROL(IgnoreFilesLargerThanUnitComboBox,     ComboBox(250, 208, 45))                                                    \
+    NAMED_CONTROL(IgnoreFilesLargerThanTextBox,         TextBox(L"10", 40, 210, 190))                                               \
+    NAMED_CONTROL(IgnoreFilesLargerThanUnitComboBox,    ComboBox(250, 208, 45))                                                     \
                                                                                                                                     \
     NAMED_CONTROL(SearchForFilesCheckBox,               CheckBox(L"Search for files", 41, 240, 320))                                \
     NAMED_CONTROL(SearchInFilePathCheckBox,             CheckBox(L"Search in file path", 41, 260, 320))                             \
