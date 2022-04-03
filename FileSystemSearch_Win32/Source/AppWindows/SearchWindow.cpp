@@ -116,15 +116,22 @@ void SearchWindow::OnCreate(HWND hWnd)
     for (size_t i = 0; i < m_ControlCount; i++)
         m_Controls[i] = kControls[i].Create(hWnd, i);
     
-    HWND byteUnitComboBox = m_Controls[m_IgnoreFileLargerThanUnitComboBox];
+    // Restrict to numbers only
+    HWND ignoreFilesLargerThanTextBox = m_Controls[m_IgnoreFilesLargerThanTextBox];
+    SetWindowLongPtrW(ignoreFilesLargerThanTextBox, GWL_STYLE, GetWindowLongPtrW(ignoreFilesLargerThanTextBox, GWL_STYLE) | ES_NUMBER);
+
+    // Populate byteUnitComboBox
+    HWND byteUnitComboBox = m_Controls[m_IgnoreFilesLargerThanUnitComboBox];
     for (size_t i = 0; i < ARRAYSIZE(kByteUnits); i++)
     {
         SendMessageW(byteUnitComboBox, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(kByteUnits[i].name));
         SendMessageW(byteUnitComboBox, CB_SETITEMDATA, i, static_cast<LPARAM>(kByteUnits[i].unit));
     }
 
+    // Select MB by default
     SendMessageW(byteUnitComboBox, CB_SETCURSEL, 2 /* MB */, 0);
 
+    // Enable default options
     SendMessageW(m_Controls[m_SearchForFilesCheckBox], BM_SETCHECK, BST_CHECKED, 0);
     SendMessageW(m_Controls[m_SearchInFileNameCheckBox], BM_SETCHECK, BST_CHECKED, 0);
     SendMessageW(m_Controls[m_SearchRecursivelyCheckBox], BM_SETCHECK, BST_CHECKED, 0);
