@@ -1,5 +1,6 @@
 #include "PrecompiledHeader.h"
 #include "SearchEngine.h"
+#include "SearchResultWindow.h"
 #include "SearchWindow.h"
 #include "Utilities/FontCache.h"
 #include "Utilities/WindowUtilities.h"
@@ -89,7 +90,7 @@ LRESULT SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_CLOSE:
             PostQuitMessage(0);
-            break;
+            return 0;
 
         case WM_CTLCOLORSTATIC:
             return kBackgroundColor;
@@ -104,7 +105,10 @@ LRESULT SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_COMMAND:
             if (wParam == IDOK || (LOWORD(wParam) == m_SearchButton && HIWORD(wParam) == BN_CLICKED))
+            {
                 s_Instance->SearchButtonClicked();
+                return 0;
+            }
             
             break;
     }
@@ -155,7 +159,7 @@ void SearchWindow::AdjustSearchWindowPlacement(int positionX, int positionY, uin
     auto result = AdjustWindowRectExForDpi(&adjustedWindowRect, kWindowStyle, FALSE, kWindowExStyle, dpi);
     Assert(result != FALSE);
 
-    result = SetWindowPos(m_Hwnd, nullptr, positionX, positionY, adjustedWindowRect.right - adjustedWindowRect.left, adjustedWindowRect.bottom - adjustedWindowRect.top, SWP_NOACTIVATE | SWP_NOZORDER);
+    result = SetWindowPos(m_Hwnd, nullptr, positionX, positionY, adjustedWindowRect.right - adjustedWindowRect.left, adjustedWindowRect.bottom - adjustedWindowRect.top, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
     Assert(result != FALSE);
 
     auto font = m_FontCache.GetFontForDpi(dpi);
@@ -170,7 +174,7 @@ void SearchWindow::AdjustSearchWindowPlacement(int positionX, int positionY, uin
         auto width = DipsToPixels(desc.width, dpi);
         auto height = DipsToPixels(desc.height, dpi);
 
-        result = SetWindowPos(childHwnd, nullptr, x, y, width, height, SWP_NOACTIVATE | SWP_NOZORDER);
+        result = SetWindowPos(childHwnd, nullptr, x, y, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
         Assert(result != FALSE);
 
         SendMessageW(childHwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
@@ -336,18 +340,7 @@ void SearchWindow::SearchButtonClicked()
         ignoreLargerThan *= static_cast<uint64_t>(ignoreFilesLargerThanUnit);
     }
 
-    auto search = ::Search(
-        [](const WIN32_FIND_DATAW* /*findData*/, const wchar_t* path) { std::wstring result = L"Path found: '"; result += path; result += L"'\r\n"; OutputDebugStringW(result.c_str()); },
-        [](const SearchStatistics& /*searchStatistics*/, double /*progress*/) {},
-        [](const SearchStatistics& /*searchStatistics*/) { OutputDebugStringW(L"Search done!\r\n"); },
-        [](const wchar_t* errorMessage) { MessageBoxW(nullptr, errorMessage, L"Error", MB_OK | MB_ICONERROR); },
-        searchPath.c_str(),
-        searchPattern.c_str(),
-        searchString.c_str(),
-        searchFlags,
-        ignoreLargerThan);
-
-    CleanupSearchOperation(search);
+    SearchResultWindow::Spawn(searchPath, searchPattern, searchString, searchFlags, ignoreLargerThan);
 }
 
 void SearchWindow::DisplayValidationFailure(const wchar_t* message)

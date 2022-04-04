@@ -16,6 +16,11 @@ public:
         other.m_Hwnd = nullptr;
     }
 
+    ~HwndHolder()
+    {
+        Free();
+    }
+
     HwndHolder& operator=(HwndHolder&& other)
     {
         std::swap(m_Hwnd, other.m_Hwnd);
