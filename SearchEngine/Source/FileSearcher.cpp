@@ -24,12 +24,12 @@ FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 		{
 			if (DirectXContext::GetDStorageFactory() == nullptr)
 			{
-				m_SearchInstructions.onError(L"Failed to initialize DirectStorage!");
+				m_SearchInstructions.onError(m_SearchInstructions.callbackContext, L"Failed to initialize DirectStorage!");
 				m_FailedInit = true;
 			}
 			else if (DirectXContext::GetD3D12Device() == nullptr)
 			{
-				m_SearchInstructions.onError(L"Failed to initialize DirectX 12!");
+				m_SearchInstructions.onError(m_SearchInstructions.callbackContext, L"Failed to initialize DirectX 12!");
 				m_FailedInit = true;
 			}
 			else

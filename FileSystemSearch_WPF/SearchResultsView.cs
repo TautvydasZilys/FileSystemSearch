@@ -44,7 +44,7 @@ namespace FileSystemSearch
 				ResizeView(childView, (int)e.NewSize.Width, (int)e.NewSize.Height);
 		}
 
-		public void AddItem(IntPtr findData, IntPtr itemPath)
+		public void AddItem(IntPtr context, IntPtr findData, IntPtr itemPath)
 		{
 			createdEvent.WaitOne();
 

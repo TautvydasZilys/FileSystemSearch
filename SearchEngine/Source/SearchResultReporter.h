@@ -34,6 +34,7 @@ private:
     FoundPathCallback m_FoundPathCallback;
     SearchProgressUpdated m_ProgressCallback;
     SearchDoneCallback m_DoneCallback;
+    void* m_CallbackContext;
 
     LARGE_INTEGER m_SearchStart;
     LARGE_INTEGER m_PerformanceFrequency;

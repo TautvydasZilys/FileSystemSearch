@@ -18,8 +18,10 @@ struct SearchInstructions
 	SearchFlags searchFlags;
 	uint64_t ignoreFilesLargerThan;
 
+	void* callbackContext;
+
 	SearchInstructions(FoundPathCallback foundPathCallback, SearchProgressUpdated progressUpdatedCallback, SearchDoneCallback searchDoneCallback, ErrorCallback errorCallback, const wchar_t* searchPath, const wchar_t* searchPattern, const wchar_t* searchString,
-		SearchFlags searchFlags, uint64_t ignoreFilesLargerThan) :
+		SearchFlags searchFlags, uint64_t ignoreFilesLargerThan, void* callbackContext) :
 		onFoundPath(foundPathCallback),
 		onProgressUpdated(progressUpdatedCallback),
 		onDone(searchDoneCallback),
@@ -28,7 +30,8 @@ struct SearchInstructions
 		searchPattern(searchPattern),
 		searchString(searchString),
 		searchFlags(searchFlags),
-		ignoreFilesLargerThan(ignoreFilesLargerThan)
+		ignoreFilesLargerThan(ignoreFilesLargerThan),
+		callbackContext(callbackContext)
 	{
 		if (StringUtils::IsAscii(this->searchString))
 		{
@@ -52,7 +55,8 @@ struct SearchInstructions
 		searchString(std::move(other.searchString)),
 		utf8SearchString(std::move(other.utf8SearchString)),
 		searchFlags(other.searchFlags),
-		ignoreFilesLargerThan(other.ignoreFilesLargerThan)
+		ignoreFilesLargerThan(other.ignoreFilesLargerThan),
+		callbackContext(other.callbackContext)
 	{
 	}
 

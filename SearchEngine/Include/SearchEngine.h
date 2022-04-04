@@ -2,9 +2,7 @@
 
 #include "SearchEngineTypes.h"
 
-class FileSearcher;
-
-extern "C" EXPORT_SEARCHENGINE FileSearcher * Search(
+extern "C" EXPORT_SEARCHENGINE FileSearcher* Search(
 	FoundPathCallback foundPathCallback,
 	SearchProgressUpdated progressUpdatedCallback,
 	SearchDoneCallback searchDoneCallback,
@@ -13,6 +11,7 @@ extern "C" EXPORT_SEARCHENGINE FileSearcher * Search(
 	const wchar_t* searchPattern,
 	const wchar_t* searchString,
 	SearchFlags searchFlags,
-	uint64_t ignoreFilesLargerThan);
+	uint64_t ignoreFilesLargerThan,
+	void* callbackContext);
 
 extern "C" EXPORT_SEARCHENGINE void CleanupSearchOperation(FileSearcher* searcher);

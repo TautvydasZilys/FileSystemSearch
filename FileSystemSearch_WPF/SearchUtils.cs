@@ -8,10 +8,10 @@ namespace FileSystemSearch
 {
 	class SearchUtils
 	{
-		public delegate void FoundPathCallbackDelegate(IntPtr findData, IntPtr path);
-		public delegate void SearchProgressUpdatedDelegate([In] ref SearchStatistics searchStatistics, double progress);
-		public delegate void SearchDoneCallbackDelegate([In] ref SearchStatistics searchStatistics);
-		public delegate void ErrorCallbackDelegate([In] [MarshalAs(UnmanagedType.LPWStr)] string message);
+		public delegate void FoundPathCallbackDelegate(IntPtr context, IntPtr findData, IntPtr path);
+		public delegate void SearchProgressUpdatedDelegate(IntPtr context, [In] ref SearchStatistics searchStatistics, double progress);
+		public delegate void SearchDoneCallbackDelegate(IntPtr context, [In] ref SearchStatistics searchStatistics);
+		public delegate void ErrorCallbackDelegate(IntPtr context, [In] [MarshalAs(UnmanagedType.LPWStr)] string message);
 
 		public static bool ValidateSearchViewModel(SearchViewModel searchViewModel, out string validationFailedReason)
 		{
@@ -116,7 +116,7 @@ namespace FileSystemSearch
 			if (searchViewModel.SearchUseDirectStorage)
 				searchFlags |= SearchFlags.UseDirectStorage;
 
-			return Search(foundPathCallback, searchProgressUpdated, searchDoneCallback, errorCallback, searchViewModel.SearchPath, searchViewModel.SearchPattern, searchViewModel.SearchString, searchFlags, searchViewModel.IgnoreFilesLargerThanInBytes);
+			return Search(foundPathCallback, searchProgressUpdated, searchDoneCallback, errorCallback, searchViewModel.SearchPath, searchViewModel.SearchPattern, searchViewModel.SearchString, searchFlags, searchViewModel.IgnoreFilesLargerThanInBytes, IntPtr.Zero);
 		}
 
 		enum SearchFlags
@@ -147,7 +147,8 @@ namespace FileSystemSearch
 			[MarshalAs(UnmanagedType.LPWStr)]string searchPattern,
 			[MarshalAs(UnmanagedType.LPWStr)]string searchString,
 			SearchFlags searchFlags,
-			ulong ignoreFilesLargerThan);
+			ulong ignoreFilesLargerThan,
+			IntPtr callbackContext);
 
 		[DllImport("SearchEngine.dll")]
 		public static extern void CleanupSearchOperation(IntPtr searchOperation);

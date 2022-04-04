@@ -61,7 +61,7 @@ namespace FileSystemSearch
 			resultsView.Cleanup();
 		}
 
-		private void OnProgressUpdated(ref SearchStatistics searchStatistics, double progress)
+		private void OnProgressUpdated(IntPtr context, ref SearchStatistics searchStatistics, double progress)
 		{
 			latestSearchStatistics.Set(ref searchStatistics);
 
@@ -87,7 +87,7 @@ namespace FileSystemSearch
 			}, DispatcherPriority.Input);
 		}
 
-		private void OnSearchDone(ref SearchStatistics searchStatistics)
+		private void OnSearchDone(IntPtr context, ref SearchStatistics searchStatistics)
 		{
 			latestSearchStatistics.Set(ref searchStatistics);
 
@@ -97,7 +97,7 @@ namespace FileSystemSearch
             }, DispatcherPriority.Input);
 		}
 
-        private void OnError(string message)
+        private void OnError(IntPtr context, string message)
 		{
 			Dispatcher.InvokeAsync(async () =>
 			{
