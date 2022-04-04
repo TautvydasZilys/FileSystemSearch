@@ -13,7 +13,7 @@ static WndClassHolder s_SearchResultWindowClass;
 static ReaderWriterLock s_SearchResultWindowsLock;
 static std::map<HWND, SearchResultWindow*> s_SearchResultWindows;
 
-uint64_t s_SearchResultWindowCount;
+static uint64_t s_SearchResultWindowCount;
 
 constexpr int kInitialWidth = 1000;
 constexpr int kInitialHeight = 540;
