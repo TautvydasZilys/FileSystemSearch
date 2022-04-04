@@ -11,7 +11,7 @@ struct SearchStatistics
 	double searchTimeInSeconds;
 };
 
-typedef void(__stdcall* FoundPathCallback)(void* context, const WIN32_FIND_DATAW* findData, const wchar_t* path);
+typedef void(__stdcall* FoundPathCallback)(void* context, const WIN32_FIND_DATAW& findData, const wchar_t* path);
 typedef void(__stdcall* SearchProgressUpdated)(void* context, const SearchStatistics& searchStatistics, double progress);
 typedef void(__stdcall* SearchDoneCallback)(void* context, const SearchStatistics& searchStatistics);
 typedef void(__stdcall* ErrorCallback)(void* context, const wchar_t* errorMessage);

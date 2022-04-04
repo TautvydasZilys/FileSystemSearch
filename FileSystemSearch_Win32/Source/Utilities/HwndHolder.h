@@ -10,6 +10,11 @@ public:
     {
     }
 
+    HwndHolder(HWND hWnd) :
+        m_Hwnd(hWnd)
+    {
+    }
+
     HwndHolder(HwndHolder&& other) :
         m_Hwnd(other.m_Hwnd)
     {

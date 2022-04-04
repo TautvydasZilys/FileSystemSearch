@@ -3,6 +3,7 @@
 #include "HandleHolder.h"
 #include "NonCopyable.h"
 #include "SearchEngineTypes.h"
+#include "Utilities/EventQueue.h"
 #include "Utilities/HwndHolder.h"
 
 class SearchResultWindow : NonCopyable
@@ -14,23 +15,39 @@ public:
         ~StaticInitializer();
     };
 
-    static void Spawn(const std::wstring& searchPath, const std::wstring& searchPattern, const std::wstring& searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan);
+    static void Spawn(std::wstring&& searchPath, std::wstring&& searchPattern, std::wstring&& searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan);
 
 private:
-    SearchResultWindow();
+    enum class SearcherCleanupState
+    {
+        NotCleanedUp,
+        CleanupInProgress,
+        CleanedUp
+    };
+
+private:
+    SearchResultWindow(std::unique_ptr<struct SearchArguments> args);
     ~SearchResultWindow();
 
-    operator HWND() const
-    {
-        return m_Hwnd;
-    }
+    void RunMessageLoop();
 
-private:
+    operator HWND() const { return m_Hwnd;}
+    void OnCreate(HWND hWnd);
+    
+    void OnFileFound(const WIN32_FIND_DATAW& findData, const wchar_t* path);
+    void OnProgressUpdate(const SearchStatistics& searchStatistics, double progress);
+    void OnSearchDone(const SearchStatistics& searchStatistics);
+    void OnSearchError(const wchar_t* errorMessage);
+
+    void CleanupSearchOperationIfNeeded();
+
     static LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-    void OnCreate(HWND hWnd);
-
 private:
+    EventQueue m_CallbackQueue;
     HwndHolder m_Hwnd;
-    ThreadHandleHolder m_Thread;
+
+    FileSearcher* m_Searcher;
+    SearcherCleanupState m_SearcherCleanupState;
+    bool m_IsTearingDown;
 };

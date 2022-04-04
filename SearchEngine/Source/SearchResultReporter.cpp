@@ -55,7 +55,7 @@ void SearchResultReporter::InitializeSearchResultDispatcherWorkerThread()
 	DoWork([this](const SearchResultData& searchResult)
 	{
 		auto win32FindData = searchResult.resultFindData.ToWin32FindData(PathUtils::GetFileName(searchResult.resultPath));
-		m_FoundPathCallback(m_CallbackContext, &win32FindData, searchResult.resultPath.c_str());
+		m_FoundPathCallback(m_CallbackContext, win32FindData, searchResult.resultPath.c_str());
 	});
 }
 
