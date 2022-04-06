@@ -18,14 +18,15 @@ static std::map<HWND, SearchResultWindow*> s_SearchResultWindows;
 
 static uint64_t s_SearchResultWindowCount;
 
-constexpr int kInitialWidth = 1000;
-constexpr int kInitialHeight = 540;
+constexpr int kInitialWidth = 1004;
+constexpr int kInitialHeight = 542;
 constexpr int kMinWidth = 500;
 constexpr int kMinHeight = 300;
 constexpr DWORD kWindowExStyle = WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW;
 constexpr DWORD kWindowStyle = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-constexpr RECT kSearchResultWindowMargins = { 20, 5, 20, 5 };
-constexpr ControlDescription kHeaderTextBlockDescription = TextBlock(L"", kSearchResultWindowMargins.left, kSearchResultWindowMargins.top, 0);
+constexpr SIZE kSearchResultWindowMargins = { 20, 5 };
+constexpr int kStatisticsMarginFromEdgeX = 30;
+constexpr int kStatisticsMarginBetweenElementsX = 40;
 
 struct SearchResultWindowArguments
 {
@@ -99,6 +100,7 @@ void SearchResultWindow::Spawn(const FontCache& fontCache, std::wstring&& search
 
 SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchResultWindowArguments> args) :
     m_FontCache(args->fontCache),
+    m_StatisticsY(0),
     m_SearcherCleanupState(SearcherCleanupState::NotCleanedUp),
     m_IsTearingDown(false)
 {
@@ -116,17 +118,27 @@ SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchResultWindowArgumen
         args->ignoreFilesLargerThan,
         this);
 
-    m_HeaderText = L"Results for '";
+    m_HeaderText = L"Results for \"";
     m_HeaderText += args->searchString;
-    m_HeaderText += L"' in '";
+    m_HeaderText += L"\"";
+    auto windowTitle = m_HeaderText + L" - FileSystemSearch";
+
+    m_HeaderText += L" in \"";
     m_HeaderText += args->searchPath;
 
     if (m_HeaderText.back() != L'\\' && m_HeaderText.back() != L'/')
         m_HeaderText += '\\';
 
-    m_HeaderText += L"':";
+    m_HeaderText += args->searchPattern;
+    m_HeaderText += L"\":";
 
-    auto hwnd = CreateWindowExW(kWindowExStyle, s_SearchResultWindowClass, L"File System Search - Results", kWindowStyle, CW_USEDEFAULT, 0, 0, 0, nullptr, nullptr, GetHInstance(), this);
+    for (size_t i = 0; i < kStatisticsCount; i++)
+    {
+        m_StatisticsText[i].reserve(kStatisticsLabels[i].size() + 30);
+        m_StatisticsText[i] = kStatisticsLabels[i];
+    }
+
+    auto hwnd = CreateWindowExW(kWindowExStyle, s_SearchResultWindowClass, windowTitle.c_str() , kWindowStyle, CW_USEDEFAULT, 0, 0, 0, nullptr, nullptr, GetHInstance(), this);
     Assert(m_Hwnd == hwnd);
 
     auto wasVisible = ShowWindow(m_Hwnd, SW_SHOW);
@@ -157,7 +169,7 @@ void SearchResultWindow::RunMessageLoop()
 
     for (;;)
     {
-        auto waitResult = MsgWaitForMultipleObjectsEx(1, &callbackQueueEvent, INFINITE, QS_ALLINPUT, MWMO_ALERTABLE | MWMO_INPUTAVAILABLE);
+        auto waitResult = MsgWaitForMultipleObjectsEx(1, &callbackQueueEvent, INFINITE, QS_ALLINPUT | QS_ALLPOSTMESSAGE, MWMO_INPUTAVAILABLE);
 
         if (waitResult == WAIT_OBJECT_0)
         {
@@ -166,16 +178,16 @@ void SearchResultWindow::RunMessageLoop()
         else if (waitResult == WAIT_OBJECT_0 + 1)
         {
             MSG msg;
-            auto getMessageResult = GetMessageW(&msg, nullptr, 0, 0);
-            Assert(getMessageResult != -1);
-
-            if (getMessageResult == 0 || getMessageResult == -1)
-                break;
-
-            if (!IsDialogMessageW(m_Hwnd, &msg))
+            while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
             {
-                TranslateMessage(&msg);
-                DispatchMessageW(&msg);
+                if (msg.message == WM_QUIT)
+                    return;
+
+                if (!IsDialogMessageW(m_Hwnd, &msg))
+                {
+                    TranslateMessage(&msg);
+                    DispatchMessageW(&msg);
+                }
             }
         }
     }
@@ -229,7 +241,7 @@ LRESULT SearchResultWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
             }
 
             if (window != nullptr)
-                window->RepositionControls(LOWORD(lParam), HIWORD(lParam), GetDpiForWindow(hWnd));
+                window->OnResize({ LOWORD(lParam), HIWORD(lParam) }, GetDpiForWindow(hWnd));
 
             return 0;
         }
@@ -255,9 +267,13 @@ void SearchResultWindow::OnCreate(HWND hWnd)
     }
 
     m_Hwnd = hWnd;
+    m_HeaderTextBlock = TextBlock(m_HeaderText).Create(m_Hwnd);
 
-    m_HeaderTextBlock = kHeaderTextBlockDescription.Create(m_Hwnd, 0);
-    SetWindowTextW(m_HeaderTextBlock, m_HeaderText.c_str());
+    SearchStatistics searchStatistics = {};
+    UpdateStatisticsText(searchStatistics);
+
+    for (size_t i = 0; i < kStatisticsCount; i++)
+        m_StatisticsTextBlocks[i] = TextBlock(m_StatisticsText[i]).Create(m_Hwnd);
 
     auto dpi = GetDpiForWindow(hWnd);
     auto windowWidth = DipsToPixels(kInitialWidth, dpi);
@@ -266,40 +282,204 @@ void SearchResultWindow::OnCreate(HWND hWnd)
     Assert(result != FALSE);
 }
 
-void SearchResultWindow::RepositionControls(int windowWidth, int /*windowHeight*/, uint32_t dpi)
+SIZE SearchResultWindow::CalculateMargins(uint32_t dpi)
+{
+    return 
+    {
+        DipsToPixels(kSearchResultWindowMargins.cx, dpi),
+        DipsToPixels(kSearchResultWindowMargins.cy, dpi),
+    };
+}
+
+SIZE SearchResultWindow::CalculateHeaderSize(HDC hdc, int windowWidth, int marginX)
+{
+    return MeasureTextSize(hdc, m_HeaderText, windowWidth - 2 * marginX).size;
+}
+
+std::array<WindowPosition, SearchResultWindow::kStatisticsCount> SearchResultWindow::CalculateStatisticsPositions(HDC hdc, int windowWidth, int marginFromEdgeX, int marginBetweenElementsX)
+{
+    return CalculateWrappingTextBlockPositions(hdc, m_StatisticsText, windowWidth - 2 * marginFromEdgeX, marginBetweenElementsX);
+}
+
+int SearchResultWindow::CalculateStatisticsYCoordinate(const WindowPosition& lastStatisticPosition, int windowHeight, int marginY)
+{
+    return windowHeight - marginY - lastStatisticPosition.y - lastStatisticPosition.cy;
+}
+
+void SearchResultWindow::OnResize(SIZE windowSize, uint32_t dpi)
 {
     auto font = m_FontCache.GetFontForDpi(dpi);
     SendMessageW(m_HeaderTextBlock, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
 
-    RECT margin =
+    for (HWND textBlock : m_StatisticsTextBlocks)
+        SendMessageW(textBlock, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
+
+    SIZE headerTextSize;
+    std::array<WindowPosition, kStatisticsCount> statisticsPositions;
+    SIZE margin = CalculateMargins(dpi);
+    int statisticsMarginFromEdgeX = DipsToPixels(kStatisticsMarginFromEdgeX, dpi);
+    int statisticsMarginBetweenElementsX = DipsToPixels(kStatisticsMarginBetweenElementsX, dpi);
+
     {
-        DipsToPixels(kSearchResultWindowMargins.left, dpi),
-        DipsToPixels(kSearchResultWindowMargins.top, dpi),
-        DipsToPixels(kSearchResultWindowMargins.right, dpi),
-        DipsToPixels(kSearchResultWindowMargins.bottom, dpi)
+        DCHolder dcForMeasurement(m_Hwnd, font);
+        headerTextSize = CalculateHeaderSize(dcForMeasurement, windowSize.cx, margin.cx);
+        statisticsPositions = CalculateStatisticsPositions(dcForMeasurement, windowSize.cx, statisticsMarginFromEdgeX, statisticsMarginBetweenElementsX);
+    }
+
+    m_StatisticsY = CalculateStatisticsYCoordinate(statisticsPositions.back(), windowSize.cy, margin.cy);
+    AdjustWindowPositions(statisticsPositions, { statisticsMarginFromEdgeX, m_StatisticsY });
+
+    RepositionHeader(margin, headerTextSize);
+    RepositionStatistics(statisticsPositions);
+}
+
+void SearchResultWindow::RepositionHeader(SIZE margin, SIZE headerSize)
+{
+    auto result = SetWindowPos(m_HeaderTextBlock, nullptr, margin.cx, margin.cy, headerSize.cx, headerSize.cy, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
+    Assert(result != FALSE);
+}
+
+void SearchResultWindow::RepositionStatistics(const std::array<WindowPosition, kStatisticsCount>& positions)
+{
+    for (size_t i = 0; i < kStatisticsCount; i++)
+    {
+        auto result = SetWindowPos(m_StatisticsTextBlocks[i], nullptr, positions[i].x, positions[i].y, positions[i].cx, positions[i].cy, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
+        Assert(result != FALSE);
+    }
+}
+
+void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatistics, double /*progress*/)
+{
+    UpdateStatisticsText(searchStatistics);
+
+    for (size_t i = 0; i < kStatisticsCount; i++)
+        SetWindowTextW(m_StatisticsTextBlocks[i], m_StatisticsText[i].c_str());
+
+    RECT windowRect;
+    auto result = GetClientRect(m_Hwnd, &windowRect);
+    Assert(result != FALSE);
+
+    SIZE windowSize = { windowRect.right, windowRect.bottom };
+
+    auto dpi = GetDpiForWindow(m_Hwnd);
+    auto font = m_FontCache.GetFontForDpi(dpi);
+
+    SIZE headerTextSize;
+    std::array<WindowPosition, kStatisticsCount> statisticsPositions;
+    SIZE margin = CalculateMargins(dpi);
+    int statisticsMarginFromEdgeX = DipsToPixels(kStatisticsMarginFromEdgeX, dpi);
+    int statisticsMarginBetweenElementsX = DipsToPixels(kStatisticsMarginBetweenElementsX, dpi);
+
+    {
+        DCHolder dcForMeasurement(m_Hwnd, font);
+        statisticsPositions = CalculateStatisticsPositions(dcForMeasurement, windowSize.cx, statisticsMarginFromEdgeX, statisticsMarginBetweenElementsX);
+    }
+
+    auto statisticsY = CalculateStatisticsYCoordinate(statisticsPositions.back(), windowSize.cy, margin.cy);
+    if (m_StatisticsY != statisticsY)
+    {
+        m_StatisticsY = statisticsY;
+
+        {
+            DCHolder dcForMeasurement(m_Hwnd, font);
+            headerTextSize = CalculateHeaderSize(dcForMeasurement, windowSize.cx, margin.cx);
+        }
+
+        RepositionHeader(margin, headerTextSize);
+    }
+
+    AdjustWindowPositions(statisticsPositions, { statisticsMarginFromEdgeX, statisticsY });
+    RepositionStatistics(statisticsPositions);
+}
+
+template <size_t N>
+static int FormatFileSize(wchar_t (&buffer)[N], double size)
+{
+    if (size < 1024)
+        return swprintf_s(buffer, L"%.0f bytes", size);
+
+    size /= 1024.0;
+    if (size < 1024)
+        return swprintf_s(buffer, L"%.3f KB", size);
+
+    size /= 1024.0;
+    if (size < 1024)
+        return swprintf_s(buffer, L"%.3f MB", size);
+
+    size /= 1024.0;
+    if (size < 1024)
+        return swprintf_s(buffer, L"%.3f GB", size);
+
+    size /= 1024.0;
+    return swprintf_s(buffer, L"%.3f TB", size);
+}
+
+void SearchResultWindow::UpdateStatisticsText(const SearchStatistics& searchStatistics)
+{
+    wchar_t buffer[30] = {};
+
+    const uint64_t statisticsNumbers[] =
+    {
+        searchStatistics.directoriesEnumerated,
+        searchStatistics.filesEnumerated,
+        searchStatistics.fileContentsSearched,
+        searchStatistics.totalFileSize,
+        static_cast<uint64_t>(searchStatistics.scannedFileSize),
+        searchStatistics.resultsFound
     };
 
-    auto effectiveWindowWidth = windowWidth - margin.left - margin.right;
-    //auto effectiveWindowHeight = windowHeight - margin.top - margin.bottom;
+    static_assert(ARRAYSIZE(statisticsNumbers) < kStatisticsCount, "Array overrun");
 
-    int headerTextHeight = MeasureTextHeight(DCHolder(m_HeaderTextBlock), font, m_HeaderText, effectiveWindowWidth);
-    auto result = SetWindowPos(m_HeaderTextBlock, nullptr, margin.left, margin.top, effectiveWindowWidth, headerTextHeight, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
-    Assert(result != FALSE);
+    auto count = swprintf_s(buffer, L"%llu", searchStatistics.directoriesEnumerated);
+    m_StatisticsText[kDirectoriesEnumerated].resize(kStatisticsLabels[kDirectoriesEnumerated].size());
+    m_StatisticsText[kDirectoriesEnumerated].append(buffer, count);
+
+    count = swprintf_s(buffer, L"%llu", searchStatistics.filesEnumerated);
+    m_StatisticsText[kFilesEnumerated].resize(kStatisticsLabels[kFilesEnumerated].size());
+    m_StatisticsText[kFilesEnumerated].append(buffer, count);
+
+    count = swprintf_s(buffer, L"%llu", searchStatistics.fileContentsSearched);
+    m_StatisticsText[kFileContentsSearched].resize(kStatisticsLabels[kFileContentsSearched].size());
+    m_StatisticsText[kFileContentsSearched].append(buffer, count);
+
+    count = FormatFileSize(buffer, static_cast<double>(searchStatistics.totalFileSize));
+    m_StatisticsText[kTotalEnumeratedFilesSize].resize(kStatisticsLabels[kTotalEnumeratedFilesSize].size());
+    m_StatisticsText[kTotalEnumeratedFilesSize].append(buffer, count);
+
+    count = FormatFileSize(buffer, static_cast<double>(searchStatistics.scannedFileSize));
+    m_StatisticsText[kTotalContentsSearchedFilesSize].resize(kStatisticsLabels[kTotalContentsSearchedFilesSize].size());
+    m_StatisticsText[kTotalContentsSearchedFilesSize].append(buffer, count);
+
+    count = swprintf_s(buffer, L"%llu", searchStatistics.resultsFound);
+    m_StatisticsText[kResultsFound].resize(kStatisticsLabels[kResultsFound].size());
+    m_StatisticsText[kResultsFound].append(buffer, count);
+
+    if (searchStatistics.searchTimeInSeconds < 1000000)
+    {
+        swprintf_s(buffer, L"%.3f seconds", searchStatistics.searchTimeInSeconds);
+    }
+    else
+    {
+        swprintf_s(buffer, L"%.3e seconds", searchStatistics.searchTimeInSeconds);
+    }
+
+    m_StatisticsText[kSearchTime].resize(kStatisticsLabels[kSearchTime].size());
+    m_StatisticsText[kSearchTime] += buffer;
 }
 
 void SearchResultWindow::OnFileFound(const WIN32_FIND_DATAW& findData, const wchar_t* path)
 {
     m_CallbackQueue.InvokeAsync([findData, path { std::wstring(path) }]()
     {
-        __debugbreak();
+        //__debugbreak();
     });
 }
 
 void SearchResultWindow::OnProgressUpdate(const SearchStatistics& searchStatistics, double progress)
 {
-    m_CallbackQueue.InvokeAsync([searchStatistics, progress]()
+    m_CallbackQueue.InvokeAsync([this, searchStatistics, progress]()
     {
-        __debugbreak();
+        OnStatisticsUpdate(searchStatistics, progress);
     });
 }
 
@@ -309,8 +489,7 @@ void SearchResultWindow::OnSearchDone(const SearchStatistics& searchStatistics)
     {
         if (!m_IsTearingDown)
         {
-            // Don't bother with UI updates if we're tearing down, as nobody will see the result.
-            __debugbreak();
+            OnStatisticsUpdate(searchStatistics, 1.0);
         }
 
         CleanupSearchOperationIfNeeded();

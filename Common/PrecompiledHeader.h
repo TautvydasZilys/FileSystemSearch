@@ -22,6 +22,7 @@
 #include <threadpoolapiset.h>
 #include <wrl.h>
 
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <map>

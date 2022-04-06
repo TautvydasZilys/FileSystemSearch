@@ -5,6 +5,7 @@
 #include "SearchEngineTypes.h"
 #include "Utilities/EventQueue.h"
 #include "Utilities/HwndHolder.h"
+#include "Utilities/WindowPosition.h"
 
 class FontCache;
 struct SearchResultWindowArguments;
@@ -28,6 +29,29 @@ private:
         CleanedUp
     };
 
+    enum StatisticsItems
+    {
+        kDirectoriesEnumerated,
+        kFilesEnumerated,
+        kFileContentsSearched,
+        kTotalEnumeratedFilesSize,
+        kTotalContentsSearchedFilesSize,
+        kResultsFound,
+        kSearchTime,
+        kStatisticsCount,
+    };
+
+    static constexpr std::array<std::wstring_view, kStatisticsCount> kStatisticsLabels =
+    {
+        L"Directories enumerated: ",
+        L"Files enumerated: ",
+        L"File contents searched: ",
+        L"Total enumerated files size: ",
+        L"Total contents searched files size: ",
+        L"Results found: ",
+        L"Search time: ",
+    };
+
 private:
     SearchResultWindow(std::unique_ptr<SearchResultWindowArguments> args);
     ~SearchResultWindow();
@@ -36,7 +60,19 @@ private:
 
     operator HWND() const { return m_Hwnd;}
     void OnCreate(HWND hWnd);
-    void RepositionControls(int windowWidth, int windowHeight, uint32_t dpi);
+    void OnResize(SIZE windowSize, uint32_t dpi);
+
+    static SIZE CalculateMargins(uint32_t dpi);
+    SIZE CalculateHeaderSize(HDC hdc, int windowWidth, int marginX);
+    std::array<WindowPosition, kStatisticsCount> CalculateStatisticsPositions(HDC hdc, int windowWidth, int marginFromEdgeX, int marginBetweenElementsX);
+    static int CalculateStatisticsYCoordinate(const WindowPosition& lastStatisticPosition, int windowHeight, int marginY);
+
+    void RepositionHeader(SIZE margin, SIZE headerSize);
+    void RepositionStatistics(const std::array<WindowPosition, kStatisticsCount>& positions);
+
+
+    void OnStatisticsUpdate(const SearchStatistics& searchStatistics, double progress);
+    void UpdateStatisticsText(const SearchStatistics& searchStatistics);
     
     void OnFileFound(const WIN32_FIND_DATAW& findData, const wchar_t* path);
     void OnProgressUpdate(const SearchStatistics& searchStatistics, double progress);
@@ -51,8 +87,13 @@ private:
     const FontCache& m_FontCache;
     EventQueue m_CallbackQueue;
     HwndHolder m_Hwnd;
+
     HwndHolder m_HeaderTextBlock;
     std::wstring m_HeaderText;
+
+    std::array<HwndHolder, kStatisticsCount> m_StatisticsTextBlocks;
+    std::array<std::wstring, kStatisticsCount> m_StatisticsText;
+    long m_StatisticsY;
 
     FileSearcher* m_Searcher;
     SearcherCleanupState m_SearcherCleanupState;

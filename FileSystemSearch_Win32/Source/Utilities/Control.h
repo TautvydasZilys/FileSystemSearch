@@ -15,7 +15,7 @@ struct ControlDescription
     {
     }
 
-    HWND Create(HWND parent, size_t controlIndex) const
+    HWND Create(HWND parent, size_t controlIndex = 0) const
     {
         return CreateWindowExW(0, controlClass, text, style, CW_USEDEFAULT, 0, 0, 0, parent, reinterpret_cast<HMENU>(controlIndex), GetHInstance(), nullptr);
     }
@@ -26,9 +26,14 @@ struct ControlDescription
     const int x, y, width, height;
 };
 
-constexpr ControlDescription TextBlock(const wchar_t* text, int x, int y, int width)
+constexpr ControlDescription TextBlock(const wchar_t* text, int x = 0, int y = 0, int width = 0)
 {
     return ControlDescription(WC_STATIC, text, WS_VISIBLE | WS_CHILD, x, y, width, 16);
+}
+
+constexpr ControlDescription TextBlock(const std::wstring& text, int x = 0, int y = 0, int width = 0)
+{
+    return TextBlock(text.c_str(), x, y, width);
 }
 
 constexpr ControlDescription TextBox(const wchar_t* text, int x, int y, int width)

@@ -209,6 +209,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClInclude Include="Source\Utilities\DCHolder.h" />
+    <ClInclude Include="Source\Utilities\WindowPosition.h" />
     <ClInclude Include="Source\Utilities\WndClassHolder.h" />
   </ItemGroup>
   <ItemGroup>
