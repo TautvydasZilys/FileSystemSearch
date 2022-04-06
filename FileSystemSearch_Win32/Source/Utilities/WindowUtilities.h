@@ -28,3 +28,49 @@ inline bool IsChecked(HWND hWnd)
 {
     return SendMessageW(hWnd, BM_GETCHECK, 0, 0) == BST_CHECKED;
 }
+
+inline int MeasureTextHeight(HDC dc, HFONT font, const std::wstring& textStr, int width)
+{
+    std::wstring_view text(textStr);
+    int textHeight = 0;
+
+    auto oldFont = SelectObject(dc, font);
+
+    while (!text.empty())
+    {
+        SIZE extents;
+        int characterCount;
+        auto result = GetTextExtentExPointW(dc, text.data(), static_cast<int>(text.length()), width, &characterCount, nullptr, &extents);
+        Assert(result != FALSE);
+
+        textHeight += extents.cy;
+        if (characterCount == 0)
+            break;
+
+        if (static_cast<int>(text.length()) > characterCount)
+        {
+            // GDI will wrap the text at the last space
+            auto wrapPoint = text.substr(0, characterCount).find_last_of(L' ');
+
+            // If no space is within bounds, it will clip the last word and continue with the next word on the next line
+            if (wrapPoint == std::wstring_view::npos)
+                wrapPoint = text.find_first_of(L' ', characterCount);
+
+            if (wrapPoint != std::wstring_view::npos)
+            {
+                text = text.substr(wrapPoint + 1);
+            }
+            else
+            {
+                text = std::wstring_view();
+            }
+        }
+        else
+        {
+            text = text.substr(characterCount);
+        }
+    }
+
+    SelectObject(dc, oldFont);
+    return textHeight;
+}

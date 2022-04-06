@@ -354,7 +354,7 @@ void SearchWindow::SearchButtonClicked()
         ignoreLargerThan *= static_cast<uint64_t>(ignoreFilesLargerThanUnit);
     }
 
-    SearchResultWindow::Spawn(std::move(searchPath), std::move(searchPattern), std::move(searchString), searchFlags, ignoreLargerThan);
+    SearchResultWindow::Spawn(m_FontCache, std::move(searchPath), std::move(searchPattern), std::move(searchString), searchFlags, ignoreLargerThan);
 }
 
 void SearchWindow::DisplayValidationFailure(const wchar_t* message)

@@ -208,6 +208,7 @@
     <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClInclude Include="Source\Utilities\DCHolder.h" />
     <ClInclude Include="Source\Utilities\WndClassHolder.h" />
   </ItemGroup>
   <ItemGroup>

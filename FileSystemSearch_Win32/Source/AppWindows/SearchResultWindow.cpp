@@ -4,6 +4,9 @@
 #include "CriticalSection.h"
 #include "ReaderWriterLock.h"
 #include "SearchEngine.h"
+#include "Utilities/Control.h"
+#include "Utilities/DCHolder.h"
+#include "Utilities/FontCache.h"
 #include "Utilities/WndClassHolder.h"
 
 constexpr intptr_t kBackgroundColor = COLOR_WINDOW + 1;
@@ -17,13 +20,16 @@ static uint64_t s_SearchResultWindowCount;
 
 constexpr int kInitialWidth = 1000;
 constexpr int kInitialHeight = 540;
-constexpr int kMinWidth = 400;
-constexpr int kMinHeight = 200;
+constexpr int kMinWidth = 500;
+constexpr int kMinHeight = 300;
 constexpr DWORD kWindowExStyle = WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW;
 constexpr DWORD kWindowStyle = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+constexpr RECT kSearchResultWindowMargins = { 20, 5, 20, 5 };
+constexpr ControlDescription kHeaderTextBlockDescription = TextBlock(L"", kSearchResultWindowMargins.left, kSearchResultWindowMargins.top, 0);
 
-struct SearchArguments
+struct SearchResultWindowArguments
 {
+    const FontCache& fontCache;
     std::wstring searchPath;
     std::wstring searchPattern;
     std::wstring searchString;
@@ -62,10 +68,11 @@ SearchResultWindow::StaticInitializer::~StaticInitializer()
     s_SearchResultWindowClass = 0;
 }
 
-void SearchResultWindow::Spawn(std::wstring&& searchPath, std::wstring&& searchPattern, std::wstring&& searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan)
+void SearchResultWindow::Spawn(const FontCache& fontCache, std::wstring&& searchPath, std::wstring&& searchPattern, std::wstring&& searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan)
 {
-    auto threadArgs = new SearchArguments
+    auto threadArgs = new SearchResultWindowArguments
     {
+        .fontCache = fontCache,
         .searchPath = std::move(searchPath),
         .searchPattern = std::move(searchPattern),
         .searchString = std::move(searchString),
@@ -79,7 +86,7 @@ void SearchResultWindow::Spawn(std::wstring&& searchPath, std::wstring&& searchP
         SetThreadDescription(GetCurrentThread(), L"FSS Search Result Window Thread");
 
         {
-            SearchResultWindow searchResultWindow(std::unique_ptr<SearchArguments>(static_cast<SearchArguments*>(args)));
+            SearchResultWindow searchResultWindow(std::unique_ptr<SearchResultWindowArguments>(static_cast<SearchResultWindowArguments*>(args)));
             searchResultWindow.RunMessageLoop();
         }
 
@@ -90,7 +97,8 @@ void SearchResultWindow::Spawn(std::wstring&& searchPath, std::wstring&& searchP
     }, threadArgs, 0, nullptr);
 }
 
-SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchArguments> args) :
+SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchResultWindowArguments> args) :
+    m_FontCache(args->fontCache),
     m_SearcherCleanupState(SearcherCleanupState::NotCleanedUp),
     m_IsTearingDown(false)
 {
@@ -107,6 +115,16 @@ SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchArguments> args) :
         args->searchFlags,
         args->ignoreFilesLargerThan,
         this);
+
+    m_HeaderText = L"Results for '";
+    m_HeaderText += args->searchString;
+    m_HeaderText += L"' in '";
+    m_HeaderText += args->searchPath;
+
+    if (m_HeaderText.back() != L'\\' && m_HeaderText.back() != L'/')
+        m_HeaderText += '\\';
+
+    m_HeaderText += L"':";
 
     auto hwnd = CreateWindowExW(kWindowExStyle, s_SearchResultWindowClass, L"File System Search - Results", kWindowStyle, CW_USEDEFAULT, 0, 0, 0, nullptr, nullptr, GetHInstance(), this);
     Assert(m_Hwnd == hwnd);
@@ -193,6 +211,29 @@ LRESULT SearchResultWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
             return 0;
         }
 
+        case WM_SIZE:
+        {
+            SearchResultWindow* window = nullptr;
+
+            {
+                ReaderWriterLock::ReaderLock lock(s_SearchResultWindowsLock);
+                auto it = s_SearchResultWindows.find(hWnd);
+                if (it != s_SearchResultWindows.end())
+                {
+                    window = it->second;
+                }
+                else
+                {
+                    Assert(false);
+                }
+            }
+
+            if (window != nullptr)
+                window->RepositionControls(LOWORD(lParam), HIWORD(lParam), GetDpiForWindow(hWnd));
+
+            return 0;
+        }
+
         case WM_GETMINMAXINFO:
         {
             auto dpi = GetDpiForWindow(hWnd);
@@ -215,8 +256,34 @@ void SearchResultWindow::OnCreate(HWND hWnd)
 
     m_Hwnd = hWnd;
 
+    m_HeaderTextBlock = kHeaderTextBlockDescription.Create(m_Hwnd, 0);
+    SetWindowTextW(m_HeaderTextBlock, m_HeaderText.c_str());
+
     auto dpi = GetDpiForWindow(hWnd);
-    auto result = SetWindowPos(hWnd, nullptr, 0, 0, DipsToPixels(kInitialWidth, dpi), DipsToPixels(kInitialHeight, dpi), SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
+    auto windowWidth = DipsToPixels(kInitialWidth, dpi);
+    auto windowHeight = DipsToPixels(kInitialHeight, dpi);
+    auto result = SetWindowPos(hWnd, nullptr, 0, 0, windowWidth, windowHeight, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
+    Assert(result != FALSE);
+}
+
+void SearchResultWindow::RepositionControls(int windowWidth, int /*windowHeight*/, uint32_t dpi)
+{
+    auto font = m_FontCache.GetFontForDpi(dpi);
+    SendMessageW(m_HeaderTextBlock, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
+
+    RECT margin =
+    {
+        DipsToPixels(kSearchResultWindowMargins.left, dpi),
+        DipsToPixels(kSearchResultWindowMargins.top, dpi),
+        DipsToPixels(kSearchResultWindowMargins.right, dpi),
+        DipsToPixels(kSearchResultWindowMargins.bottom, dpi)
+    };
+
+    auto effectiveWindowWidth = windowWidth - margin.left - margin.right;
+    //auto effectiveWindowHeight = windowHeight - margin.top - margin.bottom;
+
+    int headerTextHeight = MeasureTextHeight(DCHolder(m_HeaderTextBlock), font, m_HeaderText, effectiveWindowWidth);
+    auto result = SetWindowPos(m_HeaderTextBlock, nullptr, margin.left, margin.top, effectiveWindowWidth, headerTextHeight, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
     Assert(result != FALSE);
 }
 

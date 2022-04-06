@@ -57,6 +57,9 @@
     <ClInclude Include="Source\Utilities\WndClassHolder.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Utilities\DCHolder.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
