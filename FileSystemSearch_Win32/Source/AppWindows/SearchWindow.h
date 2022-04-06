@@ -22,7 +22,7 @@ public:
 private:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-    void AdjustSearchWindowPlacement(int positionX, int positionY, uint32_t dpi);
+    void AdjustSearchWindowPlacement(POINT position, SIZE size, uint32_t dpi);
     void OnCreate(HWND hWnd);
     void SearchButtonClicked();
     void DisplayValidationFailure(const wchar_t* message);

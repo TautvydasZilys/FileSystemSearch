@@ -10,8 +10,25 @@ static HINSTANCE GetHInstance();
 
 constexpr DWORD kWindowExStyle = WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW;
 constexpr DWORD kWindowStyle = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-constexpr int kWindowClientWidth = 409;
-constexpr int kWindowClientHeight = 639;
+
+static SIZE GetSearchWindowSize(uint32_t dpi)
+{
+    constexpr int kWindowClientWidth = 409;
+    constexpr int kWindowClientHeight = 639;
+
+    RECT adjustedWindowRect =
+    {
+        0,
+        0,
+        DipsToPixels(kWindowClientWidth, dpi),
+        DipsToPixels(kWindowClientHeight, dpi),
+    };
+
+    auto result = AdjustWindowRectExForDpi(&adjustedWindowRect, kWindowStyle, FALSE, kWindowExStyle, dpi);
+    Assert(result != FALSE);
+
+    return SIZE { adjustedWindowRect.right - adjustedWindowRect.left, adjustedWindowRect.bottom - adjustedWindowRect.top };
+}
 
 constexpr intptr_t kBackgroundColor = COLOR_WINDOW + 1;
 
@@ -84,7 +101,8 @@ LRESULT SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             s_Instance->OnCreate(hWnd);
 
             auto createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
-            s_Instance->AdjustSearchWindowPlacement(createStruct->x, createStruct->y, GetDpiForWindow(hWnd));
+            auto dpi = GetDpiForWindow(hWnd);
+            s_Instance->AdjustSearchWindowPlacement(POINT { createStruct->x, createStruct->y }, GetSearchWindowSize(dpi), dpi);
             return 0;
         }
 
@@ -95,10 +113,17 @@ LRESULT SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CTLCOLORSTATIC:
             return kBackgroundColor;
 
+        case WM_GETDPISCALEDSIZE:
+        {
+            auto dpi = static_cast<uint32_t>(wParam);
+            *reinterpret_cast<SIZE*>(lParam) = GetSearchWindowSize(dpi);
+            return TRUE;
+        }
+
         case WM_DPICHANGED:
         {
             auto targetRect = reinterpret_cast<RECT*>(lParam);
-            s_Instance->AdjustSearchWindowPlacement(targetRect->left, targetRect->top, HIWORD(wParam));
+            s_Instance->AdjustSearchWindowPlacement(POINT { targetRect->left, targetRect->top }, SIZE { targetRect->right - targetRect->left, targetRect->bottom - targetRect->top }, HIWORD(wParam));
 
             return 0;
         }
@@ -146,20 +171,9 @@ void SearchWindow::OnCreate(HWND hWnd)
     SendMessageW(m_Controls[m_IgnoreFilesStartingWithDotCheckBox], BM_SETCHECK, BST_CHECKED, 0);
 }
 
-void SearchWindow::AdjustSearchWindowPlacement(int positionX, int positionY, uint32_t dpi)
+void SearchWindow::AdjustSearchWindowPlacement(POINT position, SIZE size, uint32_t dpi)
 {
-    RECT adjustedWindowRect =
-    {
-        0,
-        0,
-        DipsToPixels(kWindowClientWidth, dpi),
-        DipsToPixels(kWindowClientHeight, dpi),
-    };
-
-    auto result = AdjustWindowRectExForDpi(&adjustedWindowRect, kWindowStyle, FALSE, kWindowExStyle, dpi);
-    Assert(result != FALSE);
-
-    result = SetWindowPos(m_Hwnd, nullptr, positionX, positionY, adjustedWindowRect.right - adjustedWindowRect.left, adjustedWindowRect.bottom - adjustedWindowRect.top, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
+    auto result = SetWindowPos(m_Hwnd, nullptr, position.x, position.y, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
     Assert(result != FALSE);
 
     auto font = m_FontCache.GetFontForDpi(dpi);
