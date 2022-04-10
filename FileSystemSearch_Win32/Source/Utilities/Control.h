@@ -17,7 +17,9 @@ struct ControlDescription
 
     HWND Create(HWND parent, size_t controlIndex = 0) const
     {
-        return CreateWindowExW(0, controlClass, text, style, CW_USEDEFAULT, 0, 0, 0, parent, reinterpret_cast<HMENU>(controlIndex), GetHInstance(), nullptr);
+        auto hWnd = CreateWindowExW(0, controlClass, text, style, CW_USEDEFAULT, 0, 0, 0, parent, reinterpret_cast<HMENU>(controlIndex), GetHInstance(), nullptr);
+        Assert(hWnd != nullptr);
+        return hWnd;
     }
 
     const wchar_t* controlClass;
@@ -59,4 +61,10 @@ constexpr ControlDescription Button(const wchar_t* text, int x, int y, int width
 constexpr ControlDescription ProgressBar(int x = 0, int y = 0, int width = 0, int height = 0)
 {
     return ControlDescription(PROGRESS_CLASS, nullptr, WS_VISIBLE | WS_CHILD | PBS_MARQUEE, x, y, width, height);
+}
+
+constexpr ControlDescription ChildWindow(LPCWSTR windowClass, int extraStyles, int x = 0, int y = 0, int width = 0, int height = 0)
+{
+    Assert(windowClass != nullptr);
+    return ControlDescription(windowClass, nullptr, WS_VISIBLE | WS_CHILD | extraStyles, x, y, width, height);
 }

@@ -2,12 +2,11 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="SearchResultsView.cpp" />
-    <ClCompile Include="PrecompiledHeader.cpp" />
     <ClCompile Include="ExplorerWindow.cpp" />
     <ClCompile Include="FileSystemBindData.cpp" />
+    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PrecompiledHeader.h" />
     <ClInclude Include="ExplorerWindow.h" />
     <ClInclude Include="..\Common\HandleHolder.h" />
     <ClInclude Include="WindowClassHolder.h" />
@@ -17,8 +16,17 @@
     <ClInclude Include="..\Common\CriticalSection.h" />
     <ClInclude Include="..\Common\HeapArray.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
+    <ClInclude Include="Include\SearchResultsView.h">
+      <Filter>Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SearchResultsView.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Include">
+      <UniqueIdentifier>{b0c57ff9-0290-4a6a-87d5-bb3e9672fc25}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
 #include "CriticalSection.h"
 #include "ReaderWriterLock.h"
 #include "SearchEngine.h"
+#include "SearchResultsView.h"
 #include "Utilities/Control.h"
 #include "Utilities/DCHolder.h"
 #include "Utilities/FontCache.h"
@@ -12,6 +13,7 @@
 constexpr intptr_t kBackgroundColor = COLOR_WINDOW + 1;
 
 static WndClassHolder s_SearchResultWindowClass;
+static WndClassHolder s_ExplorerBrowserHostWindowClass;
 
 static ReaderWriterLock s_SearchResultWindowsLock;
 static std::map<HWND, SearchResultWindow*> s_SearchResultWindows;
@@ -53,6 +55,13 @@ SearchResultWindow::StaticInitializer::StaticInitializer()
 
     s_SearchResultWindowClass = RegisterClassExW(&classDescription);
     Assert(s_SearchResultWindowClass != 0);
+
+    classDescription.lpfnWndProc = DefWindowProcW;
+    classDescription.lpszClassName = L"SearchResultExplorerBrowserHost";
+
+    s_ExplorerBrowserHostWindowClass = RegisterClassExW(&classDescription);
+    Assert(s_ExplorerBrowserHostWindowClass != 0);
+
 }
 
 SearchResultWindow::StaticInitializer::~StaticInitializer()
@@ -69,6 +78,7 @@ SearchResultWindow::StaticInitializer::~StaticInitializer()
 
     Assert(s_SearchResultWindows.empty());
     s_SearchResultWindowClass = 0;
+    s_ExplorerBrowserHostWindowClass = 0;
 }
 
 void SearchResultWindow::Spawn(const FontCache& fontCache, std::wstring&& searchPath, std::wstring&& searchPattern, std::wstring&& searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan)
@@ -102,6 +112,7 @@ void SearchResultWindow::Spawn(const FontCache& fontCache, std::wstring&& search
 
 SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchResultWindowArguments> args) :
     m_FontCache(args->fontCache),
+    m_ExplorerWindow(nullptr),
     m_StatisticsY(0),
     m_HasDeterminateProgress(false),
     m_SearcherCleanupState(SearcherCleanupState::NotCleanedUp),
@@ -153,6 +164,12 @@ SearchResultWindow::~SearchResultWindow()
     m_IsTearingDown = true;
 
     CleanupSearchOperationIfNeeded();
+
+    if (m_ExplorerWindow != nullptr)
+    {
+        DestroyView(m_ExplorerWindow);
+        m_ExplorerWindow = nullptr;
+    }
 
     {
         ReaderWriterLock::WriterLock lock(s_SearchResultWindowsLock);
@@ -271,6 +288,11 @@ void SearchResultWindow::OnCreate(HWND hWnd)
 
     m_Hwnd = hWnd;
     m_HeaderTextBlock = TextBlock(m_HeaderText).Create(m_Hwnd);
+
+    m_ExplorerBrowserHost = ChildWindow(s_ExplorerBrowserHostWindowClass, WS_CLIPCHILDREN).Create(m_Hwnd);
+    m_ExplorerWindow = CreateView(m_ExplorerBrowserHost, 0, 0);
+    InitializeView(m_ExplorerWindow);
+
     m_ProgressBar = ProgressBar().Create(m_Hwnd);
     SendMessageW(m_ProgressBar, PBM_SETMARQUEE, TRUE, 0);
 
@@ -327,7 +349,9 @@ void SearchResultWindow::OnResize(SIZE windowSize, uint32_t dpi)
 
     RepositionHeader(margin, headerTextSize);
     RepositionStatistics(statisticsPositions);
-    RepositionProgressBar(windowSize.cx, dpi, m_StatisticsY);
+
+    auto progressBarY = RepositionProgressBar(windowSize.cx, dpi, m_StatisticsY);
+    RepositionExplorerBrowser(margin, windowSize.cx, headerTextSize.cy, progressBarY);
 }
 
 void SearchResultWindow::RepositionHeader(SIZE margin, SIZE headerSize)
@@ -345,7 +369,7 @@ void SearchResultWindow::RepositionStatistics(const std::array<WindowPosition, k
     }
 }
 
-void SearchResultWindow::RepositionProgressBar(int windowWidth, uint32_t dpi, int statisticsY)
+int SearchResultWindow::RepositionProgressBar(int windowWidth, uint32_t dpi, int statisticsY)
 {
     auto margin = DipsToPixels(kProgressBarMargin, dpi);
     int x = margin.cx;
@@ -355,6 +379,19 @@ void SearchResultWindow::RepositionProgressBar(int windowWidth, uint32_t dpi, in
     int y = statisticsY - margin.cy - height;
 
     SetWindowPos(m_ProgressBar, nullptr, x, y, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
+    return y;
+}
+
+void SearchResultWindow::RepositionExplorerBrowser(SIZE margin, int windowWidth, int headerHeight, int progressBarY)
+{
+    auto x = margin.cx;
+    auto width = windowWidth - 2 * x;
+
+    auto headerEndY = margin.cy + headerHeight;
+    auto y = headerEndY + margin.cy;
+    auto height = progressBarY - margin.cy - y;
+    SetWindowPos(m_ExplorerBrowserHost, nullptr, x, y, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);    
+    ResizeView(m_ExplorerWindow, width, height);
 }
 
 void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatistics, double progress)
@@ -410,7 +447,8 @@ void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatis
         }
 
         RepositionHeader(margin, headerTextSize);
-        RepositionProgressBar(windowSize.cx, dpi, m_StatisticsY);
+        auto progressBarY = RepositionProgressBar(windowSize.cx, dpi, m_StatisticsY);
+        RepositionExplorerBrowser(margin, windowSize.cx, headerTextSize.cy, progressBarY);
     }
 
     AdjustWindowPositions(statisticsPositions, { statisticsMarginFromEdgeX, statisticsY });
@@ -494,9 +532,9 @@ void SearchResultWindow::UpdateStatisticsText(const SearchStatistics& searchStat
 
 void SearchResultWindow::OnFileFound(const WIN32_FIND_DATAW& findData, const wchar_t* path)
 {
-    m_CallbackQueue.InvokeAsync([findData, path { std::wstring(path) }]()
+    m_CallbackQueue.InvokeAsync([this, findData, path { std::wstring(path) }]()
     {
-        //__debugbreak();
+        AddItemToView(m_ExplorerWindow, &findData, path.c_str());
     });
 }
 

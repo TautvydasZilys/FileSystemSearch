@@ -7,6 +7,7 @@
 #include "Utilities/HwndHolder.h"
 #include "Utilities/WindowPosition.h"
 
+class ExplorerWindow;
 class FontCache;
 struct SearchResultWindowArguments;
 
@@ -68,7 +69,8 @@ private:
 
     void RepositionHeader(SIZE margin, SIZE headerSize);
     void RepositionStatistics(const std::array<WindowPosition, kStatisticsCount>& positions);
-    void RepositionProgressBar(int windowWidth, uint32_t dpi, int statisticsY);
+    int RepositionProgressBar(int windowWidth, uint32_t dpi, int statisticsY);
+    void RepositionExplorerBrowser(SIZE margin, int windowWidth, int headerHeight, int progressBarY);
 
     void OnStatisticsUpdate(const SearchStatistics& searchStatistics, double progress);
     void UpdateStatisticsText(const SearchStatistics& searchStatistics);
@@ -89,6 +91,9 @@ private:
 
     HwndHolder m_HeaderTextBlock;
     std::wstring m_HeaderText;
+
+    HwndHolder m_ExplorerBrowserHost;
+    ExplorerWindow* m_ExplorerWindow;
 
     HwndHolder m_ProgressBar;
 

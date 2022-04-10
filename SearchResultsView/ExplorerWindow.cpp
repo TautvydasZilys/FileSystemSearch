@@ -50,7 +50,7 @@ ExplorerWindow::ExplorerWindow(HWND parent, int width, int height) :
 	m_Width = static_cast<int>(ceil(m_Width * scaleX));
 	m_Height = static_cast<int>(ceil(m_Height * scaleY));
 
-	m_Hwnd = CreateWindowExW(0, s_WindowClass, L"SearchResultsViewWindow", WS_CHILD | WS_CLIPCHILDREN, 0, 0, m_Width, m_Height, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
+	m_Hwnd = CreateWindowExW(0, s_WindowClass, L"SearchResultsViewWindow", WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN, 0, 0, m_Width, m_Height, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
 	Assert(m_Hwnd != nullptr);
 }
 

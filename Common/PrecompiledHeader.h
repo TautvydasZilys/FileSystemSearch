@@ -67,3 +67,9 @@ using Microsoft::WRL::ComPtr;
 #else
 #define EXPORT_SEARCHENGINE __declspec(dllimport)
 #endif
+
+#if BUILDING_SEARCHRESULTSVIEW
+#define EXPORT_SEARCHRESULTSVIEW __declspec(dllexport)
+#else
+#define EXPORT_SEARCHRESULTSVIEW __declspec(dllimport)
+#endif
