@@ -169,12 +169,6 @@ SearchResultWindow::~SearchResultWindow()
 
     CleanupSearchOperationIfNeeded();
 
-    if (m_ExplorerWindow != nullptr)
-    {
-        DestroyView(m_ExplorerWindow);
-        m_ExplorerWindow = nullptr;
-    }
-
     {
         ReaderWriterLock::WriterLock lock(s_SearchResultWindowsLock);
         s_SearchResultWindows.erase(m_Hwnd);
@@ -184,6 +178,12 @@ SearchResultWindow::~SearchResultWindow()
     {
         auto inProgress = SearcherCleanupState::CleanupInProgress;
         WaitOnAddress(&m_SearcherCleanupState, &inProgress, sizeof(inProgress), INFINITE);
+    }
+
+    if (m_ExplorerWindow != nullptr)
+    {
+        DestroyView(m_ExplorerWindow);
+        m_ExplorerWindow = nullptr;
     }
 }
 
