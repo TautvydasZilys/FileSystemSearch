@@ -105,6 +105,10 @@ void ExplorerWindow::Initialize()
 	hr = CreateBindCtx(0, &m_BindCtx);
 	Assert(SUCCEEDED(hr));
 
+	BIND_OPTS bo = { sizeof(bo), 0, STGM_CREATE, 0 };
+	hr = m_BindCtx->SetBindOptions(&bo);
+	Assert(SUCCEEDED(hr));
+
 	hr = m_BindCtx->RegisterObjectParam(const_cast<wchar_t*>(STR_ITEM_CACHE_CONTEXT), itemBindContext.Get());
 	Assert(SUCCEEDED(hr));
 
