@@ -39,7 +39,8 @@ ExplorerWindow::ExplorerWindow(HWND parent, int width, int height, bool dpiAware
 	m_Hwnd(nullptr),
 	m_Width(width),
 	m_Height(height),
-	m_IsDPIAware(dpiAware)
+	m_IsDPIAware(dpiAware),
+	m_ResultDispatcherThreadId(0)
 {
 	auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 	Assert(SUCCEEDED(hr));
@@ -163,6 +164,19 @@ void ExplorerWindow::ResizeView(int width, int height)
 
 void ExplorerWindow::AddItem(const WIN32_FIND_DATAW* findData, const wchar_t* path)
 {
+	if (m_ResultDispatcherThreadId == 0)
+	{
+		if (InterlockedCompareExchange(&m_ResultDispatcherThreadId, GetCurrentThreadId(), 0) != 0)
+			__fastfail(FAST_FAIL_FATAL_APP_EXIT);
+
+		auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+		Assert(SUCCEEDED(hr));
+	}
+	else if (m_ResultDispatcherThreadId != GetCurrentThreadId())
+	{
+		__fastfail(FAST_FAIL_FATAL_APP_EXIT);
+	}
+
 	ComPtr<IShellItem2> shellItem;
 
 	m_FileSystemBindData->SetFindData(findData);

@@ -10,6 +10,7 @@ private:
 	ComPtr<IResultsFolder> m_ResultsFolder;
 	ComPtr<IBindCtx> m_BindCtx;
 	ComPtr<IFileSystemBindData2> m_FileSystemBindData;
+	DWORD m_ResultDispatcherThreadId;
 	int m_Width;
 	int m_Height;
 	bool m_IsDPIAware;
