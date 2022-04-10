@@ -12,6 +12,7 @@ private:
 	ComPtr<IFileSystemBindData2> m_FileSystemBindData;
 	int m_Width;
 	int m_Height;
+	bool m_IsDPIAware;
 
 	~ExplorerWindow();
 	static void EnsureWindowClassIsCreated();
@@ -19,7 +20,7 @@ private:
 	void GetCurrentMonitorScale(float& scaleX, float& scaleY);
 
 public:
-	ExplorerWindow(HWND parent, int width, int height);
+	ExplorerWindow(HWND parent, int width, int height, bool dpiAware);
 
 	void Initialize();
 	void Destroy();

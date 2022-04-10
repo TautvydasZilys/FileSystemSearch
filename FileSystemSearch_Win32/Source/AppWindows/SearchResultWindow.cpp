@@ -288,7 +288,7 @@ void SearchResultWindow::OnCreate(HWND hWnd)
     m_HeaderTextBlock = TextBlock(m_HeaderText).Create(m_Hwnd);
 
     m_ExplorerBrowserHost = ChildWindow(s_ExplorerBrowserHostWindowClass, WS_CLIPCHILDREN).Create(m_Hwnd);
-    m_ExplorerWindow = CreateView(m_ExplorerBrowserHost, 0, 0);
+    m_ExplorerWindow = CreateDpiAwareView(m_ExplorerBrowserHost, 0, 0);
     InitializeView(m_ExplorerWindow);
 
     m_ProgressBar = ProgressBar().Create(m_Hwnd);

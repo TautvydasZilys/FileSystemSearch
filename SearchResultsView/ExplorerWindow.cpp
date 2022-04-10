@@ -35,20 +35,24 @@ void ExplorerWindow::EnsureWindowClassIsCreated()
 	Assert(s_WindowClass != 0);
 }
 
-ExplorerWindow::ExplorerWindow(HWND parent, int width, int height) :
+ExplorerWindow::ExplorerWindow(HWND parent, int width, int height, bool dpiAware) :
 	m_Hwnd(nullptr),
 	m_Width(width),
-	m_Height(height)
+	m_Height(height),
+	m_IsDPIAware(dpiAware)
 {
 	auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 	Assert(SUCCEEDED(hr));
 
 	EnsureWindowClassIsCreated();
 	
-	float scaleX, scaleY;
-	GetCurrentMonitorScale(scaleX, scaleY);
-	m_Width = static_cast<int>(ceil(m_Width * scaleX));
-	m_Height = static_cast<int>(ceil(m_Height * scaleY));
+	if (!m_IsDPIAware)
+	{
+		float scaleX, scaleY;
+		GetCurrentMonitorScale(scaleX, scaleY);
+		m_Width = static_cast<int>(ceil(m_Width * scaleX));
+		m_Height = static_cast<int>(ceil(m_Height * scaleY));
+	}
 
 	m_Hwnd = CreateWindowExW(0, s_WindowClass, L"SearchResultsViewWindow", WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN, 0, 0, m_Width, m_Height, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
 	Assert(m_Hwnd != nullptr);
@@ -136,10 +140,18 @@ void ExplorerWindow::GetCurrentMonitorScale(float& scaleX, float& scaleY)
 
 void ExplorerWindow::ResizeView(int width, int height)
 {
-	float scaleX, scaleY;
-	GetCurrentMonitorScale(scaleX, scaleY);
-	m_Width = static_cast<int>(ceil(scaleX * width));
-	m_Height = static_cast<int>(ceil(scaleY * height));
+	if (!m_IsDPIAware)
+	{
+		float scaleX, scaleY;
+		GetCurrentMonitorScale(scaleX, scaleY);
+		m_Width = static_cast<int>(ceil(scaleX * width));
+		m_Height = static_cast<int>(ceil(scaleY * height));
+	}
+	else
+	{
+		m_Width = width;
+		m_Height = height;
+	}
 
 	auto setPositionResult = SetWindowPos(m_Hwnd, HWND_BOTTOM, 0, 0, m_Width, m_Height, 0);
 	Assert(setPositionResult != FALSE);

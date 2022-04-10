@@ -4,7 +4,12 @@
 
 extern "C" ExplorerWindow* CreateView(HWND parent, int width, int height)
 {
-	return new ExplorerWindow(parent, width, height);
+	return new ExplorerWindow(parent, width, height, false);
+}
+
+extern "C" ExplorerWindow* CreateDpiAwareView(HWND parent, int width, int height)
+{
+	return new ExplorerWindow(parent, width, height, true);
 }
 
 extern "C" void InitializeView(ExplorerWindow* window)
