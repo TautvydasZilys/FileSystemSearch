@@ -191,12 +191,10 @@ void SearchResultWindow::RunMessageLoop()
     {
         auto waitResult = MsgWaitForMultipleObjectsEx(1, &callbackQueueEvent, INFINITE, QS_ALLINPUT | QS_ALLPOSTMESSAGE, MWMO_INPUTAVAILABLE);
 
-        if (waitResult == WAIT_OBJECT_0)
+        if (waitResult == WAIT_OBJECT_0 || waitResult == WAIT_OBJECT_0 + 1)
         {
             m_CallbackQueue.InvokeCallbacks();
-        }
-        else if (waitResult == WAIT_OBJECT_0 + 1)
-        {
+
             MSG msg;
             while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
             {
