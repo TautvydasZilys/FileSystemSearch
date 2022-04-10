@@ -116,6 +116,7 @@ SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchResultWindowArgumen
     m_StatisticsY(0),
     m_HasDeterminateProgress(false),
     m_SearcherCleanupState(SearcherCleanupState::NotCleanedUp),
+    m_Initialized(false),
     m_IsTearingDown(false)
 {
     Assert(s_SearchResultWindowClass != 0);
@@ -157,6 +158,9 @@ SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchResultWindowArgumen
 
     auto wasVisible = ShowWindow(m_Hwnd, SW_SHOW);
     Assert(wasVisible == FALSE);
+
+    m_Initialized = true;
+    WakeByAddressAll(&m_Initialized);
 }
 
 SearchResultWindow::~SearchResultWindow()
@@ -530,10 +534,12 @@ void SearchResultWindow::UpdateStatisticsText(const SearchStatistics& searchStat
 
 void SearchResultWindow::OnFileFound(const WIN32_FIND_DATAW& findData, const wchar_t* path)
 {
-    m_CallbackQueue.InvokeAsync([this, findData, path { std::wstring(path) }]()
-    {
-        AddItemToView(m_ExplorerWindow, &findData, path.c_str());
-    });
+    decltype(m_Initialized) _false = false;
+
+    while (!m_Initialized)
+        WaitOnAddress(&m_Initialized, &_false, sizeof(m_Initialized), INFINITE);
+
+    AddItemToView(m_ExplorerWindow, &findData, path);
 }
 
 void SearchResultWindow::OnProgressUpdate(const SearchStatistics& searchStatistics, double progress)

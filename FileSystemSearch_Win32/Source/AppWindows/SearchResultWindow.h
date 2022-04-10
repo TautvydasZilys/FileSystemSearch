@@ -104,5 +104,6 @@ private:
 
     FileSearcher* m_Searcher;
     SearcherCleanupState m_SearcherCleanupState;
+    bool m_Initialized;
     bool m_IsTearingDown;
 };
