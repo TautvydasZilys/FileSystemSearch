@@ -62,14 +62,13 @@ private:
     void OnCreate(HWND hWnd);
     void OnResize(SIZE windowSize, uint32_t dpi);
 
-    static SIZE CalculateMargins(uint32_t dpi);
     SIZE CalculateHeaderSize(HDC hdc, int windowWidth, int marginX);
     std::array<WindowPosition, kStatisticsCount> CalculateStatisticsPositions(HDC hdc, int windowWidth, int marginFromEdgeX, int marginBetweenElementsX);
     static int CalculateStatisticsYCoordinate(const WindowPosition& lastStatisticPosition, int windowHeight, int marginY);
 
     void RepositionHeader(SIZE margin, SIZE headerSize);
     void RepositionStatistics(const std::array<WindowPosition, kStatisticsCount>& positions);
-
+    void RepositionProgressBar(int windowWidth, uint32_t dpi, int statisticsY);
 
     void OnStatisticsUpdate(const SearchStatistics& searchStatistics, double progress);
     void UpdateStatisticsText(const SearchStatistics& searchStatistics);
@@ -91,12 +90,14 @@ private:
     HwndHolder m_HeaderTextBlock;
     std::wstring m_HeaderText;
 
+    HwndHolder m_ProgressBar;
+
     std::array<HwndHolder, kStatisticsCount> m_StatisticsTextBlocks;
     std::array<std::wstring, kStatisticsCount> m_StatisticsText;
-    long m_StatisticsY;
+    int m_StatisticsY;
+    bool m_HasDeterminateProgress;
 
     FileSearcher* m_Searcher;
     SearcherCleanupState m_SearcherCleanupState;
     bool m_IsTearingDown;
-
 };

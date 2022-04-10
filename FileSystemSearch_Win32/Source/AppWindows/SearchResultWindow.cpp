@@ -25,8 +25,10 @@ constexpr int kMinHeight = 300;
 constexpr DWORD kWindowExStyle = WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW;
 constexpr DWORD kWindowStyle = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 constexpr SIZE kSearchResultWindowMargins = { 20, 5 };
+constexpr SIZE kProgressBarMargin = { 20, 8 };
 constexpr int kStatisticsMarginFromEdgeX = 30;
 constexpr int kStatisticsMarginBetweenElementsX = 40;
+constexpr int kProgressBarHeight = 21;
 
 struct SearchResultWindowArguments
 {
@@ -101,6 +103,7 @@ void SearchResultWindow::Spawn(const FontCache& fontCache, std::wstring&& search
 SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchResultWindowArguments> args) :
     m_FontCache(args->fontCache),
     m_StatisticsY(0),
+    m_HasDeterminateProgress(false),
     m_SearcherCleanupState(SearcherCleanupState::NotCleanedUp),
     m_IsTearingDown(false)
 {
@@ -268,6 +271,8 @@ void SearchResultWindow::OnCreate(HWND hWnd)
 
     m_Hwnd = hWnd;
     m_HeaderTextBlock = TextBlock(m_HeaderText).Create(m_Hwnd);
+    m_ProgressBar = ProgressBar().Create(m_Hwnd);
+    SendMessageW(m_ProgressBar, PBM_SETMARQUEE, TRUE, 0);
 
     SearchStatistics searchStatistics = {};
     UpdateStatisticsText(searchStatistics);
@@ -280,15 +285,6 @@ void SearchResultWindow::OnCreate(HWND hWnd)
     auto windowHeight = DipsToPixels(kInitialHeight, dpi);
     auto result = SetWindowPos(hWnd, nullptr, 0, 0, windowWidth, windowHeight, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
     Assert(result != FALSE);
-}
-
-SIZE SearchResultWindow::CalculateMargins(uint32_t dpi)
-{
-    return 
-    {
-        DipsToPixels(kSearchResultWindowMargins.cx, dpi),
-        DipsToPixels(kSearchResultWindowMargins.cy, dpi),
-    };
 }
 
 SIZE SearchResultWindow::CalculateHeaderSize(HDC hdc, int windowWidth, int marginX)
@@ -316,7 +312,7 @@ void SearchResultWindow::OnResize(SIZE windowSize, uint32_t dpi)
 
     SIZE headerTextSize;
     std::array<WindowPosition, kStatisticsCount> statisticsPositions;
-    SIZE margin = CalculateMargins(dpi);
+    SIZE margin = DipsToPixels(kSearchResultWindowMargins, dpi);
     int statisticsMarginFromEdgeX = DipsToPixels(kStatisticsMarginFromEdgeX, dpi);
     int statisticsMarginBetweenElementsX = DipsToPixels(kStatisticsMarginBetweenElementsX, dpi);
 
@@ -331,6 +327,7 @@ void SearchResultWindow::OnResize(SIZE windowSize, uint32_t dpi)
 
     RepositionHeader(margin, headerTextSize);
     RepositionStatistics(statisticsPositions);
+    RepositionProgressBar(windowSize.cx, dpi, m_StatisticsY);
 }
 
 void SearchResultWindow::RepositionHeader(SIZE margin, SIZE headerSize)
@@ -348,12 +345,39 @@ void SearchResultWindow::RepositionStatistics(const std::array<WindowPosition, k
     }
 }
 
-void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatistics, double /*progress*/)
+void SearchResultWindow::RepositionProgressBar(int windowWidth, uint32_t dpi, int statisticsY)
+{
+    auto margin = DipsToPixels(kProgressBarMargin, dpi);
+    int x = margin.cx;
+    int width = windowWidth - 2 * margin.cx;
+
+    int height = DipsToPixels(kProgressBarHeight, dpi);
+    int y = statisticsY - margin.cy - height;
+
+    SetWindowPos(m_ProgressBar, nullptr, x, y, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
+}
+
+void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatistics, double progress)
 {
     UpdateStatisticsText(searchStatistics);
 
     for (size_t i = 0; i < kStatisticsCount; i++)
         SetWindowTextW(m_StatisticsTextBlocks[i], m_StatisticsText[i].c_str());
+
+    if (!isnan(progress))
+    {
+        if (!m_HasDeterminateProgress)
+        {
+            m_HasDeterminateProgress = true;
+
+            auto progressStyle = GetWindowLongPtrW(m_ProgressBar, GWL_STYLE);
+            SetWindowLongPtrW(m_ProgressBar, GWL_STYLE, progressStyle & ~PBS_MARQUEE);
+
+            SendMessageW(m_ProgressBar, PBM_SETRANGE32, 0, std::numeric_limits<int>::max());
+        }
+
+        SendMessageW(m_ProgressBar, PBM_SETPOS, static_cast<int>(progress * std::numeric_limits<int>::max()), 0);
+    }
 
     RECT windowRect;
     auto result = GetClientRect(m_Hwnd, &windowRect);
@@ -366,7 +390,7 @@ void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatis
 
     SIZE headerTextSize;
     std::array<WindowPosition, kStatisticsCount> statisticsPositions;
-    SIZE margin = CalculateMargins(dpi);
+    SIZE margin = DipsToPixels(kSearchResultWindowMargins, dpi);
     int statisticsMarginFromEdgeX = DipsToPixels(kStatisticsMarginFromEdgeX, dpi);
     int statisticsMarginBetweenElementsX = DipsToPixels(kStatisticsMarginBetweenElementsX, dpi);
 
@@ -386,6 +410,7 @@ void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatis
         }
 
         RepositionHeader(margin, headerTextSize);
+        RepositionProgressBar(windowSize.cx, dpi, m_StatisticsY);
     }
 
     AdjustWindowPositions(statisticsPositions, { statisticsMarginFromEdgeX, statisticsY });

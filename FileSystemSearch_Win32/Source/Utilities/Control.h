@@ -55,3 +55,8 @@ constexpr ControlDescription Button(const wchar_t* text, int x, int y, int width
 {
     return ControlDescription(WC_BUTTON, text, WS_VISIBLE | WS_CHILD | WS_TABSTOP, x, y, width, 26);
 }
+
+constexpr ControlDescription ProgressBar(int x = 0, int y = 0, int width = 0, int height = 0)
+{
+    return ControlDescription(PROGRESS_CLASS, nullptr, WS_VISIBLE | WS_CHILD | PBS_MARQUEE, x, y, width, height);
+}

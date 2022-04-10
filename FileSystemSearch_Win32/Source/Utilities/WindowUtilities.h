@@ -14,6 +14,15 @@ inline int DipsToPixels(int dips, uint32_t dpi)
     return static_cast<int>(std::ceil(static_cast<int64_t>(dips) * dpi / 96.0));
 }
 
+inline SIZE DipsToPixels(SIZE dips, uint32_t dpi)
+{
+    return
+    {
+        DipsToPixels(dips.cx, dpi),
+        DipsToPixels(dips.cy, dpi),
+    };
+}
+
 inline std::wstring GetWindowTextW(HWND hWnd)
 {
     auto searchStringLength = GetWindowTextLengthW(hWnd);
