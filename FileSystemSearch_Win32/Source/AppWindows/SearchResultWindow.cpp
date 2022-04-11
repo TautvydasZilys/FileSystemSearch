@@ -589,7 +589,6 @@ void SearchResultWindow::OnSearchError(const wchar_t* errorMessage)
         MessageBoxW(m_Hwnd, errorMessage.c_str(), L"Error", MB_OK | MB_ICONERROR);
         CleanupSearchOperationIfNeeded();
     });
-
 }
 
 void SearchResultWindow::CleanupSearchOperationIfNeeded()
