@@ -12,6 +12,9 @@
     <ClCompile Include="Source\AppWindows\SearchResultWindow.cpp">
       <Filter>AppWindows</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Utilities\NumberFormatter.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Resources\resource.h">
@@ -61,6 +64,9 @@
       <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="Source\Utilities\WindowPosition.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\NumberFormatter.h">
       <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>

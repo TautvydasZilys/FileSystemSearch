@@ -204,11 +204,13 @@
     <ClCompile Include="Source\AppWindows\SearchResultWindow.cpp" />
     <ClCompile Include="Source\AppWindows\SearchWindow.cpp" />
     <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\Utilities\NumberFormatter.cpp" />
     <ClCompile Include="Source\Utilities\FontCache.cpp" />
     <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClInclude Include="Source\Utilities\DCHolder.h" />
+    <ClInclude Include="Source\Utilities\NumberFormatter.h" />
     <ClInclude Include="Source\Utilities\WindowPosition.h" />
     <ClInclude Include="Source\Utilities\WndClassHolder.h" />
   </ItemGroup>

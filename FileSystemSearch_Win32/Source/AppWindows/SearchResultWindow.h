@@ -4,6 +4,7 @@
 #include "NonCopyable.h"
 #include "SearchEngineTypes.h"
 #include "Utilities/EventQueue.h"
+#include "Utilities/NumberFormatter.h"
 #include "Utilities/HwndHolder.h"
 #include "Utilities/WindowPosition.h"
 
@@ -62,6 +63,7 @@ private:
     operator HWND() const { return m_Hwnd;}
     void OnCreate(HWND hWnd);
     void OnResize(SIZE windowSize, uint32_t dpi);
+    void OnLocaleChange();
 
     SIZE CalculateHeaderSize(HDC hdc, int windowWidth, int marginX);
     std::array<WindowPosition, kStatisticsCount> CalculateStatisticsPositions(HDC hdc, int windowWidth, int marginFromEdgeX, int marginBetweenElementsX);
@@ -72,8 +74,8 @@ private:
     int RepositionProgressBar(int windowWidth, uint32_t dpi, int statisticsY);
     void RepositionExplorerBrowser(SIZE margin, int windowWidth, int headerHeight, int progressBarY);
 
-    void OnStatisticsUpdate(const SearchStatistics& searchStatistics, double progress);
-    void UpdateStatisticsText(const SearchStatistics& searchStatistics);
+    void OnStatisticsUpdate();
+    void UpdateStatisticsText();
     
     void OnFileFound(const WIN32_FIND_DATAW& findData, const wchar_t* path);
     void OnProgressUpdate(const SearchStatistics& searchStatistics, double progress);
@@ -87,6 +89,8 @@ private:
 private:
     const FontCache& m_FontCache;
     EventQueue m_CallbackQueue;
+    NumberFormatter m_NumberFormatter;
+
     HwndHolder m_Hwnd;
 
     HwndHolder m_HeaderTextBlock;
@@ -104,6 +108,8 @@ private:
 
     FileSearcher* m_Searcher;
     SearcherCleanupState m_SearcherCleanupState;
+    SearchStatistics m_SearchStatistics;
+    double m_Progress;
     bool m_Initialized;
     bool m_IsTearingDown;
 };

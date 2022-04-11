@@ -116,6 +116,8 @@ SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchResultWindowArgumen
     m_StatisticsY(0),
     m_HasDeterminateProgress(false),
     m_SearcherCleanupState(SearcherCleanupState::NotCleanedUp),
+    m_SearchStatistics({}),
+    m_Progress(0.0),
     m_Initialized(false),
     m_IsTearingDown(false)
 {
@@ -215,6 +217,19 @@ void SearchResultWindow::RunMessageLoop()
     }
 }
 
+static SearchResultWindow* GetWindowInstance(HWND hWnd)
+{
+    ReaderWriterLock::ReaderLock lock(s_SearchResultWindowsLock);
+    auto it = s_SearchResultWindows.find(hWnd);
+    if (it != s_SearchResultWindows.end())
+    {
+        return it->second;
+    }
+
+    Assert(false);
+    return nullptr;
+}
+
 LRESULT SearchResultWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -245,27 +260,29 @@ LRESULT SearchResultWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
             return 0;
         }
 
-        case WM_SIZE:
+        case WM_SETTINGCHANGE:
         {
-            SearchResultWindow* window = nullptr;
-
+            if (wParam == 0 && lParam != 0 && wcscmp(L"intl", reinterpret_cast<const wchar_t*>(lParam)) == 0)
             {
-                ReaderWriterLock::ReaderLock lock(s_SearchResultWindowsLock);
-                auto it = s_SearchResultWindows.find(hWnd);
-                if (it != s_SearchResultWindows.end())
+                SearchResultWindow* window = GetWindowInstance(hWnd);
+                if (window != nullptr)
                 {
-                    window = it->second;
-                }
-                else
-                {
-                    Assert(false);
+                    window->OnLocaleChange();
+                    return 0;
                 }
             }
 
-            if (window != nullptr)
-                window->OnResize({ LOWORD(lParam), HIWORD(lParam) }, GetDpiForWindow(hWnd));
+            break;
+        }
 
-            return 0;
+        case WM_SIZE:
+        {
+            SearchResultWindow* window = GetWindowInstance(hWnd);
+            if (window != nullptr)
+            {
+                window->OnResize({ LOWORD(lParam), HIWORD(lParam) }, GetDpiForWindow(hWnd));
+                return 0;
+            }
         }
 
         case WM_GETMINMAXINFO:
@@ -298,8 +315,7 @@ void SearchResultWindow::OnCreate(HWND hWnd)
     m_ProgressBar = ProgressBar().Create(m_Hwnd);
     SendMessageW(m_ProgressBar, PBM_SETMARQUEE, TRUE, 0);
 
-    SearchStatistics searchStatistics = {};
-    UpdateStatisticsText(searchStatistics);
+    UpdateStatisticsText();
 
     for (size_t i = 0; i < kStatisticsCount; i++)
         m_StatisticsTextBlocks[i] = TextBlock(m_StatisticsText[i]).Create(m_Hwnd);
@@ -356,6 +372,12 @@ void SearchResultWindow::OnResize(SIZE windowSize, uint32_t dpi)
     RepositionExplorerBrowser(margin, windowSize.cx, headerTextSize.cy, progressBarY);
 }
 
+void SearchResultWindow::OnLocaleChange()
+{
+    m_NumberFormatter.RefreshLocaleInfo();
+    OnStatisticsUpdate();
+}
+
 void SearchResultWindow::RepositionHeader(SIZE margin, SIZE headerSize)
 {
     auto result = SetWindowPos(m_HeaderTextBlock, nullptr, margin.cx, margin.cy, headerSize.cx, headerSize.cy, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);
@@ -396,14 +418,14 @@ void SearchResultWindow::RepositionExplorerBrowser(SIZE margin, int windowWidth,
     ResizeView(m_ExplorerWindow, width, height);
 }
 
-void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatistics, double progress)
+void SearchResultWindow::OnStatisticsUpdate()
 {
-    UpdateStatisticsText(searchStatistics);
+    UpdateStatisticsText();
 
     for (size_t i = 0; i < kStatisticsCount; i++)
         SetWindowTextW(m_StatisticsTextBlocks[i], m_StatisticsText[i].c_str());
 
-    if (!isnan(progress))
+    if (!isnan(m_Progress))
     {
         if (!m_HasDeterminateProgress)
         {
@@ -415,7 +437,7 @@ void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatis
             SendMessageW(m_ProgressBar, PBM_SETRANGE32, 0, std::numeric_limits<int>::max());
         }
 
-        SendMessageW(m_ProgressBar, PBM_SETPOS, static_cast<int>(progress * std::numeric_limits<int>::max()), 0);
+        SendMessageW(m_ProgressBar, PBM_SETPOS, static_cast<int>(m_Progress * std::numeric_limits<int>::max()), 0);
     }
 
     RECT windowRect;
@@ -457,79 +479,65 @@ void SearchResultWindow::OnStatisticsUpdate(const SearchStatistics& searchStatis
     RepositionStatistics(statisticsPositions);
 }
 
-template <size_t N>
-static int FormatFileSize(wchar_t (&buffer)[N], double size)
+static const wchar_t* NormalizeSize(double& size)
 {
-    if (size < 1024)
-        return swprintf_s(buffer, L"%.0f bytes", size);
+    Assert(size >= 1024);
 
     size /= 1024.0;
     if (size < 1024)
-        return swprintf_s(buffer, L"%.3f KB", size);
+        return L" KB";
 
     size /= 1024.0;
     if (size < 1024)
-        return swprintf_s(buffer, L"%.3f MB", size);
+        return L" MB";
 
     size /= 1024.0;
     if (size < 1024)
-        return swprintf_s(buffer, L"%.3f GB", size);
+        return L" GB";
 
     size /= 1024.0;
-    return swprintf_s(buffer, L"%.3f TB", size);
+    return L" TB";
 }
 
-void SearchResultWindow::UpdateStatisticsText(const SearchStatistics& searchStatistics)
+static void AppendFileSize(const NumberFormatter& numberFormatter, std::wstring& dest, uint64_t size)
 {
-    wchar_t buffer[30] = {};
-
-    const uint64_t statisticsNumbers[] =
+    if (size < 1024)
     {
-        searchStatistics.directoriesEnumerated,
-        searchStatistics.filesEnumerated,
-        searchStatistics.fileContentsSearched,
-        searchStatistics.totalFileSize,
-        static_cast<uint64_t>(searchStatistics.scannedFileSize),
-        searchStatistics.resultsFound
-    };
-
-    static_assert(ARRAYSIZE(statisticsNumbers) < kStatisticsCount, "Array overrun");
-
-    auto count = swprintf_s(buffer, L"%llu", searchStatistics.directoriesEnumerated);
-    m_StatisticsText[kDirectoriesEnumerated].resize(kStatisticsLabels[kDirectoriesEnumerated].size());
-    m_StatisticsText[kDirectoriesEnumerated].append(buffer, count);
-
-    count = swprintf_s(buffer, L"%llu", searchStatistics.filesEnumerated);
-    m_StatisticsText[kFilesEnumerated].resize(kStatisticsLabels[kFilesEnumerated].size());
-    m_StatisticsText[kFilesEnumerated].append(buffer, count);
-
-    count = swprintf_s(buffer, L"%llu", searchStatistics.fileContentsSearched);
-    m_StatisticsText[kFileContentsSearched].resize(kStatisticsLabels[kFileContentsSearched].size());
-    m_StatisticsText[kFileContentsSearched].append(buffer, count);
-
-    count = FormatFileSize(buffer, static_cast<double>(searchStatistics.totalFileSize));
-    m_StatisticsText[kTotalEnumeratedFilesSize].resize(kStatisticsLabels[kTotalEnumeratedFilesSize].size());
-    m_StatisticsText[kTotalEnumeratedFilesSize].append(buffer, count);
-
-    count = FormatFileSize(buffer, static_cast<double>(searchStatistics.scannedFileSize));
-    m_StatisticsText[kTotalContentsSearchedFilesSize].resize(kStatisticsLabels[kTotalContentsSearchedFilesSize].size());
-    m_StatisticsText[kTotalContentsSearchedFilesSize].append(buffer, count);
-
-    count = swprintf_s(buffer, L"%llu", searchStatistics.resultsFound);
-    m_StatisticsText[kResultsFound].resize(kStatisticsLabels[kResultsFound].size());
-    m_StatisticsText[kResultsFound].append(buffer, count);
-
-    if (searchStatistics.searchTimeInSeconds < 1000000)
-    {
-        swprintf_s(buffer, L"%.3f seconds", searchStatistics.searchTimeInSeconds);
+        numberFormatter.AppendInteger(dest, size);
+        dest += L" bytes";
     }
     else
     {
-        swprintf_s(buffer, L"%.3e seconds", searchStatistics.searchTimeInSeconds);
+        double normalizedSize = static_cast<double>(size);
+        auto unit = NormalizeSize(normalizedSize);
+        numberFormatter.AppendFloat(dest, normalizedSize, 3);
+        dest += unit;
     }
+}
+
+void SearchResultWindow::UpdateStatisticsText()
+{
+    m_StatisticsText[kDirectoriesEnumerated].resize(kStatisticsLabels[kDirectoriesEnumerated].size());
+    m_NumberFormatter.AppendInteger(m_StatisticsText[kDirectoriesEnumerated], m_SearchStatistics.directoriesEnumerated);
+
+    m_StatisticsText[kFilesEnumerated].resize(kStatisticsLabels[kFilesEnumerated].size());
+    m_NumberFormatter.AppendInteger(m_StatisticsText[kFilesEnumerated], m_SearchStatistics.filesEnumerated);
+
+    m_StatisticsText[kFileContentsSearched].resize(kStatisticsLabels[kFileContentsSearched].size());
+    m_NumberFormatter.AppendInteger(m_StatisticsText[kFileContentsSearched], m_SearchStatistics.fileContentsSearched);
+
+    m_StatisticsText[kTotalEnumeratedFilesSize].resize(kStatisticsLabels[kTotalEnumeratedFilesSize].size());
+    AppendFileSize(m_NumberFormatter, m_StatisticsText[kTotalEnumeratedFilesSize], m_SearchStatistics.totalFileSize);
+
+    m_StatisticsText[kTotalContentsSearchedFilesSize].resize(kStatisticsLabels[kTotalContentsSearchedFilesSize].size());
+    AppendFileSize(m_NumberFormatter, m_StatisticsText[kTotalContentsSearchedFilesSize], m_SearchStatistics.scannedFileSize);
+
+    m_StatisticsText[kResultsFound].resize(kStatisticsLabels[kResultsFound].size());
+    m_NumberFormatter.AppendInteger(m_StatisticsText[kResultsFound], m_SearchStatistics.resultsFound);
 
     m_StatisticsText[kSearchTime].resize(kStatisticsLabels[kSearchTime].size());
-    m_StatisticsText[kSearchTime] += buffer;
+    m_NumberFormatter.AppendFloat(m_StatisticsText[kSearchTime], m_SearchStatistics.searchTimeInSeconds, 3);
+    m_StatisticsText[kSearchTime] += L" seconds";
 }
 
 void SearchResultWindow::OnFileFound(const WIN32_FIND_DATAW& findData, const wchar_t* path)
@@ -546,7 +554,10 @@ void SearchResultWindow::OnProgressUpdate(const SearchStatistics& searchStatisti
 {
     m_CallbackQueue.InvokeAsync([this, searchStatistics, progress]()
     {
-        OnStatisticsUpdate(searchStatistics, progress);
+        m_SearchStatistics = searchStatistics;
+        m_Progress = progress;
+
+        OnStatisticsUpdate();
     });
 }
 
@@ -556,7 +567,10 @@ void SearchResultWindow::OnSearchDone(const SearchStatistics& searchStatistics)
     {
         if (!m_IsTearingDown)
         {
-            OnStatisticsUpdate(searchStatistics, 1.0);
+            m_SearchStatistics = searchStatistics;
+            m_Progress = 1.0;
+
+            OnStatisticsUpdate();
         }
 
         CleanupSearchOperationIfNeeded();
