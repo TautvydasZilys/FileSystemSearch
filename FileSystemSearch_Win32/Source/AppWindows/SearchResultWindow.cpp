@@ -277,12 +277,17 @@ LRESULT SearchResultWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_SIZE:
         {
-            SearchResultWindow* window = GetWindowInstance(hWnd);
-            if (window != nullptr)
+            if (wParam != SIZE_MINIMIZED)
             {
-                window->OnResize({ LOWORD(lParam), HIWORD(lParam) }, GetDpiForWindow(hWnd));
-                return 0;
+                SearchResultWindow* window = GetWindowInstance(hWnd);
+                if (window != nullptr)
+                {
+                    window->OnResize({ LOWORD(lParam), HIWORD(lParam) }, GetDpiForWindow(hWnd));
+                    return 0;
+                }
             }
+
+            break;
         }
 
         case WM_GETMINMAXINFO:
