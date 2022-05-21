@@ -21,6 +21,7 @@ public:
 
 private:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK TextBoxWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
     void AdjustSearchWindowPlacement(POINT position, SIZE size, uint32_t dpi);
     void OnCreate(HWND hWnd);

@@ -2,6 +2,7 @@
 #include "SearchEngine.h"
 #include "SearchResultWindow.h"
 #include "SearchWindow.h"
+#include "Utilities/DCHolder.h"
 #include "Utilities/FontCache.h"
 #include "Utilities/WindowUtilities.h"
 
@@ -92,7 +93,7 @@ SearchWindow::~SearchWindow()
     s_Instance = nullptr;
 }
 
-LRESULT SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
@@ -141,12 +142,109 @@ LRESULT SearchWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
+void DrawBorder(HWND hWnd, bool hasFocus)
+{
+    RECT windowRect;
+    GetWindowRect(hWnd, &windowRect);
+
+    DCHolder dc(hWnd, nullptr, DCX_WINDOW | DCX_CACHE);
+    const auto brush = hasFocus ? reinterpret_cast<HBRUSH>(COLOR_HIGHLIGHT + 1) : reinterpret_cast<HBRUSH>(COLOR_WINDOWFRAME + 1);
+    const int width = windowRect.right - windowRect.left;
+    const int height = windowRect.bottom - windowRect.top;
+
+    RECT leftLine = { 0, 0, 1, height };
+    auto result = FillRect(dc, &leftLine, brush);
+    Assert(result != 0);
+
+    RECT topLine = { 0, 0, width, 1 };
+    result = FillRect(dc, &topLine, brush);
+    Assert(result != 0);
+
+    RECT rightLine = { width - 1, 0, width, height };
+    result = FillRect(dc, &rightLine, brush);
+    Assert(result != 0);
+
+    RECT bottomLine = { 0, height - 1, width, height };
+    result = FillRect(dc, &bottomLine, brush);
+    Assert(result != 0);
+
+    RECT clientArea = { 1, 1, width - 1, 2 };
+    result = FillRect(dc, &clientArea, reinterpret_cast<HBRUSH>(kBackgroundColor));
+    Assert(result != 0);
+}
+
+LRESULT CALLBACK SearchWindow::TextBoxWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR /*uIdSubclass*/, DWORD_PTR /*dwRefData*/)
+{
+    switch (msg)
+    {
+        // Make top border area 2 pixels high to force text 1 px lower
+        case WM_NCCALCSIZE:
+            if (wParam)
+            {
+                auto sizeParams = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+
+                if (sizeParams->rgrc[0].right - sizeParams->rgrc[0].left >= 3)
+                {
+                    sizeParams->rgrc[0].left++;
+                    sizeParams->rgrc[0].right--;
+                }
+
+                if (sizeParams->rgrc[0].bottom - sizeParams->rgrc[0].top >= 3)
+                {
+                    sizeParams->rgrc[0].top += 2;
+                    sizeParams->rgrc[0].bottom--;
+                }
+
+                return WVR_REDRAW;
+            }
+            else
+            {
+                auto rect = reinterpret_cast<RECT*>(lParam);
+                rect->top += 2;
+                rect->left++;
+                rect->right--;
+                rect->bottom--;
+                return 0;
+            }
+
+        case WM_MOUSEMOVE:
+            break;
+
+        case WM_MOUSELEAVE:
+            DrawBorder(hWnd, false);
+            break;
+
+        case WM_NCPAINT:
+        {
+            POINT p;
+            bool hasFocus = GetFocus() == hWnd || (GetCursorPos(&p) && WindowFromPoint(p) == hWnd);
+            DrawBorder(hWnd, hasFocus);
+            return 0;
+        }
+    }
+
+    return DefSubclassProc(hWnd, msg, wParam, lParam);
+}
+
 void SearchWindow::OnCreate(HWND hWnd)
 {
     m_Hwnd = hWnd;
 
     for (size_t i = 0; i < m_ControlCount; i++)
         m_Controls[i] = kControls[i].Create(hWnd, i);
+
+    // Subclass all textboxes
+    auto result = SetWindowSubclass(m_Controls[m_SearchPathTextBox], &SearchWindow::TextBoxWndProc, m_SearchPathTextBox, reinterpret_cast<DWORD_PTR>(this));
+    Assert(result != FALSE);
+
+    result = SetWindowSubclass(m_Controls[m_SearchPatternTextBox], &SearchWindow::TextBoxWndProc, m_SearchPatternTextBox, reinterpret_cast<DWORD_PTR>(this));
+    Assert(result != FALSE);
+
+    result = SetWindowSubclass(m_Controls[m_SearchStringTextBox], &SearchWindow::TextBoxWndProc, m_SearchStringTextBox, reinterpret_cast<DWORD_PTR>(this));
+    Assert(result != FALSE);
+
+    result = SetWindowSubclass(m_Controls[m_IgnoreFilesLargerThanTextBox], &SearchWindow::TextBoxWndProc, m_IgnoreFilesLargerThanTextBox, reinterpret_cast<DWORD_PTR>(this));
+    Assert(result != FALSE);
     
     // Restrict to numbers only
     HWND ignoreFilesLargerThanTextBox = m_Controls[m_IgnoreFilesLargerThanTextBox];
