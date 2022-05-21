@@ -362,7 +362,8 @@ void SearchResultWindow::OnResize(SIZE windowSize, uint32_t dpi)
     int statisticsMarginBetweenElementsX = DipsToPixels(kStatisticsMarginBetweenElementsX, dpi);
 
     {
-        DCHolder dcForMeasurement(m_Hwnd, font);
+        DCHolder dcForMeasurement(m_Hwnd);
+        DCObjectSelector fontSelector(dcForMeasurement, font);
         headerTextSize = CalculateHeaderSize(dcForMeasurement, windowSize.cx, margin.cx);
         statisticsPositions = CalculateStatisticsPositions(dcForMeasurement, windowSize.cx, statisticsMarginFromEdgeX, statisticsMarginBetweenElementsX);
     }
@@ -461,7 +462,8 @@ void SearchResultWindow::OnStatisticsUpdate()
     int statisticsMarginBetweenElementsX = DipsToPixels(kStatisticsMarginBetweenElementsX, dpi);
 
     {
-        DCHolder dcForMeasurement(m_Hwnd, font);
+        DCHolder dcForMeasurement(m_Hwnd);
+        DCObjectSelector fontSelector(dcForMeasurement, font);
         statisticsPositions = CalculateStatisticsPositions(dcForMeasurement, windowSize.cx, statisticsMarginFromEdgeX, statisticsMarginBetweenElementsX);
     }
 
@@ -471,7 +473,8 @@ void SearchResultWindow::OnStatisticsUpdate()
         m_StatisticsY = statisticsY;
 
         {
-            DCHolder dcForMeasurement(m_Hwnd, font);
+            DCHolder dcForMeasurement(m_Hwnd);
+            DCObjectSelector fontSelector(dcForMeasurement, font);
             headerTextSize = CalculateHeaderSize(dcForMeasurement, windowSize.cx, margin.cx);
         }
 
