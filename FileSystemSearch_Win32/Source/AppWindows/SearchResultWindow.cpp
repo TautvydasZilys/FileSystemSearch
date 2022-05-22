@@ -230,7 +230,7 @@ static SearchResultWindow* GetWindowInstance(HWND hWnd)
     return nullptr;
 }
 
-LRESULT SearchResultWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK SearchResultWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
