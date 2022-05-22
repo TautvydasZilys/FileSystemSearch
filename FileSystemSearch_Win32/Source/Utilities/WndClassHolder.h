@@ -3,7 +3,7 @@
 #include "NonCopyable.h"
 #include "WindowUtilities.h"
 
-class WndClassHolder
+class WndClassHolder : NonCopyable
 {
 public:
     WndClassHolder() :

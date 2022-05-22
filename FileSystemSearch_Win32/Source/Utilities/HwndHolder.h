@@ -2,7 +2,7 @@
 
 #include "NonCopyable.h"
 
-class HwndHolder
+class HwndHolder : NonCopyable
 {
 public:
     HwndHolder() :
