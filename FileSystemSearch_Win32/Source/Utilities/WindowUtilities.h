@@ -163,3 +163,15 @@ void AdjustWindowPositions(std::array<WindowPosition, N>& positions, POINT offse
         position.y += offset.y;
     }
 }
+
+inline void IntersectRectInPlace(RECT* inOutRect, const RECT& other)
+{
+    RECT result;
+    IntersectRect(&result, inOutRect, &other);
+    *inOutRect = result;
+}
+
+inline bool IsEmptyRect(const RECT& rect)
+{
+    return rect.right - rect.left == 0 || rect.bottom - rect.top == 0;
+}

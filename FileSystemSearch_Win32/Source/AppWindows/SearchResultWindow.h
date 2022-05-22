@@ -84,7 +84,7 @@ private:
 
     void CleanupSearchOperationIfNeeded();
 
-    static LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
     const FontCache& m_FontCache;

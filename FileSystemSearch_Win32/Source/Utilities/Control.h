@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Controls/BorderedTextBox.h"
 #include "WindowUtilities.h"
 
 struct ControlDescription
@@ -40,7 +41,7 @@ constexpr ControlDescription TextBlock(const std::wstring& text, int x = 0, int 
 
 constexpr ControlDescription TextBox(const wchar_t* text, int x, int y, int width)
 {
-    return ControlDescription(WC_EDIT, text, WS_VISIBLE | WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, x, y, width, 19);
+    return ControlDescription(BorderedTextBox::WindowClassName, text, WS_VISIBLE | WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, x, y, width, 19);
 }
 
 constexpr ControlDescription ComboBox(int x, int y, int width)

@@ -15,6 +15,9 @@
     <ClCompile Include="Source\Utilities\NumberFormatter.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Controls\BorderedTextBox.cpp">
+      <Filter>Controls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Resources\resource.h">
@@ -69,6 +72,9 @@
     <ClInclude Include="Source\Utilities\NumberFormatter.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Controls\BorderedTextBox.h">
+      <Filter>Controls</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -82,6 +88,9 @@
     </Filter>
     <Filter Include="Utilities">
       <UniqueIdentifier>{f3601572-69f9-46b4-a86f-db2c7776e8e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controls">
+      <UniqueIdentifier>{5893e6a0-6f56-441d-8afa-e2580c442779}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

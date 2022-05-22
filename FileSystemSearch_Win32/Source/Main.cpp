@@ -1,6 +1,7 @@
 #include "PrecompiledHeader.h"
 #include "AppWindows/SearchWindow.h"
 #include "AppWindows/SearchResultWindow.h"
+#include "Controls/BorderedTextBox.h"
 #include "Utilities/FontCache.h"
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int nCmdShow)
@@ -13,6 +14,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int nCmdShow)
     Assert(result != FALSE);
 
     FontCache fontCache;
+    BorderedTextBox::StaticInitializer borderedTextBoxStatics;
     SearchResultWindow::StaticInitializer searchResultWindowStatics;
 
     {
