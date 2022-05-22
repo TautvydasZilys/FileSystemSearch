@@ -1,4 +1,5 @@
 #include "PrecompiledHeader.h"
+#include "Event.h"
 #include "OverlappedIOReader.h"
 #include "SearchInstructions.h"
 #include "SearchResultReporter.h"
@@ -39,9 +40,11 @@ void OverlappedIOReader::ContentsSearchThread()
 		std::unique_ptr<uint8_t[]>(new uint8_t[kFileReadBufferSize]),
 	};
 
-	DoWork([this, &fileReadBuffers, &stackAllocator](const FileOpenData& searchData)
+	Event<EventType::AutoReset> overlappedEvent;
+
+	DoWork([this, &fileReadBuffers, &stackAllocator, &overlappedEvent](const FileOpenData& searchData)
 	{
-		SearchFileContents(searchData, fileReadBuffers[0].get(), fileReadBuffers[1].get(), stackAllocator);
+		SearchFileContents(searchData, fileReadBuffers[0].get(), fileReadBuffers[1].get(), stackAllocator, overlappedEvent);
 		m_SearchResultReporter.AddToScannedFileCount();
 	});
 }
@@ -63,7 +66,7 @@ static inline bool InitiateFileRead(HANDLE fileHandle, uint64_t fileOffset, uint
 	return readResult != FALSE || GetLastError() == ERROR_IO_PENDING;
 }
 
-void OverlappedIOReader::SearchFileContents(const FileOpenData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator)
+void OverlappedIOReader::SearchFileContents(const FileOpenData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator, HANDLE overlappedEvent)
 {
 	const DWORD kFileSharingFlags = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE; // We really don't want to step on anyones toes
 	uint64_t fileOffset = 0;
@@ -75,9 +78,6 @@ void OverlappedIOReader::SearchFileContents(const FileOpenData& searchData, uint
 		m_SearchResultReporter.AddToScannedFileSize(searchData.fileSize);
 		return;
 	}
-
-	EventHandleHolder overlappedEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
-	Assert(overlappedEvent != nullptr);
 
 	OVERLAPPED overlapped;
 	if (!InitiateFileRead(fileHandle, fileOffset, searchData.fileSize, primaryBuffer, secondaryBuffer, overlapped, overlappedEvent))
@@ -91,6 +91,7 @@ void OverlappedIOReader::SearchFileContents(const FileOpenData& searchData, uint
 
 	uint32_t bytesRead = static_cast<uint32_t>(overlapped.InternalHigh);
 	fileOffset += bytesRead;
+	Assert(static_cast<int64_t>(fileOffset) >= 0);
 	if (fileOffset != searchData.fileSize)
 		fileOffset -= m_MaxSearchStringLength;
 
@@ -118,6 +119,7 @@ void OverlappedIOReader::SearchFileContents(const FileOpenData& searchData, uint
 
 		bytesRead = static_cast<uint32_t>(overlapped.InternalHigh);
 		fileOffset += bytesRead;
+		Assert(static_cast<int64_t>(fileOffset) >= 0);
 		if (fileOffset != searchData.fileSize)
 			fileOffset -= m_MaxSearchStringLength;
 	}

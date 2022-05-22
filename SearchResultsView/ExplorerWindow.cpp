@@ -35,26 +35,27 @@ void ExplorerWindow::EnsureWindowClassIsCreated()
 	Assert(s_WindowClass != 0);
 }
 
-ExplorerWindow::ExplorerWindow(HWND parent, int width, int height) :
+ExplorerWindow::ExplorerWindow(HWND parent, int width, int height, bool dpiAware) :
 	m_Hwnd(nullptr),
 	m_Width(width),
 	m_Height(height),
-	m_ShcoreDll(nullptr),
-	m_GetDpiForMonitor(nullptr)
+	m_IsDPIAware(dpiAware),
+	m_ResultDispatcherThreadId(0)
 {
 	auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 	Assert(SUCCEEDED(hr));
 
-	InitializeDpiResources();
-
 	EnsureWindowClassIsCreated();
 	
-	float scaleX, scaleY;
-	GetCurrentMonitorScale(scaleX, scaleY);
-	m_Width = static_cast<int>(ceil(m_Width * scaleX));
-	m_Height = static_cast<int>(ceil(m_Height * scaleY));
+	if (!m_IsDPIAware)
+	{
+		float scaleX, scaleY;
+		GetCurrentMonitorScale(scaleX, scaleY);
+		m_Width = static_cast<int>(ceil(m_Width * scaleX));
+		m_Height = static_cast<int>(ceil(m_Height * scaleY));
+	}
 
-	m_Hwnd = CreateWindowExW(0, s_WindowClass, L"SearchResultsViewWindow", WS_CHILD | WS_CLIPCHILDREN, 0, 0, m_Width, m_Height, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
+	m_Hwnd = CreateWindowExW(0, s_WindowClass, L"SearchResultsViewWindow", WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN, 0, 0, m_Width, m_Height, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
 	Assert(m_Hwnd != nullptr);
 }
 
@@ -65,7 +66,6 @@ ExplorerWindow::~ExplorerWindow()
 	m_BindCtx = nullptr;
 	m_FileSystemBindData = nullptr;
 
-	FreeDpiResources();
 	CoUninitialize();
 
 	DestroyWindow(m_Hwnd);
@@ -90,14 +90,14 @@ void ExplorerWindow::Initialize()
 	hr = m_ExplorerBrowser->FillFromObject(nullptr, EBF_NONE);
 	Assert(SUCCEEDED(hr));
 
-	WRL::ComPtr<IFolderView> folderView;
+	ComPtr<IFolderView> folderView;
 	hr = m_ExplorerBrowser->GetCurrentView(__uuidof(IFolderView), &folderView);
 	Assert(SUCCEEDED(hr));
 
 	hr = folderView->GetFolder(__uuidof(IResultsFolder), &m_ResultsFolder);
 	Assert(SUCCEEDED(hr));
 
-	WRL::ComPtr<IBindCtx> itemBindContext;
+	ComPtr<IBindCtx> itemBindContext;
 
 	hr = CreateBindCtx(0, &itemBindContext);
 	Assert(SUCCEEDED(hr));
@@ -105,12 +105,16 @@ void ExplorerWindow::Initialize()
 	hr = CreateBindCtx(0, &m_BindCtx);
 	Assert(SUCCEEDED(hr));
 
-	hr = m_BindCtx->RegisterObjectParam(STR_ITEM_CACHE_CONTEXT, itemBindContext.Get());
+	BIND_OPTS bo = { sizeof(bo), 0, STGM_CREATE, 0 };
+	hr = m_BindCtx->SetBindOptions(&bo);
 	Assert(SUCCEEDED(hr));
 
-	m_FileSystemBindData = WRL::Make<FileSystemBindData>();
+	hr = m_BindCtx->RegisterObjectParam(const_cast<wchar_t*>(STR_ITEM_CACHE_CONTEXT), itemBindContext.Get());
+	Assert(SUCCEEDED(hr));
 
-	hr = m_BindCtx->RegisterObjectParam(STR_FILE_SYS_BIND_DATA, m_FileSystemBindData.Get());
+	m_FileSystemBindData = Microsoft::WRL::Make<FileSystemBindData>();
+
+	hr = m_BindCtx->RegisterObjectParam(const_cast<wchar_t*>(STR_FILE_SYS_BIND_DATA), m_FileSystemBindData.Get());
 	Assert(SUCCEEDED(hr));
 }
 
@@ -125,37 +129,13 @@ void ExplorerWindow::Destroy()
 	delete this;
 }
 
-void ExplorerWindow::InitializeDpiResources()
-{
-	m_ShcoreDll = LoadLibraryW(L"Shcore.dll");
-
-	if (m_ShcoreDll != nullptr)
-		m_GetDpiForMonitor = reinterpret_cast<GetDpiForMonitorFunc>(GetProcAddress(m_ShcoreDll, "GetDpiForMonitor"));
-}
-
-void ExplorerWindow::FreeDpiResources()
-{
-	if (m_ShcoreDll != nullptr)
-	{
-		m_GetDpiForMonitor = nullptr;
-		FreeLibrary(m_ShcoreDll);
-		m_ShcoreDll = nullptr;
-	}
-}
-
 void ExplorerWindow::GetCurrentMonitorScale(float& scaleX, float& scaleY)
 {
-	if (m_GetDpiForMonitor != nullptr)
+	auto dpi = GetDpiForWindow(m_Hwnd);
+	if (dpi != 0)
 	{
-		auto hmonitor = MonitorFromWindow(m_Hwnd, m_Hwnd != nullptr ? MONITOR_DEFAULTTONEAREST : MONITOR_DEFAULTTOPRIMARY);
-
-		UINT dpiX, dpiY;
-		if (SUCCEEDED(m_GetDpiForMonitor(hmonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY)))
-		{
-			scaleX = dpiX / 96.0f;
-			scaleY = dpiY / 96.0f;
-			return;
-		}
+		scaleX = scaleY = dpi / 96.0f;
+		return;
 	}
 
 	// Default to no scaling
@@ -165,10 +145,18 @@ void ExplorerWindow::GetCurrentMonitorScale(float& scaleX, float& scaleY)
 
 void ExplorerWindow::ResizeView(int width, int height)
 {
-	float scaleX, scaleY;
-	GetCurrentMonitorScale(scaleX, scaleY);
-	m_Width = static_cast<int>(ceil(scaleX * width));
-	m_Height = static_cast<int>(ceil(scaleY * height));
+	if (!m_IsDPIAware)
+	{
+		float scaleX, scaleY;
+		GetCurrentMonitorScale(scaleX, scaleY);
+		m_Width = static_cast<int>(ceil(scaleX * width));
+		m_Height = static_cast<int>(ceil(scaleY * height));
+	}
+	else
+	{
+		m_Width = width;
+		m_Height = height;
+	}
 
 	auto setPositionResult = SetWindowPos(m_Hwnd, HWND_BOTTOM, 0, 0, m_Width, m_Height, 0);
 	Assert(setPositionResult != FALSE);
@@ -180,7 +168,20 @@ void ExplorerWindow::ResizeView(int width, int height)
 
 void ExplorerWindow::AddItem(const WIN32_FIND_DATAW* findData, const wchar_t* path)
 {
-	WRL::ComPtr<IShellItem2> shellItem;
+	if (m_ResultDispatcherThreadId == 0)
+	{
+		if (InterlockedCompareExchange(&m_ResultDispatcherThreadId, GetCurrentThreadId(), 0) != 0)
+			__fastfail(FAST_FAIL_FATAL_APP_EXIT);
+
+		auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+		Assert(SUCCEEDED(hr));
+	}
+	else if (m_ResultDispatcherThreadId != GetCurrentThreadId())
+	{
+		__fastfail(FAST_FAIL_FATAL_APP_EXIT);
+	}
+
+	ComPtr<IShellItem2> shellItem;
 
 	m_FileSystemBindData->SetFindData(findData);
 

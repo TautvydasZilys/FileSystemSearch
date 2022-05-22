@@ -1,47 +1,7 @@
 #pragma once
 
+#include "SearchEngineTypes.h"
 #include "Utilities/StringUtils.h"
-
-struct SearchStatistics
-{
-	uint64_t directoriesEnumerated;
-	uint64_t filesEnumerated;
-	uint64_t fileContentsSearched;
-	uint64_t resultsFound;
-	uint64_t totalFileSize;
-	int64_t scannedFileSize;
-	double searchTimeInSeconds;
-};
-
-typedef void(__stdcall *FoundPathCallback)(const WIN32_FIND_DATAW* findData, const wchar_t* path);
-typedef void(__stdcall *SearchProgressUpdated)(const SearchStatistics& searchStatistics, double progress);
-typedef void(__stdcall *SearchDoneCallback)(const SearchStatistics& searchStatistics);
-typedef void(__stdcall *ErrorCallback)(const wchar_t* errorMessage);
-
-#define SearchFlagsEnumDefinition \
-	EnumValue(SearchForFiles,         1 << 0) \
-	EnumValue(SearchInFileName,       1 << 1) \
-	EnumValue(SearchInFilePath,      1 << 2) \
-	EnumValue(SearchInFileContents,  1 << 3) \
-	EnumValue(SearchContentsAsUtf8,  1 << 4) \
-	EnumValue(SearchContentsAsUtf16, 1 << 5) \
-	EnumValue(SearchForDirectories,  1 << 6) \
-	EnumValue(SearchInDirectoryPath, 1 << 7) \
-	EnumValue(SearchInDirectoryName, 1 << 8) \
-	EnumValue(SearchRecursively,     1 << 9) \
-	EnumValue(IgnoreCase,            1 << 10) \
-	EnumValue(IgnoreDotStart,        1 << 11) \
-	EnumValue(UseDirectStorage,      1 << 12) \
-	EnumValue(SearchStringIsAscii,   1 << 31) // Internal
-
-enum class SearchFlags
-{
-#define EnumValue(name, value) k##name = value,
-	SearchFlagsEnumDefinition
-#undef EnumValue
-};
-
-MAKE_BIT_OPERATORS_FOR_ENUM_CLASS(SearchFlags)
 
 struct SearchInstructions
 {
@@ -58,8 +18,10 @@ struct SearchInstructions
 	SearchFlags searchFlags;
 	uint64_t ignoreFilesLargerThan;
 
+	void* callbackContext;
+
 	SearchInstructions(FoundPathCallback foundPathCallback, SearchProgressUpdated progressUpdatedCallback, SearchDoneCallback searchDoneCallback, ErrorCallback errorCallback, const wchar_t* searchPath, const wchar_t* searchPattern, const wchar_t* searchString,
-		SearchFlags searchFlags, uint64_t ignoreFilesLargerThan) :
+		SearchFlags searchFlags, uint64_t ignoreFilesLargerThan, void* callbackContext) :
 		onFoundPath(foundPathCallback),
 		onProgressUpdated(progressUpdatedCallback),
 		onDone(searchDoneCallback),
@@ -68,7 +30,8 @@ struct SearchInstructions
 		searchPattern(searchPattern),
 		searchString(searchString),
 		searchFlags(searchFlags),
-		ignoreFilesLargerThan(ignoreFilesLargerThan)
+		ignoreFilesLargerThan(ignoreFilesLargerThan),
+		callbackContext(callbackContext)
 	{
 		if (StringUtils::IsAscii(this->searchString))
 		{
@@ -92,7 +55,8 @@ struct SearchInstructions
 		searchString(std::move(other.searchString)),
 		utf8SearchString(std::move(other.utf8SearchString)),
 		searchFlags(other.searchFlags),
-		ignoreFilesLargerThan(other.ignoreFilesLargerThan)
+		ignoreFilesLargerThan(other.ignoreFilesLargerThan),
+		callbackContext(other.callbackContext)
 	{
 	}
 

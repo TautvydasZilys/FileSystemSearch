@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\AppWindows\SearchWindow.cpp">
+      <Filter>AppWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Utilities\FontCache.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp" />
+    <ClCompile Include="Source\AppWindows\SearchResultWindow.cpp">
+      <Filter>AppWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Utilities\NumberFormatter.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Controls\BorderedTextBox.cpp">
+      <Filter>Controls</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Resources\resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\NonCopyable.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\HeapArray.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\HandleHolder.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Event.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\CriticalSection.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Version.rc">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AppWindows\SearchWindow.h">
+      <Filter>AppWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\WindowUtilities.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\FontCache.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\Control.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
+    <ClInclude Include="Source\AppWindows\SearchResultWindow.h">
+      <Filter>AppWindows</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\HwndHolder.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\WndClassHolder.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\DCHolder.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\WindowPosition.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utilities\NumberFormatter.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Controls\BorderedTextBox.h">
+      <Filter>Controls</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{a09c3f84-8729-45f2-a850-e202ce05f425}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{342e748c-7100-49d0-be9d-85dcb02255c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AppWindows">
+      <UniqueIdentifier>{4309b842-f1d2-4f09-91c4-3159ee7496c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{f3601572-69f9-46b4-a86f-db2c7776e8e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controls">
+      <UniqueIdentifier>{5893e6a0-6f56-441d-8afa-e2580c442779}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="Source\Resources\FileSystemSearch.exe.manifest">
+      <Filter>Resources</Filter>
+    </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Source\Resources\FileSystemSearch.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

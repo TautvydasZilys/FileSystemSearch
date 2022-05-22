@@ -8,24 +8,29 @@
 #define NOMINMAX
 
 #include <Windows.h>
+#include <commctrl.h>
 
+#if USE_DSTORAGE
 #include <dstorage.h>
 #include <dstorageerr.h>
+#endif
+
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include <ShObjIdl.h>
 #include <threadpoolapiset.h>
 #include <wrl.h>
 
-using Microsoft::WRL::ComPtr;
-
-#include <algorithm>
-#include <concepts>
+#include <array>
+#include <cmath>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <tuple>
 #include <vector>
+
+using Microsoft::WRL::ComPtr;
 
 #define MAKE_BIT_OPERATORS_FOR_ENUM_CLASS(T) \
 	inline T operator|(T left, T right) \
@@ -45,10 +50,30 @@ using Microsoft::WRL::ComPtr;
 	inline void operator&=(T& left, T right) \
 	{ \
 		left = left & right; \
+	} \
+    inline T operator~(T item) \
+    { \
+		typedef std::underlying_type<T>::type UnderlyingType; \
+        return static_cast<T>(~static_cast<UnderlyingType>(item)); \
 	}
 
 #if _DEBUG
 #define Assert(x) do { if (!(x)) __debugbreak(); } while (false, false)
 #else
 #define Assert(x) do { if (false, false) (void)(x); } while (false, false)
+#endif
+
+#define CONCAT_(a, b) a ## b
+#define CONCAT(a, b) CONCAT_(a, b)
+
+#if BUILDING_SEARCHENGINE
+#define EXPORT_SEARCHENGINE __declspec(dllexport)
+#else
+#define EXPORT_SEARCHENGINE __declspec(dllimport)
+#endif
+
+#if BUILDING_SEARCHRESULTSVIEW
+#define EXPORT_SEARCHRESULTSVIEW __declspec(dllexport)
+#else
+#define EXPORT_SEARCHRESULTSVIEW __declspec(dllimport)
 #endif

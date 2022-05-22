@@ -2,30 +2,26 @@
 
 #include "HandleHolder.h"
 
-typedef HRESULT (WINAPI* GetDpiForMonitorFunc)(HMONITOR monitor, MONITOR_DPI_TYPE dpiType, UINT* dpiX, UINT* dpiY);
-
 class ExplorerWindow
 {
 private:
 	HWND m_Hwnd;
-	WRL::ComPtr<IExplorerBrowser> m_ExplorerBrowser;
-	WRL::ComPtr<IResultsFolder> m_ResultsFolder;
-	WRL::ComPtr<IBindCtx> m_BindCtx;
-	WRL::ComPtr<IFileSystemBindData2> m_FileSystemBindData;
+	ComPtr<IExplorerBrowser> m_ExplorerBrowser;
+	ComPtr<IResultsFolder> m_ResultsFolder;
+	ComPtr<IBindCtx> m_BindCtx;
+	ComPtr<IFileSystemBindData2> m_FileSystemBindData;
+	DWORD m_ResultDispatcherThreadId;
 	int m_Width;
 	int m_Height;
-	HMODULE m_ShcoreDll;
-	GetDpiForMonitorFunc m_GetDpiForMonitor;
+	bool m_IsDPIAware;
 
 	~ExplorerWindow();
 	static void EnsureWindowClassIsCreated();
 
-	void InitializeDpiResources();
-	void FreeDpiResources();
 	void GetCurrentMonitorScale(float& scaleX, float& scaleY);
 
 public:
-	ExplorerWindow(HWND parent, int width, int height);
+	ExplorerWindow(HWND parent, int width, int height, bool dpiAware);
 
 	void Initialize();
 	void Destroy();

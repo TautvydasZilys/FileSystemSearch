@@ -46,6 +46,27 @@ public:
 		return m_Handle != InvalidValue;
 	}
 
+	inline bool operator==(const HandleHolder& other) const
+	{
+		return m_Handle == other.m_Handle;
+	}
+
+	inline bool operator==(HANDLE other) const
+	{
+		return m_Handle == other;
+	}
+
+	inline HANDLE* operator&()
+	{
+		if (m_Handle != InvalidValue)
+		{
+			CloseHandle(m_Handle);
+			m_Handle = InvalidValue;
+		}
+
+		return &m_Handle;
+	}
+
 	HandleHolder& operator=(HANDLE handle)
 	{
 		if (m_Handle != InvalidValue)

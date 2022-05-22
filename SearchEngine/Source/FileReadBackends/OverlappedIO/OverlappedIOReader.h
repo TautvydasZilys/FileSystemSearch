@@ -31,7 +31,7 @@ private:
 
 private:
     void ContentsSearchThread();
-    void SearchFileContents(const FileOpenData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator);
+    void SearchFileContents(const FileOpenData& searchData, uint8_t* primaryBuffer, uint8_t* secondaryBuffer, ScopedStackAllocator& stackAllocator, HANDLE overlappedEvent);
 
 private:
     SearchResultReporter& m_SearchResultReporter;

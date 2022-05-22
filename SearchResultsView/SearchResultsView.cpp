@@ -1,32 +1,38 @@
 #include "PrecompiledHeader.h"
+#include "SearchResultsView.h"
 #include "ExplorerWindow.h"
 
-extern "C" __declspec(dllexport) ExplorerWindow* CreateView(HWND parent, int width, int height)
+extern "C" ExplorerWindow* CreateView(HWND parent, int width, int height)
 {
-	return new ExplorerWindow(parent, width, height);
+	return new ExplorerWindow(parent, width, height, false);
 }
 
-extern "C" __declspec(dllexport) void InitializeView(ExplorerWindow* window)
+extern "C" ExplorerWindow* CreateDpiAwareView(HWND parent, int width, int height)
+{
+	return new ExplorerWindow(parent, width, height, true);
+}
+
+extern "C" void InitializeView(ExplorerWindow* window)
 {
 	window->Initialize();
 }
 
-extern "C" __declspec(dllexport) HWND GetHwnd(ExplorerWindow* window)
+extern "C" HWND GetHwnd(ExplorerWindow* window)
 {
 	return window->GetHwnd();
 }
 
-extern "C" __declspec(dllexport) void ResizeView(ExplorerWindow* window, int width, int height)
+extern "C" void ResizeView(ExplorerWindow* window, int width, int height)
 {
 	window->ResizeView(width, height);
 }
 
-extern "C" __declspec(dllexport) void DestroyView(ExplorerWindow* window)
+extern "C" void DestroyView(ExplorerWindow* window)
 {
 	window->Destroy();
 }
 
-extern "C" __declspec(dllexport) void AddItemToView(ExplorerWindow* window, const WIN32_FIND_DATAW* findData, const wchar_t* itemPath)
+extern "C" void AddItemToView(ExplorerWindow* window, const WIN32_FIND_DATAW* findData, const wchar_t* itemPath)
 {
 	window->AddItem(findData, itemPath);
 }

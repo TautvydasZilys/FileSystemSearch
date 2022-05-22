@@ -1,7 +1,7 @@
 #pragma once
 
 class FileSystemBindData : 
-	public WRL::RuntimeClass<WRL::RuntimeClassFlags<WRL::ClassicCom>, IFileSystemBindData, IFileSystemBindData2>
+	public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, IFileSystemBindData, IFileSystemBindData2>
 {
 private:
 	static const CLSID CLSID_UnknownJunction;

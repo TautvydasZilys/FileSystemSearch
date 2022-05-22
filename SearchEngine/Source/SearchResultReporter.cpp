@@ -5,7 +5,8 @@
 SearchResultReporter::SearchResultReporter(const SearchInstructions& searchInstructions) :
 	m_FoundPathCallback(searchInstructions.onFoundPath),
     m_ProgressCallback(searchInstructions.onProgressUpdated),
-    m_DoneCallback(searchInstructions.onDone)
+    m_DoneCallback(searchInstructions.onDone),
+	m_CallbackContext(searchInstructions.callbackContext)
 {
 	ZeroMemory(&m_SearchStatistics, sizeof(m_SearchStatistics));
 
@@ -28,7 +29,7 @@ void SearchResultReporter::ReportProgress(bool finishedScanningFileSystem)
 		: sqrt(-1); // indeterminate
 
 	statisticsSnapshot.searchTimeInSeconds = GetTotalSearchTimeInSeconds();
-	m_ProgressCallback(statisticsSnapshot, progress);
+	m_ProgressCallback(m_CallbackContext, statisticsSnapshot, progress);
 }
 
 void SearchResultReporter::FinishSearch()
@@ -36,7 +37,7 @@ void SearchResultReporter::FinishSearch()
 	CompleteAllWork();
 
     m_SearchStatistics.searchTimeInSeconds = GetTotalSearchTimeInSeconds();
-    m_DoneCallback(m_SearchStatistics);
+    m_DoneCallback(m_CallbackContext, m_SearchStatistics);
 }
 
 double SearchResultReporter::GetTotalSearchTimeInSeconds()
@@ -54,7 +55,7 @@ void SearchResultReporter::InitializeSearchResultDispatcherWorkerThread()
 	DoWork([this](const SearchResultData& searchResult)
 	{
 		auto win32FindData = searchResult.resultFindData.ToWin32FindData(PathUtils::GetFileName(searchResult.resultPath));
-		m_FoundPathCallback(&win32FindData, searchResult.resultPath.c_str());
+		m_FoundPathCallback(m_CallbackContext, win32FindData, searchResult.resultPath.c_str());
 	});
 }
 

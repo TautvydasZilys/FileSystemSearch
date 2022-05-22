@@ -1,7 +1,8 @@
 #include "PrecompiledHeader.h"
 #include "FileSearcher.h"
+#include "SearchEngine.h"
 
-extern "C" __declspec(dllexport) FileSearcher* Search(
+extern "C" FileSearcher* Search(
 	FoundPathCallback foundPathCallback,
 	SearchProgressUpdated progressUpdatedCallback,
 	SearchDoneCallback searchDoneCallback,
@@ -10,12 +11,13 @@ extern "C" __declspec(dllexport) FileSearcher* Search(
 	const wchar_t* searchPattern,
 	const wchar_t* searchString,
 	SearchFlags searchFlags,
-	uint64_t ignoreFilesLargerThan)
+	uint64_t ignoreFilesLargerThan,
+	void* callbackContext)
 {
-	return FileSearcher::BeginSearch(SearchInstructions(foundPathCallback, progressUpdatedCallback, searchDoneCallback, errorCallback, searchPath, searchPattern, searchString, searchFlags, ignoreFilesLargerThan));
+	return FileSearcher::BeginSearch(SearchInstructions(foundPathCallback, progressUpdatedCallback, searchDoneCallback, errorCallback, searchPath, searchPattern, searchString, searchFlags, ignoreFilesLargerThan, callbackContext));
 }
 
-extern "C" __declspec(dllexport) void CleanupSearchOperation(FileSearcher* searcher)
+extern "C" void CleanupSearchOperation(FileSearcher* searcher)
 {
 	searcher->Cleanup();
 }
