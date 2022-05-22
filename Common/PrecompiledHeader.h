@@ -51,6 +51,11 @@ using Microsoft::WRL::ComPtr;
 	inline void operator&=(T& left, T right) \
 	{ \
 		left = left & right; \
+	} \
+    inline T operator~(T item) \
+    { \
+		typedef std::underlying_type<T>::type UnderlyingType; \
+        return static_cast<T>(~static_cast<UnderlyingType>(item)); \
 	}
 
 #if _DEBUG
