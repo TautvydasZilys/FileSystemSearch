@@ -42,7 +42,8 @@ ExplorerWindow::ExplorerWindow(HWND parent, int width, int height, bool dpiAware
 	m_IsDPIAware(dpiAware),
 	m_ResultDispatcherThreadId(0)
 {
-	auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+	// Required for Drag & Drop to work
+	auto hr = OleInitialize(nullptr);
 	Assert(SUCCEEDED(hr));
 
 	EnsureWindowClassIsCreated();
@@ -66,7 +67,7 @@ ExplorerWindow::~ExplorerWindow()
 	m_BindCtx = nullptr;
 	m_FileSystemBindData = nullptr;
 
-	CoUninitialize();
+	OleUninitialize();
 
 	DestroyWindow(m_Hwnd);
 }
