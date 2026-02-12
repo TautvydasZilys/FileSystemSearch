@@ -199,8 +199,8 @@ void DirectStorageReader::FileReadThread()
 static uint32_t GetChunkCount(const DirectStorageFileReadStateData& file)
 {
     const auto fileSize = file.fileSize;
-    auto chunkCount = file.fileSize / DirectStorageReader::kFileReadBufferBaseSize;
-    if (file.fileSize % DirectStorageReader::kFileReadBufferBaseSize)
+    auto chunkCount = fileSize / DirectStorageReader::kFileReadBufferBaseSize;
+    if (fileSize % DirectStorageReader::kFileReadBufferBaseSize)
         chunkCount++;
 
     Assert(chunkCount < std::numeric_limits<uint32_t>::max());
