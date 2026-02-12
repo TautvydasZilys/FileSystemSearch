@@ -95,6 +95,11 @@ void ExplorerWindow::Initialize()
 	hr = m_ExplorerBrowser->GetCurrentView(__uuidof(IFolderView), &folderView);
 	Assert(SUCCEEDED(hr));
 
+	// Even though we initialized the view with FVM_DETAILS, it doesn't actually 
+	// apply that view mode to the folder view so we need to set it here again
+	hr = folderView->SetCurrentViewMode(FVM_DETAILS);
+	Assert(SUCCEEDED(hr));
+
 	hr = folderView->GetFolder(__uuidof(IResultsFolder), &m_ResultsFolder);
 	Assert(SUCCEEDED(hr));
 
