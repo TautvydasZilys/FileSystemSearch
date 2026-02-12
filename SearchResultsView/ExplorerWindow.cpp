@@ -10,6 +10,15 @@ static WindowClassHolder s_WindowClass;
 
 static const wchar_t kExplorerBrowserBag[] = L"BDA86866-3A40-4539-AB61-3E9059C9DCB0";
 
+static constexpr PROPERTYKEY kDesiredResultsColumns[] =
+{
+	INIT_PKEY_ItemNameDisplay,
+	INIT_PKEY_DateModified,
+	INIT_PKEY_ItemTypeText,
+	INIT_PKEY_Size,
+	INIT_PKEY_ItemPathDisplay
+};
+
 void ExplorerWindow::EnsureWindowClassIsCreated()
 {
 	CriticalSection::Lock lock(s_WindowClassCriticalSection);
@@ -98,6 +107,13 @@ void ExplorerWindow::Initialize()
 	// Even though we initialized the view with FVM_DETAILS, it doesn't actually 
 	// apply that view mode to the folder view so we need to set it here again
 	hr = folderView->SetCurrentViewMode(FVM_DETAILS);
+	Assert(SUCCEEDED(hr));
+
+	ComPtr<IColumnManager> columnManager;
+	hr = folderView.As(&columnManager);
+	Assert(SUCCEEDED(hr));
+
+	hr = columnManager->SetColumns(kDesiredResultsColumns, std::size(kDesiredResultsColumns));
 	Assert(SUCCEEDED(hr));
 
 	hr = folderView->GetFolder(__uuidof(IResultsFolder), &m_ResultsFolder);

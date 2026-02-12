@@ -17,6 +17,7 @@
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include <propkey.h>
 #include <ShObjIdl.h>
 #include <threadpoolapiset.h>
 #include <wrl.h>
