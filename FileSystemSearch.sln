@@ -3,17 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSystemSearch_WPF", "FileSystemSearch_WPF\FileSystemSearch_WPF.csproj", "{47151F80-E3E7-459B-B8A0-830BC7302F2D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{42CB7641-3FF2-4973-B1BE-1AE94123FD10} = {42CB7641-3FF2-4973-B1BE-1AE94123FD10}
-		{8847E348-4C53-4017-B9F8-9201D59F1B9C} = {8847E348-4C53-4017-B9F8-9201D59F1B9C}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchEngine", "SearchEngine\SearchEngine.vcxproj", "{42CB7641-3FF2-4973-B1BE-1AE94123FD10}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchResultsView", "SearchResultsView\SearchResultsView.vcxproj", "{8847E348-4C53-4017-B9F8-9201D59F1B9C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch_Win32", "FileSystemSearch_Win32\FileSystemSearch_Win32.vcxproj", "{E3A9B0BE-0C6C-4091-BC9A-A641404C8723}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch", "FileSystemSearch\FileSystemSearch.vcxproj", "{E3A9B0BE-0C6C-4091-BC9A-A641404C8723}"
 	ProjectSection(ProjectDependencies) = postProject
 		{42CB7641-3FF2-4973-B1BE-1AE94123FD10} = {42CB7641-3FF2-4973-B1BE-1AE94123FD10}
 		{8847E348-4C53-4017-B9F8-9201D59F1B9C} = {8847E348-4C53-4017-B9F8-9201D59F1B9C}
@@ -25,10 +19,6 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{47151F80-E3E7-459B-B8A0-830BC7302F2D}.Debug|x64.ActiveCfg = Debug|x64
-		{47151F80-E3E7-459B-B8A0-830BC7302F2D}.Debug|x64.Build.0 = Debug|x64
-		{47151F80-E3E7-459B-B8A0-830BC7302F2D}.Release|x64.ActiveCfg = Release|x64
-		{47151F80-E3E7-459B-B8A0-830BC7302F2D}.Release|x64.Build.0 = Release|x64
 		{42CB7641-3FF2-4973-B1BE-1AE94123FD10}.Debug|x64.ActiveCfg = Debug|x64
 		{42CB7641-3FF2-4973-B1BE-1AE94123FD10}.Debug|x64.Build.0 = Debug|x64
 		{42CB7641-3FF2-4973-B1BE-1AE94123FD10}.Release|x64.ActiveCfg = Release|x64

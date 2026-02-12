@@ -14,7 +14,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{e3a9b0be-0c6c-4091-bc9a-a641404c8723}</ProjectGuid>
-    <RootNamespace>FileSystemSearchWin32</RootNamespace>
+    <RootNamespace>FileSystemSearch</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
