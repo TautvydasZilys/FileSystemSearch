@@ -1,7 +1,7 @@
 #pragma once
 #include "NonCopyable.h"
 
-template <HANDLE InvalidValue>
+template <HANDLE InvalidValue, BOOL (*closeHandle)(HANDLE) = CloseHandle>
 struct HandleHolder : NonCopyable
 {
 private:
@@ -27,7 +27,7 @@ public:
 	inline ~HandleHolder()
 	{
 		if (m_Handle != InvalidValue)
-			CloseHandle(m_Handle);
+			closeHandle(m_Handle);
 	}
 
 	HandleHolder& operator=(HandleHolder&& other)
@@ -60,7 +60,7 @@ public:
 	{
 		if (m_Handle != InvalidValue)
 		{
-			CloseHandle(m_Handle);
+			closeHandle(m_Handle);
 			m_Handle = InvalidValue;
 		}
 
@@ -70,7 +70,7 @@ public:
 	HandleHolder& operator=(HANDLE handle)
 	{
 		if (m_Handle != InvalidValue)
-			CloseHandle(m_Handle);
+			closeHandle(m_Handle);
 		
 		m_Handle = handle;
 		return *this;
@@ -79,6 +79,7 @@ public:
 
 using EventHandleHolder = HandleHolder<nullptr>;
 using FileHandleHolder = HandleHolder<INVALID_HANDLE_VALUE>;
+using FindHandleHolder = HandleHolder<INVALID_HANDLE_VALUE, FindClose>;
 using SemaphoreHandleHolder = HandleHolder<nullptr>;
 using ThreadHandleHolder = HandleHolder<nullptr>;
 using TimerHandleHolder = HandleHolder<nullptr>;
