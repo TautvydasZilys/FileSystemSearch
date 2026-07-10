@@ -29,7 +29,7 @@ SEARCH_TEST(SearchInFileName)
 SEARCH_TEST(RecursiveFileSearch)
 {
     constexpr char kTestData[] = "nested";
-    Testing::TestDirectory nestedDir(std::wstring(TestName()) + L"\\subdir");
+    auto nestedDir = GetTestDirectory().SubDirectory(L"subdir");
 
     Testing::TestFile nestedFile(nestedDir, L"nested.txt", std::span<const char>(kTestData, sizeof(kTestData) - 1));
 

@@ -102,17 +102,21 @@ Testing::GlobalTestContext::~GlobalTestContext()
     s_GlobalTestContext = nullptr;
 }
 
-Testing::TestDirectory::TestDirectory(std::wstring_view testName)
+Testing::TestDirectory::TestDirectory(std::wstring_view testName) :
+    TestDirectory(s_GlobalTestContext->GetGlobalTestDirectory(), testName)
 {
-    auto globalTestDir = s_GlobalTestContext->GetGlobalTestDirectory();
-    m_Path.reserve(globalTestDir.size() + testName.size() + 1);
+}
 
-    m_Path = globalTestDir;
+Testing::TestDirectory::TestDirectory(std::wstring_view parentDir, std::wstring_view name)
+{
+    m_Path.reserve(parentDir.size() + name.size() + 1);
+
+    m_Path = parentDir;
 
     if (m_Path.back() != L'\\')
         m_Path.push_back(L'\\');
 
-    m_Path += testName;
+    m_Path += name;
 
     CreateDirectoryRecursive(m_Path);
 }
