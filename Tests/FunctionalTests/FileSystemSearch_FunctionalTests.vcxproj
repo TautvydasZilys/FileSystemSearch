@@ -46,7 +46,7 @@
     <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\SimpleFileReadTests.cpp" />
+    <ClCompile Include="Source\BasicTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />

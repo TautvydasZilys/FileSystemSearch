@@ -4,6 +4,26 @@
 
 static Testing::GlobalTestContext* s_GlobalTestContext;
 
+static void CreateDirectoryRecursive(const std::wstring& path)
+{
+    auto attributes = GetFileAttributesW(path.c_str());
+    if (attributes != INVALID_FILE_ATTRIBUTES)
+    {
+        CHECK(attributes & FILE_ATTRIBUTE_DIRECTORY, std::format(L"Failed to create directory '{}' because this path already exists but is not a directory", path));
+        return;        
+    }
+
+    auto lastSlash = path.find_last_of(L'\\');
+    if (lastSlash != std::wstring::npos)
+    {
+        auto parent = path.substr(0, lastSlash);
+        CreateDirectoryRecursive(parent);
+    }
+
+    auto createResult = CreateDirectoryW(path.c_str(), nullptr);
+    CHECK(createResult, std::format(L"Failed to create directory '{}'", path));
+}
+
 static void DeleteDirectoryRecursive(std::wstring path)
 {
     if (path.back() != L'\\')
@@ -94,8 +114,7 @@ Testing::TestDirectory::TestDirectory(std::wstring_view testName)
 
     m_Path += testName;
 
-    auto createResult = CreateDirectoryW(m_Path.c_str(), nullptr);
-    CHECK(createResult, std::format(L"Failed to create directory '{}'", m_Path));
+    CreateDirectoryRecursive(m_Path);
 }
 
 Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, std::span<const char> fileContents)
