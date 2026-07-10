@@ -107,6 +107,11 @@ void OverlappedIOReader::SearchFileContents(const FileOpenData& searchData, uint
 		{
 			m_SearchResultReporter.AddToScannedFileSize(bytesRead + searchData.fileSize - fileOffset);
 			m_SearchResultReporter.DispatchSearchResult(searchData.fileFindData, searchData.filePath.c_str());
+
+			CancelIoEx(fileHandle, &overlapped);
+			waitResult = WaitForSingleObject(overlappedEvent, INFINITE);
+			Assert(waitResult == WAIT_OBJECT_0);
+
 			return;
 		}
 		else
