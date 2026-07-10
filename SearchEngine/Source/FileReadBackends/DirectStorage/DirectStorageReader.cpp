@@ -166,6 +166,12 @@ void DirectStorageReader::FileReadThread()
             else
             {
                 readSubmissionCompleted = true;
+
+                if (m_CurrentBatch.slots.empty() && m_FreeReadSlotCount == ARRAYSIZE(m_FileReadSlots))
+                {
+                    fileContentSearchCompleted = true;
+                    m_FileReadsCompletedEvent.Set();
+                }
             }
         }
         else if (signaledHandle == MySearchResultBase::GetWorkSemaphore())
