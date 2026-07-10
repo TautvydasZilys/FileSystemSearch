@@ -25,7 +25,8 @@ public:
 
     Event& operator=(Event&& other)
     {
-        return EventHandleHolder::operator=(std::move(other));
+        EventHandleHolder::operator=(std::move(other));
+        return *this;
     }
 
     void Initialize()

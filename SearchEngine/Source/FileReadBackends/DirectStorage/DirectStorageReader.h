@@ -43,7 +43,7 @@ private:
     void FileReadThread();
     void QueueFileReads();
     void SubmitReadRequests();
-    void ProcessReadCompletion();
+    void ProcessReadCompletion(HANDLE completedEvent);
     void ContentsSearchThread();
     void ProcessSearchCompletion(SlotSearchData searchData);
 
@@ -60,10 +60,7 @@ private:
     ReadBatch m_CurrentBatch;
     Event<EventType::ManualReset> m_FileReadsCompletedEvent;
 
-    ComPtr<IDStorageQueue> m_DStorageQueue;
-    ComPtr<ID3D12Fence> m_Fence;
-    Event<EventType::AutoReset> m_FenceEvent;
-    uint64_t m_FenceValue;
+    ComPtr<IDStorageQueue3> m_DStorageQueue;
 
     TimerHandleHolder m_WaitableTimer;
     uint16_t m_FreeReadSlotCount;

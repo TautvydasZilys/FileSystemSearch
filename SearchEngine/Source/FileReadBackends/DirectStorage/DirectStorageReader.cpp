@@ -10,8 +10,6 @@ DirectStorageReader::DirectStorageReader(const StringSearcher& stringSearcher, c
     m_SearchResultReporter(searchResultReporter),
     m_StringSearcher(stringSearcher),
     m_ReadBufferSize(0),
-    m_FenceEvent(false),
-    m_FenceValue(0),
     m_IsTerminating(false),
     m_FreeReadSlotCount(ARRAYSIZE(m_FileReadSlots))
 {
@@ -42,11 +40,6 @@ void DirectStorageReader::Initialize()
 
     auto hr = DirectXContext::GetDStorageFactory()->CreateQueue(&queueDesc, __uuidof(m_DStorageQueue), &m_DStorageQueue);
     Assert(SUCCEEDED(hr));
-
-    hr = DirectXContext::GetD3D12Device()->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(m_Fence), &m_Fence);
-    Assert(SUCCEEDED(hr));
-
-    m_FenceEvent.Initialize();
 
     SYSTEM_INFO systemInfo;
     GetNativeSystemInfo(&systemInfo);
@@ -113,16 +106,17 @@ void DirectStorageReader::FileReadThread()
     bool fileContentSearchCompleted = false;
     SetThreadDescription(GetCurrentThread(), L"FSS DirectStorage Read Submission Thread");
 
+    std::vector<HANDLE> waitHandles;
+
     for (;;)
     {
-        uint32_t handleCount = 0;
-        HANDLE waitHandles[4];
+        waitHandles.clear();
 
         if (!readSubmissionCompleted)
-            waitHandles[handleCount++] = MyFileReadBase::GetWorkSemaphore();
+            waitHandles.push_back(MyFileReadBase::GetWorkSemaphore());
 
         if (!fileContentSearchCompleted)
-            waitHandles[handleCount++] = MySearchResultBase::GetWorkSemaphore();
+            waitHandles.push_back(MySearchResultBase::GetWorkSemaphore());
 
         if (!m_CurrentBatch.slots.empty())
         {
@@ -131,19 +125,22 @@ void DirectStorageReader::FileReadThread()
             auto result = SetWaitableTimer(m_WaitableTimer, &timer, 0, nullptr, nullptr, FALSE);
             Assert(result);
 
-            waitHandles[handleCount++] = m_WaitableTimer;
+            waitHandles.push_back(m_WaitableTimer);
         }
 
-        if (!m_SubmittedBatches.empty())
-            waitHandles[handleCount++] = m_FenceEvent;
+        {
+            auto submittedBatchesEnd = m_SubmittedBatches.end();
+            for (auto batch = m_SubmittedBatches.begin(); batch != submittedBatchesEnd && waitHandles.size() < MAXIMUM_WAIT_OBJECTS; batch++)
+                waitHandles.push_back(batch->completionEvent);
+        }
 
-        if (handleCount == 0)
+        if (waitHandles.empty())
             break;
 
-        auto waitResult = WaitForMultipleObjects(handleCount, waitHandles, FALSE, INFINITE);
-        Assert(waitResult >= WAIT_OBJECT_0 && waitResult < WAIT_OBJECT_0 + handleCount);
+        auto waitResult = WaitForMultipleObjects(static_cast<DWORD>(waitHandles.size()), waitHandles.data(), FALSE, INFINITE);
+        Assert(waitResult >= WAIT_OBJECT_0 && waitResult < WAIT_OBJECT_0 + waitHandles.size());
 
-        if (waitResult < WAIT_OBJECT_0 || waitResult >= WAIT_OBJECT_0 + handleCount)
+        if (waitResult < WAIT_OBJECT_0 || waitResult >= WAIT_OBJECT_0 + waitHandles.size())
             break;
 
         if (m_IsTerminating)
@@ -197,7 +194,7 @@ void DirectStorageReader::FileReadThread()
         }
         else
         {
-            ProcessReadCompletion();
+            ProcessReadCompletion(signaledHandle);
         }
     }
 }
@@ -279,35 +276,40 @@ void DirectStorageReader::QueueFileReads()
 void DirectStorageReader::SubmitReadRequests()
 {
     Assert(m_CurrentBatch.slots.size() > 0);
-    m_CurrentBatch.fenceValue = ++m_FenceValue;
 
-    m_DStorageQueue->EnqueueSignal(m_Fence.Get(), m_CurrentBatch.fenceValue);
+    if (m_CurrentBatch.completionEvent == nullptr)
+        m_CurrentBatch.completionEvent.Initialize();
+
+    m_DStorageQueue->EnqueueSetEvent(m_CurrentBatch.completionEvent);
+
     m_DStorageQueue->Submit();
-
-    if (m_SubmittedBatches.empty())
-        m_Fence->SetEventOnCompletion(m_CurrentBatch.fenceValue, m_FenceEvent);
 
     m_SubmittedBatches.push_back(std::move(m_CurrentBatch));
     m_CurrentBatch = m_BatchPool.GetNewObject();
 }
 
-void DirectStorageReader::ProcessReadCompletion()
+void DirectStorageReader::ProcessReadCompletion(HANDLE completedEvent)
 {
-    uint32_t batchIndex = 0;
-    for (; batchIndex < m_SubmittedBatches.size() && m_SubmittedBatches[batchIndex].fenceValue <= m_Fence->GetCompletedValue(); batchIndex++)
+    size_t batchIndex = 0;
+    for (batchIndex = 0; batchIndex < m_SubmittedBatches.size(); batchIndex++)
     {
         auto& batch = m_SubmittedBatches[batchIndex];
+        if (batch.completionEvent == completedEvent)
+        {
+            for (auto slot : batch.slots)
+                m_SearchWorkQueue.PushWorkItem(slot);
 
-        for (auto slot : batch.slots)
-            m_SearchWorkQueue.PushWorkItem(slot);
+            batch.slots.clear();
+            m_BatchPool.PoolObject(std::move(batch));
 
-        batch.slots.clear();
-        m_BatchPool.PoolObject(std::move(batch));
+            m_SubmittedBatches[batchIndex] = std::move(m_SubmittedBatches.back());
+            m_SubmittedBatches.pop_back();
+            return;
+        }
     }
 
-    m_SubmittedBatches.erase(m_SubmittedBatches.begin(), m_SubmittedBatches.begin() + batchIndex);
-    if (!m_SubmittedBatches.empty())
-        m_Fence->SetEventOnCompletion(m_SubmittedBatches.front().fenceValue, m_FenceEvent);
+    // Batch not found!
+    Assert(false);
 }
 
 void DirectStorageReader::ContentsSearchThread()

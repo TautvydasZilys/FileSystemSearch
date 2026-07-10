@@ -1,29 +1,30 @@
 #pragma once
 
+#include "Event.h"
 #include "FileContentSearchData.h"
 
 struct ReadBatch : NonCopyable
 {
 public:
     ReadBatch() :
-        fenceValue(0)
+        completionEvent(false)
     {
     }
 
     ReadBatch(ReadBatch&& other) :
         slots(std::move(other.slots)),
-        fenceValue(other.fenceValue)
+        completionEvent(std::move(other.completionEvent))
     {
     }
 
     ReadBatch& operator=(ReadBatch&& other)
     {
         slots = std::move(other.slots);
-        fenceValue = other.fenceValue;
+        completionEvent = std::move(other.completionEvent);
         return *this;
     }
 
 public:
     std::vector<SlotSearchData> slots;
-    uint64_t fenceValue;
+    Event<EventType::AutoReset> completionEvent;
 };
