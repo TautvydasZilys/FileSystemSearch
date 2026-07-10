@@ -119,6 +119,7 @@
     <ClInclude Include="..\Common\HandleHolder.h" />
     <ClInclude Include="..\Common\HeapArray.h" />
     <ClInclude Include="..\Common\NonCopyable.h" />
+    <ClInclude Include="..\Common\ReaderWriterLock.h" />
     <ClInclude Include="..\Common\Version.rc" />
     <ClInclude Include="Include\SearchEngine.h" />
     <ClInclude Include="Source\FileContentSearchData.h" />

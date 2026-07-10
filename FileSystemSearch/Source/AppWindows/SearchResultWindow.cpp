@@ -1,10 +1,10 @@
 #include "PrecompiledHeader.h"
 #include "SearchResultWindow.h"
 
+#include "Controls/SearchResultsView/SearchResultsView.h"
 #include "CriticalSection.h"
 #include "ReaderWriterLock.h"
 #include "SearchEngine.h"
-#include "SearchResultsView.h"
 #include "Utilities/Control.h"
 #include "Utilities/DCHolder.h"
 #include "Utilities/FontCache.h"
