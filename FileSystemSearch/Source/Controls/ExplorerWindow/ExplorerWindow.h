@@ -15,16 +15,14 @@ private:
 	int m_Height;
 	bool m_IsDPIAware;
 
-	~ExplorerWindow();
 	static void EnsureWindowClassIsCreated();
 
 	void GetCurrentMonitorScale(float& scaleX, float& scaleY);
+	void Initialize();
 
 public:
 	ExplorerWindow(HWND parent, int width, int height, bool dpiAware);
-
-	void Initialize();
-	void Destroy();
+	~ExplorerWindow();
 
 	HWND GetHwnd() const { return m_Hwnd; }	
 	void ResizeView(int width, int height);

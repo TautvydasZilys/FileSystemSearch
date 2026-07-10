@@ -1,7 +1,6 @@
 #include "PrecompiledHeader.h"
 #include "SearchResultWindow.h"
 
-#include "Controls/ExplorerWindow/ExplorerWindow.h"
 #include "CriticalSection.h"
 #include "ReaderWriterLock.h"
 #include "SearchEngine.h"
@@ -112,7 +111,7 @@ void SearchResultWindow::Spawn(const FontCache& fontCache, std::wstring&& search
 
 SearchResultWindow::SearchResultWindow(std::unique_ptr<SearchResultWindowArguments> args) :
     m_FontCache(args->fontCache),
-    m_ExplorerWindow(nullptr),
+    m_ExplorerWindow(std::nullopt),
     m_StatisticsY(0),
     m_HasDeterminateProgress(false),
     m_SearcherCleanupState(SearcherCleanupState::NotCleanedUp),
@@ -180,12 +179,6 @@ SearchResultWindow::~SearchResultWindow()
     {
         auto inProgress = SearcherCleanupState::CleanupInProgress;
         WaitOnAddress(&m_SearcherCleanupState, &inProgress, sizeof(inProgress), INFINITE);
-    }
-
-    if (m_ExplorerWindow != nullptr)
-    {
-        m_ExplorerWindow->Destroy();
-        m_ExplorerWindow = nullptr;
     }
 }
 
@@ -314,8 +307,7 @@ void SearchResultWindow::OnCreate(HWND hWnd)
     m_HeaderTextBlock = TextBlock(m_HeaderText).Create(m_Hwnd);
 
     m_ExplorerBrowserHost = ChildWindow(s_ExplorerBrowserHostWindowClass, WS_CLIPCHILDREN).Create(m_Hwnd);
-    m_ExplorerWindow = new ExplorerWindow(m_ExplorerBrowserHost, 0, 0, true);
-    m_ExplorerWindow->Initialize();
+    m_ExplorerWindow.emplace(m_ExplorerBrowserHost, 0, 0, true);
 
     m_ProgressBar = ProgressBar().Create(m_Hwnd);
     SendMessageW(m_ProgressBar, PBM_SETMARQUEE, TRUE, 0);

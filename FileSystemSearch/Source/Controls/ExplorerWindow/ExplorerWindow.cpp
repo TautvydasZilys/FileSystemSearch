@@ -67,10 +67,18 @@ ExplorerWindow::ExplorerWindow(HWND parent, int width, int height, bool dpiAware
 
 	m_Hwnd = CreateWindowExW(0, s_WindowClass, L"SearchResultsViewWindow", WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN, 0, 0, m_Width, m_Height, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
 	Assert(m_Hwnd != nullptr);
+
+	Initialize();
 }
 
 ExplorerWindow::~ExplorerWindow()
 {
+	if (m_ExplorerBrowser != nullptr)
+	{
+		auto hr = m_ExplorerBrowser->Destroy();
+		Assert(SUCCEEDED(hr));
+	}
+
 	m_ExplorerBrowser = nullptr;
 	m_ResultsFolder = nullptr;
 	m_BindCtx = nullptr;
@@ -138,17 +146,6 @@ void ExplorerWindow::Initialize()
 
 	hr = m_BindCtx->RegisterObjectParam(const_cast<wchar_t*>(STR_FILE_SYS_BIND_DATA), m_FileSystemBindData.Get());
 	Assert(SUCCEEDED(hr));
-}
-
-void ExplorerWindow::Destroy()
-{
-	if (m_ExplorerBrowser != nullptr)
-	{
-		auto hr = m_ExplorerBrowser->Destroy();
-		Assert(SUCCEEDED(hr));
-	}
-
-	delete this;
 }
 
 void ExplorerWindow::GetCurrentMonitorScale(float& scaleX, float& scaleY)

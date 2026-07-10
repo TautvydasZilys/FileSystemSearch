@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Controls/ExplorerWindow/ExplorerWindow.h"
 #include "HandleHolder.h"
 #include "NonCopyable.h"
 #include "SearchEngineTypes.h"
@@ -8,7 +9,6 @@
 #include "Utilities/HwndHolder.h"
 #include "Utilities/WindowPosition.h"
 
-class ExplorerWindow;
 class FontCache;
 struct SearchResultWindowArguments;
 
@@ -97,7 +97,7 @@ private:
     std::wstring m_HeaderText;
 
     HwndHolder m_ExplorerBrowserHost;
-    ExplorerWindow* m_ExplorerWindow;
+    std::optional<ExplorerWindow> m_ExplorerWindow;
 
     HwndHolder m_ProgressBar;
 
