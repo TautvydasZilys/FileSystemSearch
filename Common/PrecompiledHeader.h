@@ -29,7 +29,9 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <span>
 #include <string>
+#include <utility>
 #include <vector>
 
 using Microsoft::WRL::ComPtr;

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Arm64">
+      <Configuration>Debug</Configuration>
+      <Platform>Arm64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Arm64">
+      <Configuration>Release</Configuration>
+      <Platform>Arm64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{675DB5E3-1A24-46DE-A645-B83368FB85AC}</ProjectGuid>
+    <RootNamespace>FileSystemSearch_FunctionalTests</RootNamespace>
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)FileSystemSearch.common.props" />
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)build\bin\Tests\$(PlatformShortName)\$(Configuration)\</OutDir>
+    <TargetName>FileSystemSearch_FunctionalTests</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;$(ProjectDir)..\Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Framework\TestHelpers.cpp" />
+    <ClCompile Include="..\Framework\TestList.cpp" />
+    <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Source\SimpleFileReadTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
+    <ClInclude Include="..\..\Common\CriticalSection.h" />
+    <ClInclude Include="..\..\Common\Event.h" />
+    <ClInclude Include="..\..\Common\HandleHolder.h" />
+    <ClInclude Include="..\..\Common\HeapArray.h" />
+    <ClInclude Include="..\..\Common\NonCopyable.h" />
+    <ClInclude Include="..\..\Common\ReaderWriterLock.h" />
+    <ClInclude Include="..\..\Common\WindowClassHolder.h" />
+    <ClInclude Include="..\Framework\TestHelpers.h" />
+    <ClInclude Include="..\Framework\TestList.h" />
+    <ClInclude Include="..\Framework\TestMacros.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionDir)SearchEngine\SearchEngine.vcxproj">
+      <Project>{42cb7641-3ff2-4973-b1be-1ae94123fd10}</Project>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

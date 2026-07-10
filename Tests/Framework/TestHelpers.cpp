@@ -1,0 +1,163 @@
+#include "PrecompiledHeader.h"
+#include "TestHelpers.h"
+#include "TestMacros.h"
+
+static Testing::GlobalTestContext* s_GlobalTestContext;
+
+static void DeleteDirectoryRecursive(std::wstring path)
+{
+    if (path.back() != L'\\')
+        path.push_back(L'\\');
+
+    auto folderPathLength = path.size();
+
+    path.push_back('*');
+
+    WIN32_FIND_DATAW findData;
+    FindHandleHolder findHandle = FindFirstFileExW(path.c_str(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, FIND_FIRST_EX_LARGE_FETCH);
+    if (findHandle == INVALID_HANDLE_VALUE)
+        return;
+
+    do
+    {
+        if (findData.cFileName[0] == L'.' && (findData.cFileName[1] == L'\0' || (findData.cFileName[1] == L'.' && findData.cFileName[2] == L'\0')))
+            continue;
+
+        path.resize(folderPathLength);
+        path += findData.cFileName;
+
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            DeleteDirectoryRecursive(path);
+        }
+        else
+        {
+            auto deleteResult = DeleteFileW(path.c_str());
+            CHECK(deleteResult, std::format(L"Failed to delete '{}'", path));
+        }
+    } while (FindNextFileW(findHandle, &findData) != FALSE);
+
+    path.resize(folderPathLength - 1);
+
+    auto removeResult = RemoveDirectoryW(path.c_str());
+    CHECK(removeResult, std::format(L"Failed to remove directory '{}'", path));
+}
+
+Testing::GlobalTestContext::GlobalTestContext()
+{
+    CHECK(s_GlobalTestContext == nullptr, L"Global test context already exists");
+    s_GlobalTestContext = this;
+
+    std::wstring tempPath;
+    tempPath.resize(MAX_PATH);
+
+    auto tempPathLength = GetTempPathW(static_cast<DWORD>(tempPath.size()), tempPath.data());
+    CHECK(tempPathLength != 0, L"Failed to get TEMP path");
+
+    if (tempPathLength >= tempPath.size())
+    {
+        tempPath.resize(tempPathLength + 1);
+        tempPathLength = GetTempPathW(static_cast<DWORD>(tempPath.size()), tempPath.data());
+    }
+
+    tempPath.resize(tempPathLength);
+
+    m_GlobalTestDirectory = std::move(tempPath);
+    m_GlobalTestDirectory += L"FileSystemSearchTests";
+
+    if (GetFileAttributesW(m_GlobalTestDirectory.c_str()) != INVALID_FILE_ATTRIBUTES)
+        DeleteDirectoryRecursive(m_GlobalTestDirectory);
+
+    auto createResult = CreateDirectoryW(m_GlobalTestDirectory.c_str(), nullptr);
+    CHECK(createResult, std::format(L"Failed to create directory '{}'", m_GlobalTestDirectory));
+}
+
+Testing::GlobalTestContext::~GlobalTestContext()
+{
+    DeleteDirectoryRecursive(m_GlobalTestDirectory);
+
+    if (s_GlobalTestContext != this)
+        __debugbreak();
+
+    s_GlobalTestContext = nullptr;
+}
+
+Testing::TestDirectory::TestDirectory(std::wstring_view testName)
+{
+    auto globalTestDir = s_GlobalTestContext->GetGlobalTestDirectory();
+    m_Path.reserve(globalTestDir.size() + testName.size() + 1);
+
+    m_Path = globalTestDir;
+
+    if (m_Path.back() != L'\\')
+        m_Path.push_back(L'\\');
+
+    m_Path += testName;
+
+    auto createResult = CreateDirectoryW(m_Path.c_str(), nullptr);
+    CHECK(createResult, std::format(L"Failed to create directory '{}'", m_Path));
+}
+
+Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, std::span<const char> fileContents)
+{
+    m_Path.reserve(testDirectory.view().size() + fileName.size() + 1);    
+    m_Path = testDirectory.view();
+
+    if (m_Path.back() != L'\\')
+        m_Path.push_back(L'\\');
+
+    m_Path += fileName;
+
+    FileHandleHolder file = CreateFile2(m_Path.c_str(), GENERIC_WRITE, 0, CREATE_ALWAYS, nullptr);
+    CHECK(file, std::format(L"Failed to open file '{}' for writing", m_Path));
+
+    if (fileContents.size() > std::numeric_limits<DWORD>::max())
+        __debugbreak(); // TO DO: add support for writing files over 4 GB
+
+    DWORD bytesWritten;
+    auto writeResult = WriteFile(file, fileContents.data(), static_cast<DWORD>(fileContents.size()), &bytesWritten, nullptr);
+    CHECK(writeResult && bytesWritten == fileContents.size(), std::format(L"Failed to write to file '{}'", m_Path));
+}
+
+Testing::SearchOperationResult Testing::PerformTestSearch(const TestDirectory& testDirectory, const wchar_t* searchPattern, const wchar_t* searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan)
+{
+    struct TestContext
+    {
+        Event<EventType::ManualReset> doneEvent;
+        Testing::SearchOperationResult result;
+    } testContext;
+
+    auto foundPathCallback = [](void* context, const WIN32_FIND_DATAW&, const wchar_t* path)
+    {
+        static_cast<TestContext*>(context)->result.foundPaths.emplace_back(path);
+    };
+
+    auto searchDoneCallback = [](void* context, const SearchStatistics&)
+    {
+        static_cast<TestContext*>(context)->doneEvent.Set();
+    };
+
+    auto errorCallback = [](void* context, const wchar_t* errorMessage)
+    {
+        static_cast<TestContext*>(context)->result.errors.emplace_back(errorMessage);
+    };
+
+    auto searcher = Search(
+        foundPathCallback,
+        [](void*, const SearchStatistics&, double) {},
+        searchDoneCallback,
+        errorCallback,
+        testDirectory.c_str(),
+        searchPattern,
+        searchString,
+        searchFlags,
+        ignoreFilesLargerThan,
+        &testContext);
+
+    auto waitResult = WaitForSingleObject(testContext.doneEvent, INFINITE);
+    CHECK(waitResult == WAIT_OBJECT_0, L"Failed to wait for search operation to complete");
+
+    CleanupSearchOperation(searcher);
+
+    return std::move(testContext.result);
+}
