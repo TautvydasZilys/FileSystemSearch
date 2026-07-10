@@ -116,6 +116,7 @@
     <ClInclude Include="..\Common\NonCopyable.h" />
     <ClInclude Include="..\Common\ReaderWriterLock.h" />
     <ClInclude Include="..\Common\Version.rc" />
+    <ClInclude Include="..\Common\WindowClassHolder.h" />
     <ClCompile Include="Source\AppWindows\SearchResultWindow.cpp" />
     <ClCompile Include="Source\AppWindows\SearchWindow.cpp" />
     <ClCompile Include="Source\Controls\BorderedTextBox.cpp" />
@@ -130,7 +131,6 @@
     <ClInclude Include="Source\Controls\BorderedTextBox.h" />
     <ClInclude Include="Source\Controls\ExplorerWindow\ExplorerWindow.h" />
     <ClInclude Include="Source\Controls\ExplorerWindow\FileSystemBindData.h" />
-    <ClInclude Include="Source\Controls\ExplorerWindow\WindowClassHolder.h" />
     <ClInclude Include="Source\Utilities\DCHolder.h" />
     <ClInclude Include="Source\Utilities\NumberFormatter.h" />
     <ClInclude Include="Source\Utilities\WindowPosition.h" />

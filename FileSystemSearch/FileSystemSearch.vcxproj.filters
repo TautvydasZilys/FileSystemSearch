@@ -90,8 +90,8 @@
     <ClInclude Include="Source\Controls\ExplorerWindow\FileSystemBindData.h">
       <Filter>Controls\ExplorerWindow</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Controls\ExplorerWindow\WindowClassHolder.h">
-      <Filter>Controls\ExplorerWindow</Filter>
+    <ClInclude Include="..\Common\WindowClassHolder.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
