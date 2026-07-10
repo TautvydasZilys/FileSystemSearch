@@ -51,15 +51,15 @@ inline void ToLowerAsciiInline(std::wstring& str)
 	ToLowerAscii(str.c_str(), &str[0], str.length());
 }
 
-inline std::string Utf16ToUtf8(const std::wstring& utf16)
+inline std::string Utf16ToUtf8(std::wstring_view utf16)
 {
-	auto utf8Length = WideCharToMultiByte(CP_UTF8, 0, utf16.c_str(), static_cast<int>(utf16.length()), nullptr, 0, nullptr, nullptr);
+	auto utf8Length = WideCharToMultiByte(CP_UTF8, 0, utf16.data(), static_cast<int>(utf16.length()), nullptr, 0, nullptr, nullptr);
 	if (utf8Length == 0)
 		__fastfail(0);
 
 	std::string utf8;
 	utf8.resize(utf8Length);
-	utf8Length = WideCharToMultiByte(CP_UTF8, 0, utf16.c_str(), static_cast<int>(utf16.length()), &utf8[0], utf8Length, nullptr, nullptr);
+	utf8Length = WideCharToMultiByte(CP_UTF8, 0, utf16.data(), static_cast<int>(utf16.length()), &utf8[0], utf8Length, nullptr, nullptr);
 	Assert(utf8Length != 0);
 
 	return utf8;

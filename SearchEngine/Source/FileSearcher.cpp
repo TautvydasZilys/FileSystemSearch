@@ -1,11 +1,11 @@
 #include "PrecompiledHeader.h"
 #include "FileReadBackends/DirectStorage/DirectXContext.h"
 #include "FileSearcher.h"
+#include "StringUtils.h"
 #include "Utilities/AsynchronousPeriodicTimer.h"
 #include "Utilities/FileEnumerator.h"
 #include "Utilities/PathUtils.h"
 #include "Utilities/ScopedStackAllocator.h"
-#include "Utilities/StringUtils.h"
 
 FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_RefCount(1),

@@ -70,9 +70,6 @@
     <ClInclude Include="Source\Utilities\ScopedStackAllocator.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Utilities\StringUtils.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Utilities\WorkQueue.h">
       <Filter>Utilities</Filter>
     </ClInclude>
@@ -101,6 +98,9 @@
       <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\ReaderWriterLock.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\StringUtils.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>

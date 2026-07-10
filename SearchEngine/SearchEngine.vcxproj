@@ -27,7 +27,7 @@
   <Import Project="$(SolutionDir)FileSystemSearch.common.props" />
   <ItemDefinitionGroup>
     <ClCompile>
-	  <PreprocessorDefinitions>BUILDING_SEARCHENGINE=1;USE_DSTORAGE=1;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BUILDING_SEARCHENGINE=1;USE_DSTORAGE=1;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -57,6 +57,7 @@
     <ClInclude Include="..\Common\HeapArray.h" />
     <ClInclude Include="..\Common\NonCopyable.h" />
     <ClInclude Include="..\Common\ReaderWriterLock.h" />
+    <ClInclude Include="..\Common\StringUtils.h" />
     <ClInclude Include="..\Common\Version.rc" />
     <ClInclude Include="Include\SearchEngine.h" />
     <ClInclude Include="Source\FileContentSearchData.h" />
@@ -79,7 +80,6 @@
     <ClInclude Include="Source\Utilities\ObjectPool.h" />
     <ClInclude Include="Source\Utilities\PathUtils.h" />
     <ClInclude Include="Source\Utilities\ScopedStackAllocator.h" />
-    <ClInclude Include="Source\Utilities\StringUtils.h" />
     <ClInclude Include="Source\Utilities\WorkQueue.h" />
     <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
   </ItemGroup>

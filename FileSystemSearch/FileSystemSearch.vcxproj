@@ -47,6 +47,7 @@
     <ClInclude Include="..\Common\HeapArray.h" />
     <ClInclude Include="..\Common\NonCopyable.h" />
     <ClInclude Include="..\Common\ReaderWriterLock.h" />
+    <ClInclude Include="..\Common\StringUtils.h" />
     <ClInclude Include="..\Common\Version.rc" />
     <ClInclude Include="..\Common\WindowClassHolder.h" />
     <ClCompile Include="Source\AppWindows\SearchResultWindow.cpp" />

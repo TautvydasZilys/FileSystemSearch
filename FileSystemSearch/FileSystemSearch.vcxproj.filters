@@ -93,6 +93,9 @@
     <ClInclude Include="..\Common\WindowClassHolder.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\StringUtils.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
