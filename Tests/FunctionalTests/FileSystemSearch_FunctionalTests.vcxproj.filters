@@ -62,5 +62,8 @@
     <ClInclude Include="..\Framework\TestHelpers.h">
       <Filter>Framework</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Common\StringUtils.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

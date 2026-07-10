@@ -1,5 +1,7 @@
 #include "PrecompiledHeader.h"
+#include "StringUtils.h"
 #include "TestHelpers.h"
+#include "TestMacros.h"
 #include "TestList.h"
 
 #include <format>
@@ -17,6 +19,20 @@ void Testing::RegisterTest(ITest* test)
         s_LastRegisteredTest->next = test;
 
     s_LastRegisteredTest = test;
+}
+
+static void PrintToStdout(std::string_view text)
+{
+    CHECK(text.length() <= std::numeric_limits<DWORD>::max(), L"Text is too long to write to stdout!");
+
+    DWORD bytesWritten;
+    auto writeResult = WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), text.data(), static_cast<DWORD>(text.length()), &bytesWritten, nullptr);
+    CHECK(writeResult && bytesWritten == text.length(), L"Failed to write to stdout");
+}
+
+static void PrintToStdout(std::wstring_view wideText)
+{
+    PrintToStdout(StringUtils::Utf16ToUtf8(wideText));
 }
 
 int Testing::RunAllTests()
@@ -42,19 +58,19 @@ int Testing::RunAllTests()
             catch (const TestFailedException& e)
             {
                 failureCount++;
-                std::wcout << std::format(L"'{}' FAILED:\n    {}", test->TestName().data(), e.Text()) << std::endl;
+                PrintToStdout(std::format(L"'{}' FAILED:\n    {}\r\n", test->TestName().data(), e.Text()));
             }
 
             test = test->next;
         }
 
-        std::wcout << std::format(L"Ran {} tests: {} succeeded, {} failed.", testCount, successCount, failureCount) << std::endl;
+        PrintToStdout(std::format(L"Ran {} tests: {} succeeded, {} failed.\r\n", testCount, successCount, failureCount));
 
         return failureCount;
     }
     catch (const TestFailedException& e)
     {
-        std::wcout << std::format(L"Tests encountered a fatal error outside of any single test: {}", e.Text()) << std::endl;
+        PrintToStdout(std::format(L"Tests encountered a fatal error outside of any single test: {}\r\n", e.Text()));
         return std::numeric_limits<int>::max();
     }
 }
