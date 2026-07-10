@@ -68,12 +68,12 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;$(SolutionDir)SearchResultsView\Include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)SearchEngine.lib;$(OutDir)SearchResultsView.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;ComCtl32.Lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;Synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)SearchEngine.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;ComCtl32.Lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;Synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
@@ -94,7 +94,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;$(SolutionDir)SearchResultsView\Include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -102,7 +102,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>$(OutDir)SearchEngine.lib;$(OutDir)SearchResultsView.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;ComCtl32.Lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;Synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)SearchEngine.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;ComCtl32.Lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;Synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
@@ -119,9 +119,8 @@
     <ClCompile Include="Source\AppWindows\SearchResultWindow.cpp" />
     <ClCompile Include="Source\AppWindows\SearchWindow.cpp" />
     <ClCompile Include="Source\Controls\BorderedTextBox.cpp" />
-    <ClCompile Include="Source\Controls\SearchResultsView\ExplorerWindow.cpp" />
-    <ClCompile Include="Source\Controls\SearchResultsView\FileSystemBindData.cpp" />
-    <ClCompile Include="Source\Controls\SearchResultsView\SearchResultsView.cpp" />
+    <ClCompile Include="Source\Controls\ExplorerWindow\ExplorerWindow.cpp" />
+    <ClCompile Include="Source\Controls\ExplorerWindow\FileSystemBindData.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\Utilities\NumberFormatter.cpp" />
     <ClCompile Include="Source\Utilities\FontCache.cpp" />
@@ -129,10 +128,9 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClInclude Include="Source\Controls\BorderedTextBox.h" />
-    <ClInclude Include="Source\Controls\SearchResultsView\ExplorerWindow.h" />
-    <ClInclude Include="Source\Controls\SearchResultsView\FileSystemBindData.h" />
-    <ClInclude Include="Source\Controls\SearchResultsView\SearchResultsView.h" />
-    <ClInclude Include="Source\Controls\SearchResultsView\WindowClassHolder.h" />
+    <ClInclude Include="Source\Controls\ExplorerWindow\ExplorerWindow.h" />
+    <ClInclude Include="Source\Controls\ExplorerWindow\FileSystemBindData.h" />
+    <ClInclude Include="Source\Controls\ExplorerWindow\WindowClassHolder.h" />
     <ClInclude Include="Source\Utilities\DCHolder.h" />
     <ClInclude Include="Source\Utilities\NumberFormatter.h" />
     <ClInclude Include="Source\Utilities\WindowPosition.h" />

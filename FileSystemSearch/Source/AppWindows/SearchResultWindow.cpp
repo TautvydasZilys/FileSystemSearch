@@ -1,7 +1,7 @@
 #include "PrecompiledHeader.h"
 #include "SearchResultWindow.h"
 
-#include "Controls/SearchResultsView/SearchResultsView.h"
+#include "Controls/ExplorerWindow/ExplorerWindow.h"
 #include "CriticalSection.h"
 #include "ReaderWriterLock.h"
 #include "SearchEngine.h"
@@ -184,7 +184,7 @@ SearchResultWindow::~SearchResultWindow()
 
     if (m_ExplorerWindow != nullptr)
     {
-        DestroyView(m_ExplorerWindow);
+        m_ExplorerWindow->Destroy();
         m_ExplorerWindow = nullptr;
     }
 }
@@ -314,8 +314,8 @@ void SearchResultWindow::OnCreate(HWND hWnd)
     m_HeaderTextBlock = TextBlock(m_HeaderText).Create(m_Hwnd);
 
     m_ExplorerBrowserHost = ChildWindow(s_ExplorerBrowserHostWindowClass, WS_CLIPCHILDREN).Create(m_Hwnd);
-    m_ExplorerWindow = CreateDpiAwareView(m_ExplorerBrowserHost, 0, 0);
-    InitializeView(m_ExplorerWindow);
+    m_ExplorerWindow = new ExplorerWindow(m_ExplorerBrowserHost, 0, 0, true);
+    m_ExplorerWindow->Initialize();
 
     m_ProgressBar = ProgressBar().Create(m_Hwnd);
     SendMessageW(m_ProgressBar, PBM_SETMARQUEE, TRUE, 0);
@@ -421,7 +421,7 @@ void SearchResultWindow::RepositionExplorerBrowser(SIZE margin, int windowWidth,
     auto y = headerEndY + margin.cy;
     auto height = progressBarY - margin.cy - y;
     SetWindowPos(m_ExplorerBrowserHost, nullptr, x, y, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOCOPYBITS);    
-    ResizeView(m_ExplorerWindow, width, height);
+    m_ExplorerWindow->ResizeView(width, height);
 }
 
 void SearchResultWindow::OnStatisticsUpdate()
@@ -555,7 +555,7 @@ void SearchResultWindow::OnFileFound(const WIN32_FIND_DATAW& findData, const wch
     while (!m_Initialized)
         WaitOnAddress(&m_Initialized, &_false, sizeof(m_Initialized), INFINITE);
 
-    AddItemToView(m_ExplorerWindow, &findData, path);
+    m_ExplorerWindow->AddItem(&findData, path);
 }
 
 void SearchResultWindow::OnProgressUpdate(const SearchStatistics& searchStatistics, double progress)

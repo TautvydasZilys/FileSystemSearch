@@ -18,14 +18,11 @@
     <ClCompile Include="Source\Controls\BorderedTextBox.cpp">
       <Filter>Controls</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Controls\SearchResultsView\SearchResultsView.cpp">
-      <Filter>Controls\SearchResultsView</Filter>
+    <ClCompile Include="Source\Controls\ExplorerWindow\ExplorerWindow.cpp">
+      <Filter>Controls\ExplorerWindow</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Controls\SearchResultsView\FileSystemBindData.cpp">
-      <Filter>Controls\SearchResultsView</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Controls\SearchResultsView\ExplorerWindow.cpp">
-      <Filter>Controls\SearchResultsView</Filter>
+    <ClCompile Include="Source\Controls\ExplorerWindow\FileSystemBindData.cpp">
+      <Filter>Controls\ExplorerWindow</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -87,17 +84,14 @@
     <ClInclude Include="..\Common\ReaderWriterLock.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Controls\SearchResultsView\WindowClassHolder.h">
-      <Filter>Controls\SearchResultsView</Filter>
+    <ClInclude Include="Source\Controls\ExplorerWindow\ExplorerWindow.h">
+      <Filter>Controls\ExplorerWindow</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Controls\SearchResultsView\SearchResultsView.h">
-      <Filter>Controls\SearchResultsView</Filter>
+    <ClInclude Include="Source\Controls\ExplorerWindow\FileSystemBindData.h">
+      <Filter>Controls\ExplorerWindow</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Controls\SearchResultsView\FileSystemBindData.h">
-      <Filter>Controls\SearchResultsView</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Controls\SearchResultsView\ExplorerWindow.h">
-      <Filter>Controls\SearchResultsView</Filter>
+    <ClInclude Include="Source\Controls\ExplorerWindow\WindowClassHolder.h">
+      <Filter>Controls\ExplorerWindow</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -116,7 +110,7 @@
     <Filter Include="Controls">
       <UniqueIdentifier>{5893e6a0-6f56-441d-8afa-e2580c442779}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Controls\SearchResultsView">
+    <Filter Include="Controls\ExplorerWindow">
       <UniqueIdentifier>{ea96e5ea-1488-4400-a5d3-264832130c57}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
