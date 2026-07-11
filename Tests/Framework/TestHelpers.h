@@ -61,14 +61,6 @@ namespace Testing
         std::wstring m_Path;
     };
 
-    struct SearchOperationResult : NonCopyable
-    {
-        std::vector<std::wstring> foundPaths;
-        std::vector<std::wstring> errors;
-    };
-
-    SearchOperationResult PerformTestSearch(const TestDirectory& testDirectory, const wchar_t* searchPattern, const wchar_t* searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan = std::numeric_limits<uint64_t>::max());
-
     struct SearchTest : ITest
     {
         const Testing::TestDirectory& GetTestDirectory() const
@@ -78,6 +70,8 @@ namespace Testing
 
             return *m_TestDirectory;
         }
+
+        std::vector<std::wstring> PerformTestSearch(const wchar_t* searchPattern, const wchar_t* searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan = std::numeric_limits<uint64_t>::max()) const;
 
     protected:
         mutable std::optional<Testing::TestDirectory> m_TestDirectory;

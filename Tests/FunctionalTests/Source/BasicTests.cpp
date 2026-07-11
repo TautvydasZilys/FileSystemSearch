@@ -7,11 +7,10 @@ SEARCH_TEST(SimpleFileRead)
     constexpr char kTestData[] = "Hello, world!";
     Testing::TestFile testFile(GetTestDirectory(), L"test.txt", std::span<const char>(kTestData, sizeof(kTestData) - 1));
 
-    auto searchResults = Testing::PerformTestSearch(GetTestDirectory(), L"*", L"llo, w", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileContents | SearchFlags::kSearchContentsAsUtf8);
+    auto searchResults = PerformTestSearch(L"*", L"llo, w", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileContents | SearchFlags::kSearchContentsAsUtf8);
 
-    CHECK(searchResults.errors.empty(), L"Search operation encountered errors");
-    CHECK(searchResults.foundPaths.size() == 1, L"Unexpected number of search results");
-    CHECK(searchResults.foundPaths[0] == testFile.GetPath(), L"Search result does not match expected file path");
+    CHECK(searchResults.size() == 1, L"Unexpected number of search results");
+    CHECK(searchResults[0] == testFile.GetPath(), L"Search result does not match expected file path");
 }
 
 SEARCH_TEST(SearchInFileName)
@@ -19,11 +18,10 @@ SEARCH_TEST(SearchInFileName)
     constexpr char kTestData[] = "x";
     Testing::TestFile testFile(GetTestDirectory(), L"hello_search.txt", std::span<const char>(kTestData, sizeof(kTestData) - 1));
 
-    auto searchResults = Testing::PerformTestSearch(GetTestDirectory(), L"*", L"hello_search", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileName);
+    auto searchResults = PerformTestSearch(L"*", L"hello_search", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileName);
 
-    CHECK(searchResults.errors.empty(), L"Search operation encountered errors");
-    CHECK(searchResults.foundPaths.size() == 1, L"Unexpected number of search results");
-    CHECK(searchResults.foundPaths[0] == testFile.GetPath(), L"Search result does not match expected file path");
+    CHECK(searchResults.size() == 1, L"Unexpected number of search results");
+    CHECK(searchResults[0] == testFile.GetPath(), L"Search result does not match expected file path");
 }
 
 SEARCH_TEST(RecursiveFileSearch)
@@ -33,11 +31,10 @@ SEARCH_TEST(RecursiveFileSearch)
 
     Testing::TestFile nestedFile(nestedDir, L"nested.txt", std::span<const char>(kTestData, sizeof(kTestData) - 1));
 
-    auto searchResults = Testing::PerformTestSearch(GetTestDirectory(), L"*", L"nested", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileName | SearchFlags::kSearchRecursively);
+    auto searchResults = PerformTestSearch(L"*", L"nested", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileName | SearchFlags::kSearchRecursively);
 
-    CHECK(searchResults.errors.empty(), L"Search operation encountered errors");
-    CHECK(searchResults.foundPaths.size() == 1, L"Unexpected number of search results");
-    CHECK(searchResults.foundPaths[0] == nestedFile.GetPath(), L"Search result does not match expected file path");
+    CHECK(searchResults.size() == 1, L"Unexpected number of search results");
+    CHECK(searchResults[0] == nestedFile.GetPath(), L"Search result does not match expected file path");
 }
 
 SEARCH_TEST(Utf16ContentSearch)
@@ -49,11 +46,10 @@ SEARCH_TEST(Utf16ContentSearch)
 
     Testing::TestFile testFile(GetTestDirectory(), L"utf16.txt", std::span<const char>(data, byteCount));
 
-    auto searchResults = Testing::PerformTestSearch(GetTestDirectory(), L"*", L"čęėįš", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileContents | SearchFlags::kSearchContentsAsUtf16);
+    auto searchResults = PerformTestSearch(L"*", L"čęėįš", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileContents | SearchFlags::kSearchContentsAsUtf16);
 
-    CHECK(searchResults.errors.empty(), L"Search operation encountered errors");
-    CHECK(searchResults.foundPaths.size() == 1, L"Unexpected number of search results");
-    CHECK(searchResults.foundPaths[0] == testFile.GetPath(), L"Search result does not match expected file path");
+    CHECK(searchResults.size() == 1, L"Unexpected number of search results");
+    CHECK(searchResults[0] == testFile.GetPath(), L"Search result does not match expected file path");
 }
 
 SEARCH_TEST(CaseInsensitiveFileNameSearch)
@@ -61,9 +57,8 @@ SEARCH_TEST(CaseInsensitiveFileNameSearch)
     constexpr char kTestData[] = "x";
     Testing::TestFile testFile(GetTestDirectory(), L"CaseTest.TXT", std::span<const char>(kTestData, sizeof(kTestData) - 1));
 
-    auto searchResults = Testing::PerformTestSearch(GetTestDirectory(), L"*", L"casetest", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileName | SearchFlags::kIgnoreCase);
+    auto searchResults = PerformTestSearch(L"*", L"casetest", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileName | SearchFlags::kIgnoreCase);
 
-    CHECK(searchResults.errors.empty(), L"Search operation encountered errors");
-    CHECK(searchResults.foundPaths.size() == 1, L"Unexpected number of search results");
-    CHECK(searchResults.foundPaths[0] == testFile.GetPath(), L"Search result does not match expected file path");
+    CHECK(searchResults.size() == 1, L"Unexpected number of search results");
+    CHECK(searchResults[0] == testFile.GetPath(), L"Search result does not match expected file path");
 }

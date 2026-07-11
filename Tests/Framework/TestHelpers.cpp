@@ -142,17 +142,18 @@ Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_vie
     CHECK(writeResult && bytesWritten == fileContents.size(), std::format(L"Failed to write to file '{}'", m_Path));
 }
 
-Testing::SearchOperationResult Testing::PerformTestSearch(const TestDirectory& testDirectory, const wchar_t* searchPattern, const wchar_t* searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan)
+std::vector<std::wstring> Testing::SearchTest::PerformTestSearch(const wchar_t* searchPattern, const wchar_t* searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan) const
 {
     struct TestContext
     {
         Event<EventType::ManualReset> doneEvent;
-        Testing::SearchOperationResult result;
+        std::vector<std::wstring> foundPaths;
+        std::vector<std::wstring> errors;
     } testContext;
 
     auto foundPathCallback = [](void* context, const WIN32_FIND_DATAW&, const wchar_t* path)
     {
-        static_cast<TestContext*>(context)->result.foundPaths.emplace_back(path);
+        static_cast<TestContext*>(context)->foundPaths.emplace_back(path);
     };
 
     auto searchDoneCallback = [](void* context, const SearchStatistics&)
@@ -162,15 +163,15 @@ Testing::SearchOperationResult Testing::PerformTestSearch(const TestDirectory& t
 
     auto errorCallback = [](void* context, const wchar_t* errorMessage)
     {
-        static_cast<TestContext*>(context)->result.errors.emplace_back(errorMessage);
+        static_cast<TestContext*>(context)->errors.emplace_back(errorMessage);
     };
 
-    auto searcher = Search(
+    auto searcher = ::Search(
         foundPathCallback,
         [](void*, const SearchStatistics&, double) {},
         searchDoneCallback,
         errorCallback,
-        testDirectory.c_str(),
+        GetTestDirectory().c_str(),
         searchPattern,
         searchString,
         searchFlags,
@@ -182,5 +183,17 @@ Testing::SearchOperationResult Testing::PerformTestSearch(const TestDirectory& t
 
     CleanupSearchOperation(searcher);
 
-    return std::move(testContext.result);
+    CHECK(testContext.errors.empty(), [](const std::vector<std::wstring>& errors)
+    {
+        std::wstring combinedErrors = L"Search operation encountered errors:";
+        for (const auto& error : errors)
+        {
+            combinedErrors += L"\r\n";
+            combinedErrors += error;
+        }
+
+        return combinedErrors;
+    }(testContext.errors));
+
+    return std::move(testContext.foundPaths);
 }
