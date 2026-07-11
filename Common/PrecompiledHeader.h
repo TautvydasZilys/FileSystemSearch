@@ -22,9 +22,11 @@
 #include <threadpoolapiset.h>
 #include <wrl.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -37,25 +39,25 @@
 using Microsoft::WRL::ComPtr;
 
 #define MAKE_BIT_OPERATORS_FOR_ENUM_CLASS(T) \
-	inline T operator|(T left, T right) \
+	constexpr inline T operator|(T left, T right) \
 	{ \
 		typedef std::underlying_type<T>::type UnderlyingType; \
 		return static_cast<T>(static_cast<UnderlyingType>(left) | static_cast<UnderlyingType>(right)); \
 	} \
-	inline T operator&(T left, T right) \
+	constexpr inline T operator&(T left, T right) \
 	{ \
 		typedef std::underlying_type<T>::type UnderlyingType; \
 		return static_cast<T>(static_cast<UnderlyingType>(left) & static_cast<UnderlyingType>(right)); \
 	} \
-	inline void operator|=(T& left, T right) \
+	constexpr inline void operator|=(T& left, T right) \
 	{ \
 		left = left | right; \
 	} \
-	inline void operator&=(T& left, T right) \
+	constexpr inline void operator&=(T& left, T right) \
 	{ \
 		left = left & right; \
 	} \
-    inline T operator~(T item) \
+    constexpr inline T operator~(T item) \
     { \
 		typedef std::underlying_type<T>::type UnderlyingType; \
         return static_cast<T>(~static_cast<UnderlyingType>(item)); \

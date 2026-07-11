@@ -10,14 +10,8 @@
     <ClCompile Include="..\Framework\TestList.cpp">
       <Filter>Framework</Filter>
     </ClCompile>
-    <ClCompile Include="Source\BasicTests.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\Framework\TestHelpers.cpp">
       <Filter>Framework</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\EdgeCaseTests.cpp">
-      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

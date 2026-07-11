@@ -17,7 +17,7 @@ typedef void(__stdcall* SearchDoneCallback)(void* context, const SearchStatistic
 typedef void(__stdcall* ErrorCallback)(void* context, const wchar_t* errorMessage);
 
 #define SearchFlagsEnumDefinition \
-	EnumValue(None,			         1 << 0) \
+	EnumValue(None,			              0) \
 	EnumValue(SearchForFiles,        1 << 0) \
 	EnumValue(SearchInFileName,      1 << 1) \
 	EnumValue(SearchInFilePath,      1 << 2) \

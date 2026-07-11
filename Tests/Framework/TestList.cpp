@@ -7,27 +7,32 @@
 #include <format>
 #include <iostream>
 
-static Testing::ITest* s_FirstRegisteredTest;
-static Testing::ITest* s_LastRegisteredTest;
-
-void Testing::RegisterTest(ITest* test)
+template <typename TestType>
+void Testing::RegisterTest(TestType* test)
 {
-    if (s_FirstRegisteredTest == nullptr)
-        s_FirstRegisteredTest = test;
+    if (TestType::s_FirstRegisteredTest == nullptr)
+        TestType::s_FirstRegisteredTest = test;
 
-    if (s_LastRegisteredTest != nullptr)
-        s_LastRegisteredTest->next = test;
+    if (TestType::s_LastRegisteredTest != nullptr)
+        TestType::s_LastRegisteredTest->next = test;
 
-    s_LastRegisteredTest = test;
+    TestType::s_LastRegisteredTest = test;
 }
+
+template void Testing::RegisterTest<Testing::FunctionalTest>(Testing::FunctionalTest* test);
+template void Testing::RegisterTest<Testing::PerformanceTestBase>(Testing::PerformanceTestBase* test);
 
 static void PrintToStdout(std::string_view text)
 {
     CHECK(text.length() <= std::numeric_limits<DWORD>::max(), L"Text is too long to write to stdout!");
 
+    auto stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
     DWORD bytesWritten;
-    auto writeResult = WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), text.data(), static_cast<DWORD>(text.length()), &bytesWritten, nullptr);
+    auto writeResult = WriteFile(stdOut, text.data(), static_cast<DWORD>(text.length()), &bytesWritten, nullptr);
     CHECK(writeResult && bytesWritten == text.length(), L"Failed to write to stdout");
+
+    FlushFileBuffers(stdOut);
 }
 
 static void PrintToStdout(std::wstring_view wideText)
@@ -35,13 +40,14 @@ static void PrintToStdout(std::wstring_view wideText)
     PrintToStdout(StringUtils::Utf16ToUtf8(wideText));
 }
 
+template <typename TestType>
 int Testing::RunAllTests()
 {
     try
     {
         GlobalTestContext globalTestContext;
 
-        auto test = s_FirstRegisteredTest;
+        auto test = TestType::s_FirstRegisteredTest;
 
         int failureCount = 0;
         int successCount = 0;
@@ -51,14 +57,16 @@ int Testing::RunAllTests()
         {
             try
             {
+                PrintToStdout(std::format(L"Running '{}'\r\n", test->TestName().data()));
                 testCount++;
                 test->Run();
                 successCount++;
+                PrintToStdout(L"    PASS!\r\n");
             }
             catch (const TestFailedException& e)
             {
                 failureCount++;
-                PrintToStdout(std::format(L"'{}' FAILED:\n    {}\r\n", test->TestName().data(), e.Text()));
+                PrintToStdout(std::format(L"    FAILED:\r\n        {}\r\n", e.Text()));
             }
 
             test = test->next;
@@ -72,5 +80,26 @@ int Testing::RunAllTests()
     {
         PrintToStdout(std::format(L"Tests encountered a fatal error outside of any single test: {}\r\n", e.Text()));
         return std::numeric_limits<int>::max();
+    }
+}
+
+template int Testing::RunAllTests<Testing::FunctionalTest>();
+template int Testing::RunAllTests<Testing::PerformanceTestBase>();
+
+void Testing::ReportPerformanceTestResults()
+{
+    auto test = PerformanceTestBase::s_FirstRegisteredTest;
+    if (test == nullptr)
+        return;
+
+    PrintToStdout(std::format(L"\r\nPerformance Test Results:\r\n"));
+
+    while (test != nullptr)
+    {
+        auto name = test->TestName();
+        auto durationMS = 1000.0 * test->GetMedianRunTime();
+
+        PrintToStdout(std::format(L"    {:80}: {:.2f} ms\r\n", name, durationMS));
+        test = test->next;
     }
 }

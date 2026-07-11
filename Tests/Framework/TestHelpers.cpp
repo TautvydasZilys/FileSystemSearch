@@ -142,7 +142,8 @@ Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_vie
     CHECK(writeResult && bytesWritten == fileContents.size(), std::format(L"Failed to write to file '{}'", m_Path));
 }
 
-std::vector<std::wstring> Testing::SearchTest::PerformTestSearch(const wchar_t* searchPattern, const wchar_t* searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan) const
+template <typename BaseClass>
+std::vector<std::wstring> Testing::SearchTestImpl<BaseClass>::PerformTestSearch(const wchar_t* searchPattern, const wchar_t* searchString, SearchFlags searchFlags, uint64_t ignoreFilesLargerThan) const
 {
     struct TestContext
     {
@@ -197,3 +198,6 @@ std::vector<std::wstring> Testing::SearchTest::PerformTestSearch(const wchar_t* 
 
     return std::move(testContext.foundPaths);
 }
+
+template Testing::SearchTestImpl<Testing::ITest>;
+template Testing::SearchTestImpl<Testing::FunctionalTest>;

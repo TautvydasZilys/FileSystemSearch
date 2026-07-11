@@ -3,5 +3,5 @@
 
 int main()
 {
-    return Testing::RunAllTests();
+    return Testing::RunAllTests<Testing::FunctionalTest>();
 }

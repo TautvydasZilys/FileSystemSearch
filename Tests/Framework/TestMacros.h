@@ -14,7 +14,7 @@
     } Test_##name##_instance;                                                                                   \
     void Test_##name::Run() const
 
-#define TEST(name) TEST_IMPL(name, Testing::ITest)
+#define TEST(name) TEST_IMPL(name, Testing::RegisteredTest)
 
 #define SEARCH_TEST(name)                                                                                       \
     template <SearchFlags ExtraSearchFlags>                                                                     \

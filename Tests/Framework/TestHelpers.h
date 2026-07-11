@@ -61,10 +61,11 @@ namespace Testing
         std::wstring m_Path;
     };
 
-    struct SearchTest : ITest
+    template <typename BaseClass>
+    struct SearchTestImpl : BaseClass
     {
-        inline SearchTest(std::wstring_view testName, SearchFlags extraSearchFlags = SearchFlags::kNone) :
-            ITest(testName),
+        inline SearchTestImpl(std::wstring_view testName, SearchFlags extraSearchFlags = SearchFlags::kNone) :
+            BaseClass(testName),
             m_ExtraSearchFlags(extraSearchFlags)
         {
         }
@@ -72,7 +73,7 @@ namespace Testing
         const Testing::TestDirectory& GetTestDirectory() const
         {   
             if (!m_TestDirectory)
-                m_TestDirectory.emplace(TestName());
+                m_TestDirectory.emplace(BaseClass::TestName());
 
             return *m_TestDirectory;
         }
@@ -83,4 +84,6 @@ namespace Testing
         mutable std::optional<Testing::TestDirectory> m_TestDirectory;
         SearchFlags m_ExtraSearchFlags;
     };
+
+    using SearchTest = SearchTestImpl<FunctionalTest>;
 }
