@@ -1,6 +1,8 @@
 #pragma once
 
-#include "TestList.h"
+#include "SearchEngineTypes.h"
+#include "TestMacros.h"
+#include "TestHelpers.h"
 
 namespace Testing
 {
@@ -281,4 +283,4 @@ namespace Testing
     };
 }
 
-#define DEFINE_PERFORMANCE_TEST(T) Testing::PerformanceTestDefinition<T, L#T> s_##T##_instance;
+#define DEFINE_PERFORMANCE_TEST(TestName, ...) Testing::PerformanceTestDefinition<__VA_ARGS__, L#TestName> s_##TestName##_instance
