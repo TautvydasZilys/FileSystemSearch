@@ -107,6 +107,11 @@ Testing::TestDirectory::TestDirectory(std::wstring_view testName) :
 {
 }
 
+void Testing::TestDirectory::Remove() const
+{
+    DeleteDirectoryRecursive(m_Path);
+}
+
 Testing::TestDirectory::TestDirectory(std::wstring_view parentDir, std::wstring_view name)
 {
     m_Path.reserve(parentDir.size() + name.size() + 1);
@@ -121,16 +126,20 @@ Testing::TestDirectory::TestDirectory(std::wstring_view parentDir, std::wstring_
     CreateDirectoryRecursive(m_Path);
 }
 
-Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, std::span<const char> fileContents)
+Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_view fileName)
 {
-    m_Path.reserve(testDirectory.view().size() + fileName.size() + 1);    
+    m_Path.reserve(testDirectory.view().size() + fileName.size() + 1);
     m_Path = testDirectory.view();
 
     if (m_Path.back() != L'\\')
         m_Path.push_back(L'\\');
 
     m_Path += fileName;
+}
 
+Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, std::span<const char> fileContents) :
+    TestFile(testDirectory, fileName)
+{
     FileHandleHolder file = CreateFile2(m_Path.c_str(), GENERIC_WRITE, 0, CREATE_ALWAYS, nullptr);
     CHECK(file, std::format(L"Failed to open file '{}' for writing", m_Path));
 
@@ -140,6 +149,13 @@ Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_vie
     DWORD bytesWritten;
     auto writeResult = WriteFile(file, fileContents.data(), static_cast<DWORD>(fileContents.size()), &bytesWritten, nullptr);
     CHECK(writeResult && bytesWritten == fileContents.size(), std::format(L"Failed to write to file '{}'", m_Path));
+}
+
+Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, const wchar_t* sourceFilePath) :
+    TestFile(testDirectory, fileName)
+{
+    auto result = CopyFileW(sourceFilePath, m_Path.c_str(), FALSE);
+    CHECK(result, std::format(L"Failed to copy file from '{}' to '{}': ", sourceFilePath, m_Path, GetLastError()));
 }
 
 template <typename BaseClass>

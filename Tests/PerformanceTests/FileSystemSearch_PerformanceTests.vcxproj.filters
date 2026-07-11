@@ -13,6 +13,12 @@
     <ClCompile Include="..\Framework\TestHelpers.cpp">
       <Filter>Framework</Filter>
     </ClCompile>
+    <ClCompile Include="Source\FileNameAndPathSearchPerformanceTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\FileContentSearchPerformanceTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -61,6 +67,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Common\StringUtils.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Framework\PerformanceTest.h">
+      <Filter>Framework</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

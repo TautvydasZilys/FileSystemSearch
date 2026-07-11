@@ -25,6 +25,7 @@ namespace Testing
     struct TestDirectory : NonCopyable
     {
         TestDirectory(std::wstring_view testName);
+        void Remove() const;
         
         inline TestDirectory SubDirectory(std::wstring_view name) const
         {
@@ -51,11 +52,15 @@ namespace Testing
     struct TestFile
     {
         TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, std::span<const char> fileContents);
+        TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, const wchar_t* sourceFilePath);
 
         inline const std::wstring& GetPath() const
         {
             return m_Path;
         }
+
+    private:
+        TestFile(const TestDirectory& testDirectory, std::wstring_view fileName);
 
     private:
         std::wstring m_Path;

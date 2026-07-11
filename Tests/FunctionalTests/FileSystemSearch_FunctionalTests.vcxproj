@@ -59,6 +59,7 @@
     <ClInclude Include="..\..\Common\ReaderWriterLock.h" />
     <ClInclude Include="..\..\Common\StringUtils.h" />
     <ClInclude Include="..\..\Common\WindowClassHolder.h" />
+    <ClInclude Include="..\Framework\PerformanceTest.h" />
     <ClInclude Include="..\Framework\TestHelpers.h" />
     <ClInclude Include="..\Framework\TestList.h" />
     <ClInclude Include="..\Framework\TestMacros.h" />

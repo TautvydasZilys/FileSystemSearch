@@ -19,9 +19,38 @@ namespace Testing
             std::copy_n(str, N, value);
         }
 
+        template <size_t M>
+        constexpr WStringLiteral(const wchar_t(&str)[M])
+        {
+            static_assert(M <= N, "Cannot construct a WStringLiteral from a larger string literal");
+            std::copy_n(str, M, value);
+            std::fill_n(value + M, N - M, L'\0');
+        }
+
+        template <size_t M>
+        constexpr WStringLiteral(WStringLiteral<M> other)
+        {
+            static_assert(M <= N, "Cannot construct a WStringLiteral from a larger WStringLiteral");
+            std::copy_n(other.value, M, value);
+            std::fill_n(value + M, N - M, L'\0');
+        }
+
+        template <size_t Start, size_t Count = N - Start - 1>
+        constexpr WStringLiteral<Count + 1> SubStr() const
+        {
+            static_assert(Start >= 0 && Start < Length, "Start index is out of bounds");
+            static_assert(Start + Count <= Length, "Requested substring continues past the end of the original string");
+
+            WStringLiteral<Count + 1> result;
+            std::copy_n(value + Start, Count, result.value);
+            result.value[Count] = L'\0';
+            return result;
+        }
+
         wchar_t value[N];
         
-        static constexpr size_t Length = N;
+        static constexpr size_t Length = N - 1;
+        static_assert(N > 0, "WStringLiteral must have a non-zero size to fit a null terminator");
     };
 
     template <std::size_t N, std::size_t M>
@@ -52,6 +81,15 @@ namespace Testing
     concept StdArrayOf = IsStdArrayOf<std::remove_cvref_t<T>, ElementType>::value;
 
     template <typename T>
+    struct IsStdArrayOfWStringLiteral : std::false_type {};
+
+    template <size_t N, size_t M>
+    struct IsStdArrayOfWStringLiteral<std::array<WStringLiteral<M>, N>> : std::true_type {};
+
+    template <typename T>
+    concept StdArrayOfWStringLiteral = IsStdArrayOfWStringLiteral<std::remove_cvref_t<T>>::value;
+
+    template <typename T>
     concept PerformanceTest = requires
     {
         { T::SearchString } -> std::same_as<const wchar_t* const&>;
@@ -64,7 +102,7 @@ namespace Testing
     {
         { T::SearchPattern } -> std::same_as<const wchar_t* const&>;
         { T::TestFileExtensions } -> StdArrayOf<std::wstring_view>;
-        { T::FileContents } -> StdArrayOf<std::span<const char>>;
+        { T::TestFiles } -> StdArrayOfWStringLiteral;
     };
 
     template <PerformanceTest T, SearchFlags ExtraSearchFlags>
@@ -97,16 +135,16 @@ namespace Testing
             }
         }
 
-        static constexpr auto GetFileContents()
+        static constexpr auto GetTestFiles()
         {
-            if constexpr (requires { { T::FileContents } -> StdArrayOf<std::span<const char>>; })
+            if constexpr (requires { { T::TestFiles } -> StdArrayOfWStringLiteral; })
             {
-                return T::FileContents;
+                return T::TestFiles;
             }
             else
             {
-                static_assert(!requires { T::FileContents; }, "T::FileContents must be a std::array<std::span<const char>> if it exists");
-                return std::array<std::span<const char>, 1> { std::span<const char>("x", 1) };
+                static_assert(!requires { T::TestFiles; }, "T::TestFiles must be a std::array<WStringLiteral> if it exists");
+                return std::array<WStringLiteral<1>, 0>{};
             }
         }
 
@@ -118,7 +156,7 @@ namespace Testing
         // Optional properties
         static constexpr const wchar_t* SearchPattern = GetSearchPattern();
         static constexpr auto TestFileExtensions = GetTestFileExtensions();
-        static constexpr auto FileContents = GetFileContents();
+        static constexpr auto TestFiles = GetTestFiles();
     };
 
     template <PerformanceTestFull T, WStringLiteral Name>
@@ -140,12 +178,11 @@ namespace Testing
             LARGE_INTEGER frequency;
             QueryPerformanceFrequency(&frequency);
 
+            SearchTestImpl<ITest> test(Name.value);
+            PrepareTest(test.GetTestDirectory());
+
             for (size_t i = 0; i < kIterations; i++)
             {
-                auto testName = std::format(L"{}_{}", Name.value, i);
-                SearchTestImpl<ITest> test(testName);
-
-                PrepareTest(test.GetTestDirectory());
 
                 LARGE_INTEGER start, end;
 
@@ -157,6 +194,8 @@ namespace Testing
 
                 measurements[i] = static_cast<double>(end.QuadPart - start.QuadPart) / frequency.QuadPart;
             }
+
+            test.GetTestDirectory().Remove();
 
             std::sort(measurements.begin(), measurements.end());
 
@@ -174,11 +213,6 @@ namespace Testing
         static constexpr std::wstring_view GetFileExtension(size_t fileIndex)
         {
             return T::TestFileExtensions[fileIndex % T::TestFileExtensions.size()];
-        }
-
-        static constexpr std::span<const char> GetFileContents(size_t fileIndex)
-        {
-            return T::FileContents[fileIndex % T::FileContents.size()];
         }
 
         static void PrepareTest(const TestDirectory& testDirectory)
@@ -225,7 +259,14 @@ namespace Testing
                 std::wstring fileName(&baseFileName[0], baseFileName.size());
                 fileName += fileExtension;
 
-                Testing::TestFile(testDirectory, fileName, GetFileContents(fileIndex));
+                if constexpr (std::size(T::TestFiles) > 0)
+                {
+                    Testing::TestFile(testDirectory, fileName, T::TestFiles[fileIndex % std::size(T::TestFiles)].value);
+                }
+                else
+                {
+                    Testing::TestFile(testDirectory, fileName, std::span<const char>("x", 1));
+                }
             }
 
             if constexpr (Depth != T::LayoutSizes.size() - 1)

@@ -42,6 +42,7 @@
   <ItemGroup>
     <ClCompile Include="..\Framework\TestHelpers.cpp" />
     <ClCompile Include="..\Framework\TestList.cpp" />
+    <ClCompile Include="Source\FileContentSearchPerformanceTests.cpp" />
     <ClCompile Include="Source\FileNameAndPathSearchPerformanceTests.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
