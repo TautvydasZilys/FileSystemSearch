@@ -63,6 +63,12 @@ namespace Testing
 
     struct SearchTest : ITest
     {
+        inline SearchTest(std::wstring_view testName, SearchFlags extraSearchFlags = SearchFlags::kNone) :
+            ITest(testName),
+            m_ExtraSearchFlags(extraSearchFlags)
+        {
+        }
+
         const Testing::TestDirectory& GetTestDirectory() const
         {   
             if (!m_TestDirectory)
@@ -75,5 +81,6 @@ namespace Testing
 
     protected:
         mutable std::optional<Testing::TestDirectory> m_TestDirectory;
+        SearchFlags m_ExtraSearchFlags;
     };
 }

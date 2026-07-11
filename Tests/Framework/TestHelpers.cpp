@@ -174,7 +174,7 @@ std::vector<std::wstring> Testing::SearchTest::PerformTestSearch(const wchar_t* 
         GetTestDirectory().c_str(),
         searchPattern,
         searchString,
-        searchFlags,
+        searchFlags | m_ExtraSearchFlags,
         ignoreFilesLargerThan,
         &testContext);
 

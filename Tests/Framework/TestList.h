@@ -3,20 +3,27 @@
 
 namespace Testing
 {
+    void RegisterTest(struct ITest* test);
+    int RunAllTests();
+
     struct ITest : NonCopyable
     {
-        virtual std::wstring_view TestName() const = 0;
+        ITest(std::wstring_view testName) :
+            m_TestName(testName)
+        {
+            RegisterTest(this);
+        }
+
+        std::wstring_view TestName() const { return m_TestName; }
         virtual void Run() const = 0;
 
     private:
         ITest* next = nullptr;
+        std::wstring_view m_TestName;
 
         friend void RegisterTest(ITest* test);
         friend int RunAllTests();
     };
-
-    void RegisterTest(ITest* test);
-    int RunAllTests();
 
     struct TestFailedException
     {

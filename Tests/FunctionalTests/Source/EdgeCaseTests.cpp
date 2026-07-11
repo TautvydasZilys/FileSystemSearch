@@ -106,18 +106,6 @@ SEARCH_TEST(IgnoreFilesLargerThan)
     CHECK(searchResults.empty(), L"ignoreFilesLargerThan did not filter large file as expected");
 }
 
-SEARCH_TEST(UseDirectStorageSanity)
-{
-    // UseDirectStorage is platform-specific; perform a sanity check that it doesn't crash and returns results when appropriate
-    constexpr char kTestData[] = "dsdata";
-    Testing::TestFile f(GetTestDirectory(), L"ds.txt", std::span<const char>(kTestData, sizeof(kTestData) - 1));
-
-    auto searchResults = PerformTestSearch(L"*", L"dsdata", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileContents | SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kUseDirectStorage);
-
-    CHECK(searchResults.size() == 1, L"DirectStorage sanity search did not find expected file");
-    CHECK(searchResults[0] == f.GetPath(), L"DirectStorage search result does not match expected file path");
-}
-
 SEARCH_TEST(FileNameVsFilePath)
 {
     // Ensure that searching in file name vs file path yields different results when token only appears in path
