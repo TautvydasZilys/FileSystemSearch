@@ -155,7 +155,7 @@ Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_vie
     TestFile(testDirectory, fileName)
 {
     auto result = CopyFileW(sourceFilePath, m_Path.c_str(), FALSE);
-    CHECK(result, std::format(L"Failed to copy file from '{}' to '{}': ", sourceFilePath, m_Path, GetLastError()));
+    CHECK(result, std::format(L"Failed to copy file from '{}' to '{}': {}", sourceFilePath, m_Path, GetLastError()));
 }
 
 template <typename BaseClass>
