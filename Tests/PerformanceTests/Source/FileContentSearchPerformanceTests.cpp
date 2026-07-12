@@ -48,7 +48,7 @@ template <CompileTimeStringW RelativePath>
 consteval CompileTimeString<wchar_t, MAX_PATH> GetTestSourceFile()
 {
     constexpr auto filePath = CompileTimeString(__FILEW__);
-    constexpr size_t lastBackslash = std::find(filePath.value, filePath.value + filePath.Length, L'\\') - filePath.value;
+    constexpr size_t lastBackslash = (std::find(std::rbegin(filePath.value), std::rend(filePath.value), L'\\').base() - 1) - filePath.value;
     return filePath.template SubStr<0, lastBackslash>() + L"\\TestData\\" + RelativePath;
 }
 
