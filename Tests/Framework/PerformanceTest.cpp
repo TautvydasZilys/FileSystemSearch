@@ -273,18 +273,35 @@ int Testing::RunAllPerformanceTests()
 
 void Testing::ReportPerformanceTestResults()
 {
-    auto test = PerformanceTestBase::GetFirstTest();
-    if (test == nullptr)
-        return;
-
     PrintToStdout(std::format(L"\r\nPerformance Test Results:\r\n"));
 
-    while (test != nullptr)
+    std::vector<PerformanceTestBase*> allTests;
+
+    {
+        auto test = PerformanceTestBase::GetFirstTest();
+        while (test != nullptr)
+        {
+            allTests.push_back(test);
+            test = test->GetNextTest();
+        }
+    }
+
+    if (allTests.empty())
+    {
+        PrintToStdout(std::format(L"    No performance tests were run.\r\n"));
+        return;
+    }
+
+    std::sort(allTests.begin(), allTests.end(), [](const PerformanceTestBase* a, const PerformanceTestBase* b)
+    {
+        return a->TestName() < b->TestName();
+    });
+
+    for (auto test : allTests)
     {
         auto name = test->TestName();
         auto durationMS = 1000.0 * test->GetMedianRunTime();
 
-        PrintToStdout(std::format(L"    {:80}: {:.2f} ms\r\n", name, durationMS));
-        test = test->GetNextTest();
+        PrintToStdout(std::format(L"    {:100}: {:.2f} ms\r\n", name, durationMS));
     }
 }
