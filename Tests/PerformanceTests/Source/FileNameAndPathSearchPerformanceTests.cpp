@@ -10,12 +10,12 @@ struct FileNamePathPerformanceTest : SearchString
 
 struct WideSearch
 {
-    static constexpr std::array<size_t, 2> LayoutSizes = { 20, 100 };
+    static constexpr std::array<size_t, 2> LayoutSizes = { 20, 20 };
 };
 
 struct DeepSearch
 {
-    static constexpr std::array<size_t, 5> LayoutSizes = { 4, 4, 4, 4, 5 };
+    static constexpr std::array<size_t, 5> LayoutSizes = { 4, 4, 4, 5 };
 };
 
 struct LittleMatches

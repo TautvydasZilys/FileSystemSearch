@@ -167,7 +167,7 @@ namespace Testing
 
         void Run(const PreparedPerformanceTestLayout& testLayout) const final override
         {
-            static constexpr size_t kIterations = 10;
+            static constexpr size_t kIterations = 50;
 
             std::vector<double> measurements;
             measurements.resize(kIterations);

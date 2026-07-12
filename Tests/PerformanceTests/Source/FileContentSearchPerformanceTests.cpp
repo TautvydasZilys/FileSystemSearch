@@ -14,12 +14,12 @@ struct FileContentsPathPerformanceTest : SearchString
 // Define the binary files layout to be smaller than the source files layout, as our test binary files are very large and we want to limit the test disk footprint and the time it takes to run the tests.
 struct BinaryFilesSearchLayout
 {
-    static constexpr std::array<size_t, 2> LayoutSizes = { 5, 50 };
+    static constexpr std::array<size_t, 2> LayoutSizes = { 5, 20 };
 };
 
 struct SourceFilesSearchLayout
 {
-    static constexpr std::array<size_t, 2> LayoutSizes = { 30, 100 };
+    static constexpr std::array<size_t, 2> LayoutSizes = { 30, 20 };
 };
 
 struct ShortSearchString
