@@ -7,21 +7,6 @@
 #include <format>
 #include <iostream>
 
-template <typename TestType>
-void Testing::RegisterTest(TestType* test)
-{
-    if (TestType::s_FirstRegisteredTest == nullptr)
-        TestType::s_FirstRegisteredTest = test;
-
-    if (TestType::s_LastRegisteredTest != nullptr)
-        TestType::s_LastRegisteredTest->next = test;
-
-    TestType::s_LastRegisteredTest = test;
-}
-
-template void Testing::RegisterTest<Testing::FunctionalTest>(Testing::FunctionalTest* test);
-template void Testing::RegisterTest<Testing::PerformanceTestBase>(Testing::PerformanceTestBase* test);
-
 static void PrintToStdout(std::string_view text)
 {
     CHECK(text.length() <= std::numeric_limits<DWORD>::max(), L"Text is too long to write to stdout!");
@@ -47,7 +32,7 @@ int Testing::RunAllTests()
     {
         GlobalTestContext globalTestContext;
 
-        auto test = TestType::s_FirstRegisteredTest;
+        auto test = TestType::GetFirstTest();
 
         int failureCount = 0;
         int successCount = 0;
@@ -69,7 +54,7 @@ int Testing::RunAllTests()
                 PrintToStdout(std::format(L"    FAILED:\r\n        {}\r\n", e.Text()));
             }
 
-            test = test->next;
+            test = test->GetNextTest();
         }
 
         PrintToStdout(std::format(L"Ran {} tests: {} succeeded, {} failed.\r\n", testCount, successCount, failureCount));
@@ -88,7 +73,7 @@ template int Testing::RunAllTests<Testing::PerformanceTestBase>();
 
 void Testing::ReportPerformanceTestResults()
 {
-    auto test = PerformanceTestBase::s_FirstRegisteredTest;
+    auto test = PerformanceTestBase::GetFirstTest();
     if (test == nullptr)
         return;
 
@@ -100,6 +85,6 @@ void Testing::ReportPerformanceTestResults()
         auto durationMS = 1000.0 * test->GetMedianRunTime();
 
         PrintToStdout(std::format(L"    {:80}: {:.2f} ms\r\n", name, durationMS));
-        test = test->next;
+        test = test->GetNextTest();
     }
 }

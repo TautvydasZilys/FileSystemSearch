@@ -4,9 +4,6 @@
 namespace Testing
 {
     template <typename TestType>
-    void RegisterTest(TestType* test);
-
-    template <typename TestType>
     int RunAllTests();
 
     void ReportPerformanceTestResults();
@@ -23,34 +20,51 @@ namespace Testing
     private:
         std::wstring_view m_TestName;
     };
+    
+    template <typename T>
+    struct RegisteredTest : NonCopyable
+    {
+        RegisteredTest()
+        {
+            static_assert(std::is_base_of_v<RegisteredTest<T>, T>, "RegisteredTest<T> must be a base of T");
 
-    struct FunctionalTest : ITest
+            if (s_FirstRegisteredTest != nullptr)
+                next = s_FirstRegisteredTest;
+
+            s_FirstRegisteredTest = static_cast<T*>(this);
+        }
+
+        inline static T* GetFirstTest()
+        {
+            return s_FirstRegisteredTest;
+        }
+
+        inline T* GetNextTest() const
+        {
+            return next;
+        }
+
+    private:
+        T* next = nullptr;
+        inline static T* s_FirstRegisteredTest;
+    };
+
+    struct FunctionalTest : RegisteredTest<FunctionalTest>, ITest
     {
         FunctionalTest(std::wstring_view testName) :
             ITest(testName)
         {
-            RegisterTest<FunctionalTest>(this);
         }
 
         virtual void Run() const = 0;
-
-    private:
-        FunctionalTest* next = nullptr;
-
-        inline static FunctionalTest* s_FirstRegisteredTest;
-        inline static FunctionalTest* s_LastRegisteredTest;
-
-        friend void RegisterTest<FunctionalTest>(FunctionalTest* test);
-        friend int RunAllTests<FunctionalTest>();
     };
 
-    struct PerformanceTestBase : ITest
+    struct PerformanceTestBase : ITest, RegisteredTest<PerformanceTestBase>
     {
         PerformanceTestBase(std::wstring_view testName) :
             ITest(testName),
             m_MedianTime(NAN)
         {
-            RegisterTest<PerformanceTestBase>(this);
         }
 
         virtual void Run() const = 0;
@@ -61,13 +75,6 @@ namespace Testing
         mutable double m_MedianTime;
 
     private:
-        PerformanceTestBase* next = nullptr;
-
-        inline static PerformanceTestBase* s_FirstRegisteredTest;
-        inline static PerformanceTestBase* s_LastRegisteredTest;
-
-        friend void RegisterTest<PerformanceTestBase>(struct PerformanceTestBase* test);
-        friend int RunAllTests<PerformanceTestBase>();
         friend void ReportPerformanceTestResults();
     };
 
