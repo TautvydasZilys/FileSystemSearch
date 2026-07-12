@@ -3,5 +3,6 @@
 
 int main()
 {
+    SetThreadDescription(GetCurrentThread(), L"Functional Test Main Thread");
     return Testing::RunAllFunctionalTests();
 }
