@@ -1,38 +1,21 @@
 #include "PrecompiledHeader.h"
+#include "PerformanceTest.h"
 #include "StringUtils.h"
 #include "TestHelpers.h"
 #include "TestMacros.h"
 #include "TestList.h"
+#include "TestLogger.h"
 
 #include <format>
 #include <iostream>
 
-static void PrintToStdout(std::string_view text)
-{
-    CHECK(text.length() <= std::numeric_limits<DWORD>::max(), L"Text is too long to write to stdout!");
-
-    auto stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    DWORD bytesWritten;
-    auto writeResult = WriteFile(stdOut, text.data(), static_cast<DWORD>(text.length()), &bytesWritten, nullptr);
-    CHECK(writeResult && bytesWritten == text.length(), L"Failed to write to stdout");
-
-    FlushFileBuffers(stdOut);
-}
-
-static void PrintToStdout(std::wstring_view wideText)
-{
-    PrintToStdout(StringUtils::Utf16ToUtf8(wideText));
-}
-
-template <typename TestType>
-int Testing::RunAllTests()
+int Testing::RunAllFunctionalTests()
 {
     try
     {
         GlobalTestContext globalTestContext;
 
-        auto test = TestType::GetFirstTest();
+        auto test = FunctionalTest::GetFirstTest();
 
         int failureCount = 0;
         int successCount = 0;
@@ -65,26 +48,5 @@ int Testing::RunAllTests()
     {
         PrintToStdout(std::format(L"Tests encountered a fatal error outside of any single test: {}\r\n", e.Text()));
         return std::numeric_limits<int>::max();
-    }
-}
-
-template int Testing::RunAllTests<Testing::FunctionalTest>();
-template int Testing::RunAllTests<Testing::PerformanceTestBase>();
-
-void Testing::ReportPerformanceTestResults()
-{
-    auto test = PerformanceTestBase::GetFirstTest();
-    if (test == nullptr)
-        return;
-
-    PrintToStdout(std::format(L"\r\nPerformance Test Results:\r\n"));
-
-    while (test != nullptr)
-    {
-        auto name = test->TestName();
-        auto durationMS = 1000.0 * test->GetMedianRunTime();
-
-        PrintToStdout(std::format(L"    {:80}: {:.2f} ms\r\n", name, durationMS));
-        test = test->GetNextTest();
     }
 }

@@ -40,8 +40,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Framework\PerformanceTest.cpp" />
     <ClCompile Include="..\Framework\TestHelpers.cpp" />
     <ClCompile Include="..\Framework\TestList.cpp" />
+    <ClCompile Include="..\Framework\TestLogger.cpp" />
     <ClCompile Include="Source\FileContentSearchPerformanceTests.cpp" />
     <ClCompile Include="Source\FileNameAndPathSearchPerformanceTests.cpp" />
     <ClCompile Include="Source\Main.cpp" />
@@ -62,6 +64,7 @@
     <ClInclude Include="..\Framework\PerformanceTest.h" />
     <ClInclude Include="..\Framework\TestHelpers.h" />
     <ClInclude Include="..\Framework\TestList.h" />
+    <ClInclude Include="..\Framework\TestLogger.h" />
     <ClInclude Include="..\Framework\TestMacros.h" />
     <ClInclude Include="..\Framework\Utilities\CompileTimeString.h" />
   </ItemGroup>

@@ -1,9 +1,9 @@
 #include "PrecompiledHeader.h"
-#include "TestList.h"
+#include "PerformanceTest.h"
 
 int main()
 {
-     auto failCount = Testing::RunAllTests<Testing::PerformanceTestBase>();
+     auto failCount = Testing::RunAllPerformanceTests();
 
      if (failCount == 0)
          Testing::ReportPerformanceTestResults();

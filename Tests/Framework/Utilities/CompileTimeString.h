@@ -64,6 +64,8 @@ struct CompileTimeString
         return result;
     }
 
+    auto operator<=>(const CompileTimeString<CharType, N>&) const = default;
+
     static constexpr size_t Length = N - 1;
 
     consteval void EnsureNullTerminated()

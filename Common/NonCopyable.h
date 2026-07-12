@@ -2,10 +2,10 @@
 
 struct NonCopyable
 {
-    constexpr NonCopyable() {}
+    constexpr NonCopyable() noexcept {}
     NonCopyable(const NonCopyable&) = delete;
     NonCopyable& operator=(const NonCopyable&) = delete;
 
-    NonCopyable(NonCopyable&&) = default;
-    NonCopyable& operator=(NonCopyable&&) = default;
+    NonCopyable(NonCopyable&&) noexcept = default;
+    NonCopyable& operator=(NonCopyable&&) noexcept = default;
 };

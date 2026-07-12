@@ -7,6 +7,73 @@
 
 namespace Testing
 {
+    struct PreparedPerformanceTestLayout
+    {
+        inline PreparedPerformanceTestLayout(std::wstring_view testName);
+        ~PreparedPerformanceTestLayout();
+
+        PreparedPerformanceTestLayout(PreparedPerformanceTestLayout&& other) noexcept;
+        PreparedPerformanceTestLayout& operator=(PreparedPerformanceTestLayout&& other) noexcept;
+
+        const Testing::TestDirectory& GetTestDirectory() const
+        {
+            return m_Layout->GetTestDirectory();
+        }
+
+        std::vector<std::wstring> PerformTestSearch(const wchar_t* searchPattern, const wchar_t* searchString, SearchFlags searchFlags) const
+        {
+            return m_Layout->PerformTestSearch(searchPattern, searchString, searchFlags);
+        }
+
+    private:
+        std::optional<SearchTestImpl<ITest>> m_Layout;
+    };
+
+    struct PerformanceTestDataLayout
+    {
+        PerformanceTestDataLayout(std::wstring_view layoutName, std::span<const size_t> layoutSizes) :
+            m_LayoutName(layoutName),
+            m_LayoutSizes(layoutSizes),
+            m_TestFileExtensions(kDefaultTestFileExtensions)
+        {
+        }
+
+        PerformanceTestDataLayout(std::wstring_view layoutName, std::span<const size_t> layoutSizes, std::span<const CompileTimeString<wchar_t, MAX_PATH>> testFiles) :
+            m_LayoutName(layoutName),
+            m_LayoutSizes(layoutSizes),
+            m_TestFiles(testFiles),
+            m_TestFileExtensions(kDefaultTestFileExtensions)
+        {
+        }
+
+        PerformanceTestDataLayout(std::wstring_view layoutName, std::span<const size_t> layoutSizes, std::span<const CompileTimeString<wchar_t, MAX_PATH>> testFiles, std::span<const std::wstring_view> testFileExtensions) :
+            m_LayoutName(layoutName),
+            m_LayoutSizes(layoutSizes),
+            m_TestFiles(testFiles),
+            m_TestFileExtensions(testFileExtensions)
+        {
+        }
+
+        PreparedPerformanceTestLayout Prepare() const;
+
+        bool operator<(const PerformanceTestDataLayout& other) const;
+        bool operator==(const PerformanceTestDataLayout& other) const;
+
+        std::wstring_view GetLayoutName() const { return m_LayoutName; }
+
+    private:
+        void PrepareLayout(const TestDirectory& testDirectory) const;
+        void GenerateLayoutRecursive(const TestDirectory& testDirectory, std::span<size_t> counters, size_t depth = 0) const;
+
+    private:
+        std::wstring_view m_LayoutName;
+        std::span<const size_t> m_LayoutSizes;
+        std::span<const CompileTimeString<wchar_t, MAX_PATH>> m_TestFiles;
+        std::span<const std::wstring_view> m_TestFileExtensions;
+
+        static constexpr std::array<std::wstring_view, 1> kDefaultTestFileExtensions = { L".txt" };
+    };
+
     template <typename T, typename ElementType>
     struct IsStdArrayOf : std::false_type {};
 
@@ -30,15 +97,13 @@ namespace Testing
     {
         { T::SearchString } -> std::same_as<const wchar_t* const&>;
         { T::SearchFlags } -> std::same_as<const SearchFlags&>;
-        { T::LayoutSizes } -> StdArrayOf<size_t>;
+        { T::PerformanceTestDataLayout } -> std::same_as<const PerformanceTestDataLayout* const&>;
     };
 
     template <typename T>
     concept PerformanceTestFull = PerformanceTest<T> && requires
     {
         { T::SearchPattern } -> std::same_as<const wchar_t* const&>;
-        { T::TestFileExtensions } -> StdArrayOf<std::wstring_view>;
-        { T::TestFiles } -> StdArrayOfCompileTimeStringW;
     };
 
     template <PerformanceTest T, SearchFlags ExtraSearchFlags>
@@ -58,41 +123,35 @@ namespace Testing
             }
         }
 
-        static constexpr auto GetTestFileExtensions()
-        {
-            if constexpr (requires { { T::TestFileExtensions } -> StdArrayOf<std::wstring_view>; })
-            {
-                return T::TestFileExtensions;
-            }
-            else
-            {
-                static_assert(!requires { T::TestFileExtensions; }, "T::SearchPattern must be a std::array<std::wstring_view> if it exists");
-                return std::array<std::wstring_view, 1> { L".txt" };
-            }
-        }
-
-        static constexpr auto GetTestFiles()
-        {
-            if constexpr (requires { { T::TestFiles } -> StdArrayOfCompileTimeStringW; })
-            {
-                return T::TestFiles;
-            }
-            else
-            {
-                static_assert(!requires { T::TestFiles; }, "T::TestFiles must be a std::array<CompileTimeStringW> if it exists");
-                return std::array<CompileTimeStringW<1>, 0>{};
-            }
-        }
-
     public:
         static constexpr const wchar_t* SearchString = T::SearchString;
         static constexpr SearchFlags SearchFlags = T::SearchFlags | ExtraSearchFlags;
-        static constexpr auto LayoutSizes = T::LayoutSizes;
+        static constexpr auto PerformanceTestDataLayout = T::PerformanceTestDataLayout;
 
         // Optional properties
         static constexpr const wchar_t* SearchPattern = GetSearchPattern();
-        static constexpr auto TestFileExtensions = GetTestFileExtensions();
-        static constexpr auto TestFiles = GetTestFiles();
+    };
+
+    struct PerformanceTestBase : ITest, RegisteredTest<PerformanceTestBase>
+    {
+        PerformanceTestBase(std::wstring_view testName, const struct PerformanceTestDataLayout* PerformanceTestDataLayout) :
+            ITest(testName),
+            m_PerformanceTestDataLayout(PerformanceTestDataLayout),
+            m_MedianTime(NAN)
+        {
+        }
+
+        virtual void Run(const PreparedPerformanceTestLayout& testLayout) const = 0;
+
+        const PerformanceTestDataLayout* GetPerformanceTestDataLayout() const { return m_PerformanceTestDataLayout; }
+        double GetMedianRunTime() const { return m_MedianTime; }
+
+    protected:
+        const PerformanceTestDataLayout* m_PerformanceTestDataLayout;
+        mutable double m_MedianTime;
+
+    private:
+        friend void ReportPerformanceTestResults();
     };
 
     template <PerformanceTestFull T, CompileTimeStringW Name>
@@ -100,11 +159,11 @@ namespace Testing
     {
     public:
         PerformanceTestT() :
-            PerformanceTestBase(Name.value)
+            PerformanceTestBase(Name.value, T::PerformanceTestDataLayout)
         {
         }
 
-        void Run() const final override
+        void Run(const PreparedPerformanceTestLayout& testLayout) const final override
         {
             static constexpr size_t kIterations = 10;
 
@@ -114,24 +173,18 @@ namespace Testing
             LARGE_INTEGER frequency;
             QueryPerformanceFrequency(&frequency);
 
-            SearchTestImpl<ITest> test(Name.value);
-            PrepareTest(test.GetTestDirectory());
-
             for (size_t i = 0; i < kIterations; i++)
             {
-
                 LARGE_INTEGER start, end;
 
                 {
                     QueryPerformanceCounter(&start);
-                    auto foundPaths = test.PerformTestSearch(T::SearchPattern, T::SearchString, T::SearchFlags);
+                    auto foundPaths = testLayout.PerformTestSearch(T::SearchPattern, T::SearchString, T::SearchFlags);
                     QueryPerformanceCounter(&end);
                 }
 
                 measurements[i] = static_cast<double>(end.QuadPart - start.QuadPart) / frequency.QuadPart;
             }
-
-            test.GetTestDirectory().Remove();
 
             std::sort(measurements.begin(), measurements.end());
 
@@ -142,78 +195,6 @@ namespace Testing
             else
             {
                 m_MedianTime = measurements[kIterations / 2];
-            }
-        }
-
-    private:
-        static constexpr std::wstring_view GetFileExtension(size_t fileIndex)
-        {
-            return T::TestFileExtensions[fileIndex % T::TestFileExtensions.size()];
-        }
-
-        static void PrepareTest(const TestDirectory& testDirectory)
-        {
-            std::array<size_t, T::LayoutSizes.size()> counters = {};
-            GenerateLayoutRecursive(testDirectory, counters);
-        }
-
-        static constexpr const wchar_t kFileNameCharacters[] = L"0123abcdABCD";
-
-        static constexpr wchar_t GetFileNameCharacter(size_t index)
-        {
-            return kFileNameCharacters[index % (std::size(kFileNameCharacters) - 1)];
-        }
-
-        static constexpr std::array<wchar_t, 12> MakeBaseFileName(size_t index)
-        {
-            static const size_t kPrimes[] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37 };
-            std::array<wchar_t, 12> result;
-
-            static_assert(std::size(kPrimes) == std::size(result), "Sizes must match!");
-
-            index += 201911;
-
-            for (size_t i = 0; i < result.size(); i++)
-            {
-                index = (index * kPrimes[i]) % 1004167;
-                result[i] = GetFileNameCharacter(index);
-            }
-
-            return result;
-        }
-
-        template <size_t Depth = 0>
-        static void GenerateLayoutRecursive(const TestDirectory& testDirectory, std::array<size_t, T::LayoutSizes.size()>& counters)
-        {
-            constexpr size_t FileDepth = T::LayoutSizes.size() - 1;
-            for (size_t i = 0; i < T::LayoutSizes[FileDepth]; i++)
-            {
-                auto fileIndex = counters[FileDepth]++;
-                const auto baseFileName = MakeBaseFileName(293 * fileIndex);
-                const auto fileExtension = GetFileExtension(fileIndex);
-                
-                std::wstring fileName(&baseFileName[0], baseFileName.size());
-                fileName += fileExtension;
-
-                if constexpr (std::size(T::TestFiles) > 0)
-                {
-                    Testing::TestFile(testDirectory, fileName, T::TestFiles[fileIndex % std::size(T::TestFiles)].value);
-                }
-                else
-                {
-                    Testing::TestFile(testDirectory, fileName, std::span<const char>("x", 1));
-                }
-            }
-
-            if constexpr (Depth != T::LayoutSizes.size() - 1)
-            {
-                for (size_t i = 0; i < T::LayoutSizes[Depth]; i++)
-                {
-                    auto folderIndex = counters[Depth]++;
-                    auto folderName = MakeBaseFileName(593 * folderIndex);
-                    auto subDir = testDirectory.SubDirectory(std::wstring_view(&folderName[0], folderName.size()));
-                    GenerateLayoutRecursive<Depth + 1>(subDir, counters);
-                }
             }
         }
     };
@@ -258,6 +239,9 @@ namespace Testing
             FileNamePerformanceTest<T, TestName>
         > value;
     };
+
+    int RunAllPerformanceTests();
+    void ReportPerformanceTestResults();
 }
 
 #define DEFINE_PERFORMANCE_TEST(TestName, ...) Testing::PerformanceTestDefinition<__VA_ARGS__, L#TestName> s_##TestName##_instance

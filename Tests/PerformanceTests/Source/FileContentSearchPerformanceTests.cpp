@@ -4,11 +4,16 @@
 #include "TestHelpers.h"
 #include "PerformanceTest.h"
 
-template <typename SearchString, typename Files>
-struct FileContentsPathPerformanceTest : SearchString, Files
+template <const Testing::PerformanceTestDataLayout* Layout, typename SearchString>
+struct FileContentsPathPerformanceTest : SearchString
 {
-    static constexpr std::array<size_t, 2> LayoutSizes = { 10, 50 };
+    static constexpr const Testing::PerformanceTestDataLayout* PerformanceTestDataLayout = Layout;
     static constexpr SearchFlags SearchFlags = SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileContents;
+};
+
+struct ContentSearchLayout
+{
+    static constexpr std::array<size_t, 2> LayoutSizes = { 5, 100 };
 };
 
 struct ShortSearchString
@@ -41,33 +46,40 @@ consteval CompileTimeString<wchar_t, MAX_PATH> GetTestSourceFile()
     return filePath.template SubStr<0, lastBackslash>() + L"\\TestData\\" + RelativePath;
 }
 
-struct BinaryFile
+struct BinaryFiles
 {
     static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { LR"(C:\Windows\System32\Windows.UI.Xaml.dll)" };
 };
 
-struct LargeSourceFile
+struct LargeSourceFiles
 {
     static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\gentree.cpp">() };
 };
 
-struct MediumSourceFile
+struct MediumSourceFiles
 {
     static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\class.cpp">() };
 };
 
-struct SmallSourceFile
+struct SmallSourceFiles
 {
     static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\unwind.cpp">() };
 };
 
-#define DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(SearchString, Files) DEFINE_PERFORMANCE_TEST(FileContents_##SearchString##_##Files, FileContentsPathPerformanceTest<SearchString, Files>)
+#define DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(Files) static const Testing::PerformanceTestDataLayout k##Files##Layout { L#Files, ContentSearchLayout::LayoutSizes, Files::TestFiles }
+
+DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(BinaryFiles);
+DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(LargeSourceFiles);
+DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(MediumSourceFiles);
+DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(SmallSourceFiles);
+
+#define DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(Files, SearchString) DEFINE_PERFORMANCE_TEST(FileContents_##Files##_##SearchString, FileContentsPathPerformanceTest<&k##Files##Layout, SearchString>)
 
 #define DEFINE_FILE_CONTENTS_PERFORMANCE_TESTS(SearchString) \
-    DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(SearchString, BinaryFile); \
-    DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(SearchString, LargeSourceFile); \
-    DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(SearchString, MediumSourceFile); \
-    DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(SearchString, SmallSourceFile);
+    DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(BinaryFiles, SearchString); \
+    DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(LargeSourceFiles, SearchString); \
+    DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(MediumSourceFiles, SearchString); \
+    DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(SmallSourceFiles, SearchString);
 
 DEFINE_FILE_CONTENTS_PERFORMANCE_TESTS(ShortSearchString);
 DEFINE_FILE_CONTENTS_PERFORMANCE_TESTS(LongSearchString);

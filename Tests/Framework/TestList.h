@@ -3,10 +3,7 @@
 
 namespace Testing
 {
-    template <typename TestType>
-    int RunAllTests();
-
-    void ReportPerformanceTestResults();
+    int RunAllFunctionalTests();
 
     struct ITest : NonCopyable
     {
@@ -57,25 +54,6 @@ namespace Testing
         }
 
         virtual void Run() const = 0;
-    };
-
-    struct PerformanceTestBase : ITest, RegisteredTest<PerformanceTestBase>
-    {
-        PerformanceTestBase(std::wstring_view testName) :
-            ITest(testName),
-            m_MedianTime(NAN)
-        {
-        }
-
-        virtual void Run() const = 0;
-
-        double GetMedianRunTime() const { return m_MedianTime; }
-
-    protected:
-        mutable double m_MedianTime;
-
-    private:
-        friend void ReportPerformanceTestResults();
     };
 
     struct TestFailedException

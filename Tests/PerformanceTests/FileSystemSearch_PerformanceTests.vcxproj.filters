@@ -19,6 +19,12 @@
     <ClCompile Include="Source\FileContentSearchPerformanceTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\Framework\PerformanceTest.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Framework\TestLogger.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -76,6 +82,9 @@
     </ClInclude>
     <ClInclude Include="..\Framework\Utilities\CompileTimeString.h">
       <Filter>Framework\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Framework\TestLogger.h">
+      <Filter>Framework</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
