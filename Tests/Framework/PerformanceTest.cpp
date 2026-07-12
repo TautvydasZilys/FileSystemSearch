@@ -205,7 +205,13 @@ int Testing::RunAllPerformanceTests()
         // Now check if there are any layouts that are identical but have different names
         std::sort(allTests.begin(), allTests.end(), [](const PerformanceTestBase* a, const PerformanceTestBase* b)
         {
-            return a->GetPerformanceTestDataLayout() < b->GetPerformanceTestDataLayout();
+            auto& aLayout = *a->GetPerformanceTestDataLayout();
+            auto& bLayout = *b->GetPerformanceTestDataLayout();
+
+            if (aLayout == bLayout)
+                return a->TestName() < b->TestName();
+
+            return aLayout < bLayout;
         });
 
         for (size_t i = 1; i < allTests.size(); i++)
