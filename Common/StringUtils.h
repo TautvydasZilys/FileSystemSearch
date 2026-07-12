@@ -53,6 +53,9 @@ inline void ToLowerAsciiInline(std::wstring& str)
 
 inline std::string Utf16ToUtf8(std::wstring_view utf16)
 {
+	if (utf16.empty())
+		return std::string();
+
 	auto utf8Length = WideCharToMultiByte(CP_UTF8, 0, utf16.data(), static_cast<int>(utf16.length()), nullptr, 0, nullptr, nullptr);
 	if (utf8Length == 0)
 		__fastfail(0);
@@ -63,6 +66,23 @@ inline std::string Utf16ToUtf8(std::wstring_view utf16)
 	Assert(utf8Length != 0);
 
 	return utf8;
+}
+
+inline std::wstring Utf8ToUtf16(std::string_view utf8)
+{
+	if (utf8.empty())
+		return std::wstring();
+
+	auto utf16Length = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), static_cast<int>(utf8.length()), nullptr, 0);
+	if (utf16Length == 0)
+		__fastfail(0);
+
+	std::wstring utf16;
+	utf16.resize(utf16Length);
+	utf16Length = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), static_cast<int>(utf8.length()), &utf16[0], utf16Length);
+	Assert(utf16Length != 0);
+
+	return utf16;
 }
 
 inline bool IsAscii(const std::wstring& utf16)

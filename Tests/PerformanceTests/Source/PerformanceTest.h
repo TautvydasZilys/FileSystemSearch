@@ -149,6 +149,13 @@ namespace Testing
         double GetMedianRunTime() const { return m_MedianTime; }
 
     protected:
+        std::vector<std::wstring> LoadPerformanceTestResultForComparison(std::wstring_view testDirectory) const;
+        void SavePerformanceTestResultForComparison(std::wstring_view testDirectory, const std::vector<std::wstring>& foundPaths) const;
+
+    private:
+        std::wstring GetPerformanceTestResultForComparisonPath() const;
+
+    protected:
         const PerformanceTestDataLayout* m_PerformanceTestDataLayout;
         mutable double m_MedianTime;
 
@@ -167,7 +174,12 @@ namespace Testing
 
         void Run(const PreparedPerformanceTestLayout& testLayout) const final override
         {
-            static constexpr size_t kIterations = 50;
+            static constexpr bool kSavePerformanceTestResultForComparison = false;
+            static constexpr size_t kIterations = kSavePerformanceTestResultForComparison ? 1 : 50;
+
+            std::vector<std::wstring> expectedPaths;
+            if constexpr (!kSavePerformanceTestResultForComparison)
+                expectedPaths = LoadPerformanceTestResultForComparison(testLayout.GetTestDirectory().view());
 
             std::vector<double> measurements;
             measurements.resize(kIterations);
@@ -184,6 +196,20 @@ namespace Testing
                     QueryPerformanceCounter(&start);
                     auto foundPaths = testLayout.PerformTestSearch(T::SearchPattern, T::SearchString.value, T::SearchFlags);
                     QueryPerformanceCounter(&end);
+
+                    std::sort(foundPaths.begin(), foundPaths.end());
+
+                    if constexpr (kSavePerformanceTestResultForComparison)
+                    {
+                        SavePerformanceTestResultForComparison(testLayout.GetTestDirectory().view(), foundPaths);
+                    }
+                    else
+                    {
+                        CHECK(foundPaths.size() == expectedPaths.size(), std::format(L"Found {} paths, but expected {} paths at iteration #{}", foundPaths.size(), expectedPaths.size(), i));
+
+                        for (size_t j = 0; j < foundPaths.size(); j++)
+                            CHECK(foundPaths[j] == expectedPaths[j], std::format(L"Found path '{}' does not match expected path '{}' at iteration #{}", foundPaths[j], expectedPaths[j], i));
+                    }
                 }
 
                 measurements[i] = static_cast<double>(end.QuadPart - start.QuadPart) / frequency.QuadPart;
@@ -271,6 +297,13 @@ namespace Testing
 
     int RunAllPerformanceTests();
     void ReportPerformanceTestResults();
+
+    inline consteval auto GetPerformanceTestDataDirectory()
+    {
+        constexpr auto filePath = CompileTimeString(__FILEW__);
+        constexpr size_t lastBackslash = (std::find(std::rbegin(filePath.value), std::rend(filePath.value), L'\\').base() - 1) - filePath.value;
+        return filePath.template SubStr<0, lastBackslash>() + L"\\TestData";
+    }
 }
 
 #define DEFINE_PERFORMANCE_TEST(TestName, ...) Testing::PerformanceTestDefinition<__VA_ARGS__, L#TestName> s_##TestName##_instance

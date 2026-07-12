@@ -37,19 +37,10 @@ struct UnicodeSearchString
     static constexpr CompileTimeStringW SearchString = L"Gąsdindamas ąsotį gręžiantį žąsiną, žvejys tąsė įsipainiojusį vėžį.";
 };
 
-template <CompileTimeStringW FilePath>
-consteval auto GetDirectoryName()
-{
-    constexpr size_t lastBackslash = std::find(FilePath.value, FilePath.value + FilePath.Length, L'\\') - FilePath.value;
-    return FilePath.template SubStr<0, lastBackslash>();
-}
-
 template <CompileTimeStringW RelativePath>
 consteval CompileTimeString<wchar_t, MAX_PATH> GetTestSourceFile()
 {
-    constexpr auto filePath = CompileTimeString(__FILEW__);
-    constexpr size_t lastBackslash = (std::find(std::rbegin(filePath.value), std::rend(filePath.value), L'\\').base() - 1) - filePath.value;
-    return filePath.template SubStr<0, lastBackslash>() + L"\\TestData\\" + RelativePath;
+    return Testing::GetPerformanceTestDataDirectory() + L"\\" + RelativePath;
 }
 
 struct BinaryFiles

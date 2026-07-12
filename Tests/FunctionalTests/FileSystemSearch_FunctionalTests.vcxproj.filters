@@ -19,11 +19,11 @@
     <ClCompile Include="Source\EdgeCaseTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\Framework\PerformanceTest.cpp">
-      <Filter>Framework</Filter>
-    </ClCompile>
     <ClCompile Include="..\Framework\TestLogger.cpp">
       <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Framework\Utilities\FileUtilities.cpp">
+      <Filter>Framework\Utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,14 +77,14 @@
     <ClInclude Include="..\..\Common\StringUtils.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\Framework\PerformanceTest.h">
-      <Filter>Framework</Filter>
-    </ClInclude>
     <ClInclude Include="..\Framework\Utilities\CompileTimeString.h">
       <Filter>Framework\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="..\Framework\TestLogger.h">
       <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Framework\Utilities\FileUtilities.h">
+      <Filter>Framework\Utilities</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

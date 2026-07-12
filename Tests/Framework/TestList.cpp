@@ -1,5 +1,4 @@
 #include "PrecompiledHeader.h"
-#include "PerformanceTest.h"
 #include "StringUtils.h"
 #include "TestHelpers.h"
 #include "TestMacros.h"

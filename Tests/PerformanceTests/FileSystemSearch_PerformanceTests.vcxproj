@@ -40,16 +40,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Framework\PerformanceTest.cpp" />
     <ClCompile Include="..\Framework\TestHelpers.cpp" />
     <ClCompile Include="..\Framework\TestList.cpp" />
     <ClCompile Include="..\Framework\TestLogger.cpp" />
+    <ClCompile Include="..\Framework\Utilities\FileUtilities.cpp" />
     <ClCompile Include="Source\FileContentSearchPerformanceTests.cpp" />
     <ClCompile Include="Source\FileNameAndPathSearchPerformanceTests.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Source\PerformanceTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
@@ -61,12 +62,13 @@
     <ClInclude Include="..\..\Common\ReaderWriterLock.h" />
     <ClInclude Include="..\..\Common\StringUtils.h" />
     <ClInclude Include="..\..\Common\WindowClassHolder.h" />
-    <ClInclude Include="..\Framework\PerformanceTest.h" />
     <ClInclude Include="..\Framework\TestHelpers.h" />
     <ClInclude Include="..\Framework\TestList.h" />
     <ClInclude Include="..\Framework\TestLogger.h" />
     <ClInclude Include="..\Framework\TestMacros.h" />
     <ClInclude Include="..\Framework\Utilities\CompileTimeString.h" />
+    <ClInclude Include="..\Framework\Utilities\FileUtilities.h" />
+    <ClInclude Include="Source\PerformanceTest.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)SearchEngine\SearchEngine.vcxproj">
