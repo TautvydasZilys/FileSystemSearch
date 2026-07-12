@@ -3,74 +3,10 @@
 #include "SearchEngineTypes.h"
 #include "TestMacros.h"
 #include "TestHelpers.h"
+#include "Utilities/CompileTimeString.h"
 
 namespace Testing
 {
-    template <size_t N>
-    struct WStringLiteral
-    {
-        constexpr WStringLiteral()
-        {
-            std::fill_n(value, N, L'\0');
-        }
-
-        constexpr WStringLiteral(const wchar_t(&str)[N])
-        {
-            std::copy_n(str, N, value);
-        }
-
-        template <size_t M>
-        constexpr WStringLiteral(const wchar_t(&str)[M])
-        {
-            static_assert(M <= N, "Cannot construct a WStringLiteral from a larger string literal");
-            std::copy_n(str, M, value);
-            std::fill_n(value + M, N - M, L'\0');
-        }
-
-        template <size_t M>
-        constexpr WStringLiteral(WStringLiteral<M> other)
-        {
-            static_assert(M <= N, "Cannot construct a WStringLiteral from a larger WStringLiteral");
-            std::copy_n(other.value, M, value);
-            std::fill_n(value + M, N - M, L'\0');
-        }
-
-        template <size_t Start, size_t Count = N - Start - 1>
-        constexpr WStringLiteral<Count + 1> SubStr() const
-        {
-            static_assert(Start >= 0 && Start < Length, "Start index is out of bounds");
-            static_assert(Start + Count <= Length, "Requested substring continues past the end of the original string");
-
-            WStringLiteral<Count + 1> result;
-            std::copy_n(value + Start, Count, result.value);
-            result.value[Count] = L'\0';
-            return result;
-        }
-
-        wchar_t value[N];
-        
-        static constexpr size_t Length = N - 1;
-        static_assert(N > 0, "WStringLiteral must have a non-zero size to fit a null terminator");
-    };
-
-    template <std::size_t N, std::size_t M>
-    constexpr auto operator+(const WStringLiteral<N>& lhs, const WStringLiteral<M>& rhs)
-    {
-        WStringLiteral<N + M - 1> result;
-        std::copy_n(lhs.value, N - 1, result.value);
-        std::copy_n(rhs.value, M, result.value + (N - 1));
-        return result;
-    }
-
-    template <std::size_t N, std::size_t M>
-    constexpr auto operator+(const WStringLiteral<N>& lhs, const wchar_t (&rhs)[M])
-    {
-        WStringLiteral<N + M - 1> result;
-        std::copy_n(lhs.value, N - 1, result.value);
-        std::copy_n(rhs, M, result.value + (N - 1));
-        return result;
-    }
-
     template <typename T, typename ElementType>
     struct IsStdArrayOf : std::false_type {};
 
@@ -81,13 +17,13 @@ namespace Testing
     concept StdArrayOf = IsStdArrayOf<std::remove_cvref_t<T>, ElementType>::value;
 
     template <typename T>
-    struct IsStdArrayOfWStringLiteral : std::false_type {};
+    struct IsStdArrayOfCompileTimeStringW : std::false_type {};
 
     template <size_t N, size_t M>
-    struct IsStdArrayOfWStringLiteral<std::array<WStringLiteral<M>, N>> : std::true_type {};
+    struct IsStdArrayOfCompileTimeStringW<std::array<CompileTimeStringW<M>, N>> : std::true_type {};
 
     template <typename T>
-    concept StdArrayOfWStringLiteral = IsStdArrayOfWStringLiteral<std::remove_cvref_t<T>>::value;
+    concept StdArrayOfCompileTimeStringW = IsStdArrayOfCompileTimeStringW<std::remove_cvref_t<T>>::value;
 
     template <typename T>
     concept PerformanceTest = requires
@@ -102,7 +38,7 @@ namespace Testing
     {
         { T::SearchPattern } -> std::same_as<const wchar_t* const&>;
         { T::TestFileExtensions } -> StdArrayOf<std::wstring_view>;
-        { T::TestFiles } -> StdArrayOfWStringLiteral;
+        { T::TestFiles } -> StdArrayOfCompileTimeStringW;
     };
 
     template <PerformanceTest T, SearchFlags ExtraSearchFlags>
@@ -137,14 +73,14 @@ namespace Testing
 
         static constexpr auto GetTestFiles()
         {
-            if constexpr (requires { { T::TestFiles } -> StdArrayOfWStringLiteral; })
+            if constexpr (requires { { T::TestFiles } -> StdArrayOfCompileTimeStringW; })
             {
                 return T::TestFiles;
             }
             else
             {
-                static_assert(!requires { T::TestFiles; }, "T::TestFiles must be a std::array<WStringLiteral> if it exists");
-                return std::array<WStringLiteral<1>, 0>{};
+                static_assert(!requires { T::TestFiles; }, "T::TestFiles must be a std::array<CompileTimeStringW> if it exists");
+                return std::array<CompileTimeStringW<1>, 0>{};
             }
         }
 
@@ -159,7 +95,7 @@ namespace Testing
         static constexpr auto TestFiles = GetTestFiles();
     };
 
-    template <PerformanceTestFull T, WStringLiteral Name>
+    template <PerformanceTestFull T, CompileTimeStringW Name>
     class PerformanceTestT : PerformanceTestBase
     {
     public:
@@ -282,7 +218,7 @@ namespace Testing
         }
     };
 
-    template <PerformanceTest T, WStringLiteral TestName>
+    template <PerformanceTest T, CompileTimeStringW TestName>
     struct ContentPerformanceTestT :
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8>, TestName + L"_UTF8">,
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf16>, TestName + L"_UTF16">,
@@ -304,7 +240,7 @@ namespace Testing
             "You may not specify any search flags that dictate how content is searched in a performance test. All variations are enumerated automatically");
     };
 
-    template <PerformanceTest T, WStringLiteral TestName>
+    template <PerformanceTest T, CompileTimeStringW TestName>
     struct FileNamePerformanceTest :
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kNone>, TestName>,
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kIgnoreCase>, TestName + L"_IgnoreCase">
@@ -313,7 +249,7 @@ namespace Testing
             "You may not specify IgnoreCase flag in a performance test. Both case preserving and case ignoring cases are automatically tested.");
     };
     
-    template <PerformanceTest T, WStringLiteral TestName>
+    template <PerformanceTest T, CompileTimeStringW TestName>
     struct PerformanceTestDefinition
     {
         std::conditional_t<

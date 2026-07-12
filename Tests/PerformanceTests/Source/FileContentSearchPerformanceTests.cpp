@@ -26,37 +26,39 @@ struct UnicodeSearchString
     static constexpr const wchar_t* SearchString = L"Gąsdindamas ąsotį gręžiantį žąsiną, žvejys tąsė įsipainiojusį vėžį.";
 };
 
-template <Testing::WStringLiteral FilePath>
+template <CompileTimeStringW FilePath>
 consteval auto GetDirectoryName()
 {
     constexpr size_t lastBackslash = std::find(FilePath.value, FilePath.value + FilePath.Length, L'\\') - FilePath.value;
     return FilePath.template SubStr<0, lastBackslash>();
 }
 
-template <Testing::WStringLiteral RelativePath>
-consteval Testing::WStringLiteral<MAX_PATH> GetTestSourceFile()
+template <CompileTimeStringW RelativePath>
+consteval CompileTimeString<wchar_t, MAX_PATH> GetTestSourceFile()
 {
-    return GetDirectoryName<__FILEW__>() + L"\\TestData\\" + RelativePath;
+    constexpr auto filePath = CompileTimeString(__FILEW__);
+    constexpr size_t lastBackslash = std::find(filePath.value, filePath.value + filePath.Length, L'\\') - filePath.value;
+    return filePath.template SubStr<0, lastBackslash>() + L"\\TestData\\" + RelativePath;
 }
 
 struct BinaryFile
 {
-    static constexpr std::array<Testing::WStringLiteral<MAX_PATH>, 1> TestFiles = { LR"(C:\Windows\System32\Windows.UI.Xaml.dll)" };
+    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { LR"(C:\Windows\System32\Windows.UI.Xaml.dll)" };
 };
 
 struct LargeSourceFile
 {
-    static constexpr std::array<Testing::WStringLiteral<MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\gentree.cpp">() };
+    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\gentree.cpp">() };
 };
 
 struct MediumSourceFile
 {
-    static constexpr std::array<Testing::WStringLiteral<MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\class.cpp">() };
+    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\class.cpp">() };
 };
 
 struct SmallSourceFile
 {
-    static constexpr std::array<Testing::WStringLiteral<MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\unwind.cpp">() };
+    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\unwind.cpp">() };
 };
 
 #define DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(SearchString, Files) DEFINE_PERFORMANCE_TEST(FileContents_##SearchString##_##Files, FileContentsPathPerformanceTest<SearchString, Files>)

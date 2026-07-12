@@ -63,6 +63,7 @@
     <ClInclude Include="..\Framework\TestHelpers.h" />
     <ClInclude Include="..\Framework\TestList.h" />
     <ClInclude Include="..\Framework\TestMacros.h" />
+    <ClInclude Include="..\Framework\Utilities\CompileTimeString.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)SearchEngine\SearchEngine.vcxproj">

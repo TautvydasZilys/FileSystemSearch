@@ -30,6 +30,9 @@
     <Filter Include="Common">
       <UniqueIdentifier>{16c62d93-28f9-4f80-9557-bc3c04f14273}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Framework\Utilities">
+      <UniqueIdentifier>{fd78a8cc-a156-48eb-b0d7-7d58894b6399}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h">
@@ -70,6 +73,9 @@
     </ClInclude>
     <ClInclude Include="..\Framework\PerformanceTest.h">
       <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Framework\Utilities\CompileTimeString.h">
+      <Filter>Framework\Utilities</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
