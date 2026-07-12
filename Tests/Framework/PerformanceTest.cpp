@@ -259,6 +259,9 @@ int Testing::RunAllPerformanceTests()
 
         for (const auto& test : allTests)
         {
+            //if (test->TestName().find(L"FileContents_BinaryFiles_LongSearchString_UTF16") == std::wstring_view::npos)
+            //    continue;
+
             if (test->GetPerformanceTestDataLayout() != currentLayout)
             {
                 auto newLayout = test->GetPerformanceTestDataLayout();
