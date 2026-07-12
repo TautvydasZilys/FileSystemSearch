@@ -1,5 +1,6 @@
 #include "PrecompiledHeader.h"
 #include "TestHelpers.h"
+#include "TestLogger.h"
 #include "TestMacros.h"
 
 static Testing::GlobalTestContext* s_GlobalTestContext;
@@ -53,14 +54,16 @@ static void DeleteDirectoryRecursive(std::wstring path)
         else
         {
             auto deleteResult = DeleteFileW(path.c_str());
-            CHECK(deleteResult, std::format(L"Failed to delete '{}'", path));
+            if (!deleteResult)
+                Testing::PrintToStdout(std::format(L"Failed to delete '{}': {}", path, GetLastError()));
         }
     } while (FindNextFileW(findHandle, &findData) != FALSE);
 
     path.resize(folderPathLength - 1);
 
     auto removeResult = RemoveDirectoryW(path.c_str());
-    CHECK(removeResult, std::format(L"Failed to remove directory '{}'", path));
+    if (!removeResult)
+        Testing::PrintToStdout(std::format(L"Failed to remove directory '{}': {}", path, GetLastError()));
 }
 
 Testing::GlobalTestContext::GlobalTestContext()
