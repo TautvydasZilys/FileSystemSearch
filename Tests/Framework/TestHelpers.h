@@ -49,7 +49,7 @@ namespace Testing
         std::wstring m_Path;
     };
 
-    struct TestFile
+    struct TestFile : NonCopyable
     {
         TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, std::span<const char> fileContents);
         TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, const wchar_t* sourceFilePath);

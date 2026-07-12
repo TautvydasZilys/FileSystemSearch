@@ -9,7 +9,7 @@ namespace Testing
 {
     struct PreparedPerformanceTestLayout
     {
-        inline PreparedPerformanceTestLayout(std::wstring_view testName);
+        inline PreparedPerformanceTestLayout(std::wstring_view testName, std::span<const size_t> layoutSizes, std::span<const CompileTimeString<wchar_t, MAX_PATH>> testFiles, std::span<const std::wstring_view> testFileExtensions);
         ~PreparedPerformanceTestLayout();
 
         PreparedPerformanceTestLayout(PreparedPerformanceTestLayout&& other) noexcept;
@@ -20,13 +20,19 @@ namespace Testing
             return m_Layout->GetTestDirectory();
         }
 
+        void InvalidateTestFileCache() const;
+
         std::vector<std::wstring> PerformTestSearch(const wchar_t* searchPattern, const wchar_t* searchString, SearchFlags searchFlags) const
         {
             return m_Layout->PerformTestSearch(searchPattern, searchString, searchFlags);
         }
 
     private:
+        void GenerateLayoutRecursive(const TestDirectory& testDirectory, std::span<const size_t> layoutSizes, std::span<const CompileTimeString<wchar_t, MAX_PATH>> testFiles, std::span<const std::wstring_view> testFileExtensions, std::span<size_t> counters, size_t depth = 0);
+
+    private:
         std::optional<SearchTestImpl<ITest>> m_Layout;
+        std::vector<Testing::TestFile> m_GeneratedFiles;
     };
 
     struct PerformanceTestDataLayout
@@ -60,10 +66,6 @@ namespace Testing
         bool operator==(const PerformanceTestDataLayout& other) const;
 
         std::wstring_view GetLayoutName() const { return m_LayoutName; }
-
-    private:
-        void PrepareLayout(const TestDirectory& testDirectory) const;
-        void GenerateLayoutRecursive(const TestDirectory& testDirectory, std::span<size_t> counters, size_t depth = 0) const;
 
     private:
         std::wstring_view m_LayoutName;
@@ -176,6 +178,7 @@ namespace Testing
             for (size_t i = 0; i < kIterations; i++)
             {
                 LARGE_INTEGER start, end;
+                testLayout.InvalidateTestFileCache();
 
                 {
                     QueryPerformanceCounter(&start);
