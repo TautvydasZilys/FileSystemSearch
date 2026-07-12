@@ -84,18 +84,18 @@ namespace Testing
     concept StdArrayOf = IsStdArrayOf<std::remove_cvref_t<T>, ElementType>::value;
 
     template <typename T>
-    struct IsStdArrayOfCompileTimeStringW : std::false_type {};
+    struct IsCompileTimeStringW : std::false_type {};
 
-    template <size_t N, size_t M>
-    struct IsStdArrayOfCompileTimeStringW<std::array<CompileTimeStringW<M>, N>> : std::true_type {};
+    template <size_t N>
+    struct IsCompileTimeStringW<CompileTimeStringW<N>> : std::true_type {};
 
     template <typename T>
-    concept StdArrayOfCompileTimeStringW = IsStdArrayOfCompileTimeStringW<std::remove_cvref_t<T>>::value;
+    concept ACompileTimeStringW = IsCompileTimeStringW<std::remove_cvref_t<T>>::value;
 
     template <typename T>
     concept PerformanceTest = requires
     {
-        { T::SearchString } -> std::same_as<const wchar_t* const&>;
+        { T::SearchString } -> ACompileTimeStringW;
         { T::SearchFlags } -> std::same_as<const SearchFlags&>;
         { T::PerformanceTestDataLayout } -> std::same_as<const PerformanceTestDataLayout* const&>;
     };
@@ -124,7 +124,7 @@ namespace Testing
         }
 
     public:
-        static constexpr const wchar_t* SearchString = T::SearchString;
+        static constexpr auto SearchString = T::SearchString;
         static constexpr SearchFlags SearchFlags = T::SearchFlags | ExtraSearchFlags;
         static constexpr auto PerformanceTestDataLayout = T::PerformanceTestDataLayout;
 
@@ -179,7 +179,7 @@ namespace Testing
 
                 {
                     QueryPerformanceCounter(&start);
-                    auto foundPaths = testLayout.PerformTestSearch(T::SearchPattern, T::SearchString, T::SearchFlags);
+                    auto foundPaths = testLayout.PerformTestSearch(T::SearchPattern, T::SearchString.value, T::SearchFlags);
                     QueryPerformanceCounter(&end);
                 }
 
@@ -200,25 +200,33 @@ namespace Testing
     };
 
     template <PerformanceTest T, CompileTimeStringW TestName>
-    struct ContentPerformanceTestT :
+    struct ContentPerformanceTestWithoutUtf8IgnoreCaseT :
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8>, TestName + L"_UTF8">,
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf16>, TestName + L"_UTF16">,
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kSearchContentsAsUtf16>, TestName + L"_UTF8_UTF16">,
 
-        PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kIgnoreCase>, TestName + L"_UTF8_IgnoreCase">,
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kIgnoreCase>, TestName + L"_UTF16_IgnoreCase">,
-        PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kIgnoreCase>, TestName + L"_UTF8_UTF16_IgnoreCase">,
 
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kUseDirectStorage>, TestName + L"_UTF8_UseDirectStorage">,
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kUseDirectStorage>, TestName + L"_UTF16_UseDirectStorage">,
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kUseDirectStorage>, TestName + L"_UTF8_UTF16_UseDirectStorage">,
 
+        PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kIgnoreCase | SearchFlags::kUseDirectStorage>, TestName + L"_UTF16_IgnoreCase_UseDirectStorage">
+    {
+        static_assert((T::SearchFlags & (SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kIgnoreCase | SearchFlags::kUseDirectStorage)) == SearchFlags::kNone,
+            "You may not specify any search flags that dictate how content is searched in a performance test. All variations are enumerated automatically");
+    };
+
+    template <PerformanceTest T, CompileTimeStringW TestName>
+    struct ContentPerformanceTestT :
+        ContentPerformanceTestWithoutUtf8IgnoreCaseT<T, TestName>,
+
+        PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kIgnoreCase>, TestName + L"_UTF8_IgnoreCase">,
+        PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kIgnoreCase>, TestName + L"_UTF8_UTF16_IgnoreCase">,
+
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kIgnoreCase | SearchFlags::kUseDirectStorage>, TestName + L"_UTF8_IgnoreCase_UseDirectStorage">,
-        PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kIgnoreCase | SearchFlags::kUseDirectStorage>, TestName + L"_UTF16_IgnoreCase_UseDirectStorage">,
         PerformanceTestT<PerformanceTestWrapper<T, SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kIgnoreCase | SearchFlags::kUseDirectStorage>, TestName + L"_UTF8_UTF16_IgnoreCase_UseDirectStorage">
     {
-        static_assert((T::SearchFlags & (SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kIgnoreCase | SearchFlags::kUseDirectStorage)) == SearchFlags::kNone, 
-            "You may not specify any search flags that dictate how content is searched in a performance test. All variations are enumerated automatically");
     };
 
     template <PerformanceTest T, CompileTimeStringW TestName>
@@ -229,13 +237,31 @@ namespace Testing
         static_assert((T::SearchFlags & SearchFlags::kIgnoreCase) == SearchFlags::kNone,
             "You may not specify IgnoreCase flag in a performance test. Both case preserving and case ignoring cases are automatically tested.");
     };
+
+    template <CompileTimeStringW SearchString>
+    struct HasNonAsciiCharacters
+    {
+        static constexpr bool value = []()
+        {
+            for (size_t i = 0; i < SearchString.Length; i++)
+            {
+                if (SearchString.value[i] > 127)
+                    return true;
+            }
+
+            return false;
+        }();
+    };
     
     template <PerformanceTest T, CompileTimeStringW TestName>
     struct PerformanceTestDefinition
     {
         std::conditional_t<
             (T::SearchFlags & SearchFlags::kSearchInFileContents) != SearchFlags::kNone,
-            ContentPerformanceTestT<T, TestName>,
+            std::conditional_t<HasNonAsciiCharacters<T::SearchString>::value,
+                ContentPerformanceTestWithoutUtf8IgnoreCaseT<T, TestName>,
+                ContentPerformanceTestT<T, TestName>
+            >,
             FileNamePerformanceTest<T, TestName>
         > value;
     };

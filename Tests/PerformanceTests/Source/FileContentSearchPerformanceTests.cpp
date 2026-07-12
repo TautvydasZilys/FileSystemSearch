@@ -24,17 +24,17 @@ struct SourceFilesSearchLayout
 
 struct ShortSearchString
 {
-    static constexpr const wchar_t* SearchString = L"System";
+    static constexpr CompileTimeStringW SearchString = L"System";
 };
 
 struct LongSearchString
 {
-    static constexpr const wchar_t* SearchString = L"static constexpr std::array<size_t, 5> LayoutSizes = { 4, 4, 4, 5 };";
+    static constexpr CompileTimeStringW SearchString = L"static constexpr std::array<size_t, 5> LayoutSizes = { 4, 4, 4, 5 };";
 };
 
 struct UnicodeSearchString
 {
-    static constexpr const wchar_t* SearchString = L"Gąsdindamas ąsotį gręžiantį žąsiną, žvejys tąsė įsipainiojusį vėžį.";
+    static constexpr CompileTimeStringW SearchString = L"Gąsdindamas ąsotį gręžiantį žąsiną, žvejys tąsė įsipainiojusį vėžį.";
 };
 
 template <CompileTimeStringW FilePath>

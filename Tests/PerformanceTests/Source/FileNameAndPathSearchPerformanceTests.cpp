@@ -20,12 +20,12 @@ struct DeepSearch
 
 struct LittleMatches
 {
-    static constexpr const wchar_t* SearchString = L"2bcB";
+    static constexpr CompileTimeStringW SearchString = L"2bcB";
 };
 
 struct LotsOfMatches
 {
-    static constexpr const wchar_t* SearchString = L"C";
+    static constexpr CompileTimeStringW SearchString = L"C";
 };
 
 #define DEFINE_PERFORMANCE_TEST_DATA_LAYOUT(SearchLayout) static const Testing::PerformanceTestDataLayout k##SearchLayout##Layout { L#SearchLayout, SearchLayout::LayoutSizes }
