@@ -11,9 +11,15 @@ struct FileContentsPathPerformanceTest : SearchString
     static constexpr SearchFlags SearchFlags = SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileContents;
 };
 
-struct ContentSearchLayout
+// Define the binary files layout to be smaller than the source files layout, as our test binary files are very large and we want to limit the test disk footprint.
+struct BinaryFilesSearchLayout
 {
     static constexpr std::array<size_t, 2> LayoutSizes = { 5, 100 };
+};
+
+struct SourceFilesSearchLayout
+{
+    static constexpr std::array<size_t, 2> LayoutSizes = { 30, 100 };
 };
 
 struct ShortSearchString
@@ -66,12 +72,12 @@ struct SmallSourceFiles
     static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\unwind.cpp">() };
 };
 
-#define DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(Files) static const Testing::PerformanceTestDataLayout k##Files##Layout { L#Files, ContentSearchLayout::LayoutSizes, Files::TestFiles }
+#define DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(Files, FileLayout) static const Testing::PerformanceTestDataLayout k##Files##Layout { L#Files, FileLayout::LayoutSizes, Files::TestFiles }
 
-DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(BinaryFiles);
-DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(LargeSourceFiles);
-DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(MediumSourceFiles);
-DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(SmallSourceFiles);
+DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(BinaryFiles, BinaryFilesSearchLayout);
+DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(LargeSourceFiles, SourceFilesSearchLayout);
+DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(MediumSourceFiles, SourceFilesSearchLayout);
+DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(SmallSourceFiles, SourceFilesSearchLayout);
 
 #define DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(Files, SearchString) DEFINE_PERFORMANCE_TEST(FileContents_##Files##_##SearchString, FileContentsPathPerformanceTest<&k##Files##Layout, SearchString>)
 
