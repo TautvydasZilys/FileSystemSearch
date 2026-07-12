@@ -300,6 +300,9 @@ void Testing::ReportPerformanceTestResults()
     for (auto test : allTests)
     {
         auto name = test->TestName();
+        if (isnan(test->GetMedianRunTime()))
+            continue;
+
         auto durationMS = 1000.0 * test->GetMedianRunTime();
 
         PrintToStdout(std::format(L"    {:100}: {:.2f} ms\r\n", name, durationMS));
