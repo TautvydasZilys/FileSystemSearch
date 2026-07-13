@@ -10,8 +10,8 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Arm64">
-      <Platform>Arm64</Platform>
       <Configuration>Debug</Configuration>
+      <Platform>Arm64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Arm64">
       <Configuration>Release</Configuration>
@@ -21,14 +21,13 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{675DB5E3-1A24-46DE-A645-B83368FB85AC}</ProjectGuid>
-    <RootNamespace>FileSystemSearch_FunctionalTests</RootNamespace>
+    <ProjectGuid>{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23}</ProjectGuid>
+    <RootNamespace>FileSystemSearch_PerformanceTests</RootNamespace>
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(SolutionDir)FileSystemSearch.common.props" />
   <PropertyGroup>
     <OutDir>$(SolutionDir)build\bin\Tests\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <TargetName>FileSystemSearch_FunctionalTests</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -44,12 +43,13 @@
     <ClCompile Include="..\Framework\TestList.cpp" />
     <ClCompile Include="..\Framework\TestLogger.cpp" />
     <ClCompile Include="..\Framework\Utilities\FileUtilities.cpp" />
-    <ClCompile Include="Source\EdgeCaseTests.cpp" />
+    <ClCompile Include="Source\FileContentSearchPerformanceTests.cpp" />
+    <ClCompile Include="Source\FileNameAndPathSearchPerformanceTests.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\BasicTests.cpp" />
+    <ClCompile Include="Source\PerformanceTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
@@ -67,6 +67,7 @@
     <ClInclude Include="..\Framework\TestMacros.h" />
     <ClInclude Include="..\Framework\Utilities\CompileTimeString.h" />
     <ClInclude Include="..\Framework\Utilities\FileUtilities.h" />
+    <ClInclude Include="Source\PerformanceTest.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

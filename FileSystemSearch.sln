@@ -14,12 +14,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{1F495C75
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchEngine.Testing", "SearchEngine\SearchEngine.Testing.vcxproj", "{B8E829C3-6427-4E49-A42C-C1AA2C39504D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch_FunctionalTests", "Tests\FunctionalTests\FileSystemSearch_FunctionalTests.vcxproj", "{675DB5E3-1A24-46DE-A645-B83368FB85AC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch.FunctionalTests", "Tests\FunctionalTests\FileSystemSearch.FunctionalTests.vcxproj", "{675DB5E3-1A24-46DE-A645-B83368FB85AC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B8E829C3-6427-4E49-A42C-C1AA2C39504D} = {B8E829C3-6427-4E49-A42C-C1AA2C39504D}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch_PerformanceTests", "Tests\PerformanceTests\FileSystemSearch_PerformanceTests.vcxproj", "{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch.PerformanceTests", "Tests\PerformanceTests\FileSystemSearch.PerformanceTests.vcxproj", "{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B8E829C3-6427-4E49-A42C-C1AA2C39504D} = {B8E829C3-6427-4E49-A42C-C1AA2C39504D}
 	EndProjectSection
