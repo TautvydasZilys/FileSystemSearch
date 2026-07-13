@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <Keyword>Win32Proj</Keyword>
     <RootNamespace>SearchEngine</RootNamespace>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>

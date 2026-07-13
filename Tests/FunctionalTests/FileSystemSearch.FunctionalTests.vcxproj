@@ -19,23 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>16.0</VCProjectVersion>
-    <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{675DB5E3-1A24-46DE-A645-B83368FB85AC}</ProjectGuid>
     <RootNamespace>FileSystemSearch_FunctionalTests</RootNamespace>
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
-  <Import Project="$(SolutionDir)FileSystemSearch.common.props" />
-  <PropertyGroup>
-    <OutDir>$(SolutionDir)build\bin\Tests\$(PlatformShortName)\$(Configuration)\</OutDir>
-  </PropertyGroup>
+  <Import Project="$(SolutionDir)Tests\FileSystemSearch.Tests.common.props" />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;$(ProjectDir)..\TestFramework\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(ProjectDir)..\TestFramework\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)FileSystemSearch.TestFramework.lib;$(OutDir)SearchEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>$(OutDir)FileSystemSearch.TestFramework.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -19,16 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>18.0</VCProjectVersion>
-    <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{24a4c6c1-5047-4972-8d5f-38f10f92ff8b}</ProjectGuid>
     <RootNamespace>FileSystemSearch_TestFramework</RootNamespace>
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
-  <Import Project="$(SolutionDir)FileSystemSearch.common.props" />
-  <PropertyGroup>
-    <OutDir>$(SolutionDir)build\bin\Tests\$(PlatformShortName)\$(Configuration)\</OutDir>
-  </PropertyGroup>
+  <Import Project="$(SolutionDir)Tests\FileSystemSearch.Tests.common.props" />
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
