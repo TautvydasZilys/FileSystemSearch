@@ -10,8 +10,8 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Arm64">
-      <Platform>Arm64</Platform>
-      <Configuration>Debug</Configuration>
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Arm64">
       <Configuration>Release</Configuration>

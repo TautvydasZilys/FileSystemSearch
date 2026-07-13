@@ -1,0 +1,24 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Arm64" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/Tests/">
+    <Project Path="SearchEngine/SearchEngine.Testing.vcxproj" Id="b8e829c3-6427-4e49-a42c-c1aa2c39504d" />
+    <Project Path="Tests/FunctionalTests/FileSystemSearch.FunctionalTests.vcxproj" Id="675db5e3-1a24-46de-a645-b83368fb85ac">
+      <BuildDependency Project="SearchEngine/SearchEngine.Testing.vcxproj" />
+      <BuildDependency Project="Tests/TestFramework/FileSystemSearch.TestFramework.vcxproj" />
+    </Project>
+    <Project Path="Tests/PerformanceTests/FileSystemSearch.PerformanceTests.vcxproj" Id="dbbf5e74-cbaa-4ce5-b1b6-f02886e07a23">
+      <BuildDependency Project="SearchEngine/SearchEngine.Testing.vcxproj" />
+      <BuildDependency Project="Tests/TestFramework/FileSystemSearch.TestFramework.vcxproj" />
+    </Project>
+    <Project Path="Tests/TestFramework/FileSystemSearch.TestFramework.vcxproj" Id="24a4c6c1-5047-4972-8d5f-38f10f92ff8b" />
+  </Folder>
+  <Project Path="FileSystemSearch.Common/FileSystemSearch.Common.vcxitems" Id="96adde58-55dd-4026-b29f-7083bb7ff362" />
+  <Project Path="FileSystemSearch/FileSystemSearch.vcxproj" Id="e3a9b0be-0c6c-4091-bc9a-a641404c8723">
+    <BuildDependency Project="SearchEngine/SearchEngine.vcxproj" />
+  </Project>
+  <Project Path="SearchEngine/SearchEngine.Common.vcxitems" Id="68d09f46-bf62-4ccf-a8b2-bb1e52a7e19e" />
+  <Project Path="SearchEngine/SearchEngine.vcxproj" Id="42cb7641-3ff2-4973-b1be-1ae94123fd10" />
+</Solution>
