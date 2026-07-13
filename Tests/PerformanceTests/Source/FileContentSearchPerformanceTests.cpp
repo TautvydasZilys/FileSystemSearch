@@ -1,8 +1,7 @@
 #include "PrecompiledHeader.h"
 #include "HandleHolder.h"
 #include "TestMacros.h"
-#include "TestHelpers.h"
-#include "PerformanceTest.h"
+#include "PerformanceIntegrationTest.h"
 
 template <const Testing::PerformanceTestDataLayout* Layout, typename SearchString>
 struct FileContentsPathPerformanceTest : SearchString
@@ -119,7 +118,7 @@ DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(SmallSourceFiles, SourceFilesSearchL
 DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(MixedFilesByCount, BinaryFilesSearchLayout);
 DEFINE_CONTENT_PERFORMANCE_TEST_DATA_LAYOUT(MixedFilesBySize, SourceFilesSearchLayout);
 
-#define DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(Files, SearchString) DEFINE_PERFORMANCE_TEST(FileContents_##Files##_##SearchString, FileContentsPathPerformanceTest<&k##Files##Layout, SearchString>)
+#define DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(Files, SearchString) DEFINE_PERFORMANCE_INTEGRATION_TEST(FileContents_##Files##_##SearchString, FileContentsPathPerformanceTest<&k##Files##Layout, SearchString>)
 
 #define DEFINE_FILE_CONTENTS_PERFORMANCE_TESTS(SearchString) \
     DEFINE_FILE_CONTENTS_PERFORMANCE_TEST(BinaryFiles, SearchString); \

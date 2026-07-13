@@ -1,5 +1,5 @@
 #include "PrecompiledHeader.h"
-#include "PerformanceTest.h"
+#include "PerformanceIntegrationTest.h"
 
 template <const Testing::PerformanceTestDataLayout* Layout, typename SearchString, SearchFlags Flags>
 struct FileNamePathPerformanceTest : SearchString
@@ -38,7 +38,7 @@ constexpr SearchFlags kFilePathSearchFlags = SearchFlags::kSearchForFiles | Sear
 constexpr SearchFlags kDirectoryNameSearchFlags = SearchFlags::kSearchForFiles | SearchFlags::kSearchInFilePath | SearchFlags::kSearchRecursively;
 constexpr SearchFlags kDirectoryPathSearchFlags = SearchFlags::kSearchForFiles | SearchFlags::kSearchInFilePath | SearchFlags::kSearchRecursively;
 
-#define DEFINE_NAME_PATH_PERFORMANCE_TEST(Category, SearchLayout, SearchString) DEFINE_PERFORMANCE_TEST(Category##_##SearchLayout##_##SearchString, FileNamePathPerformanceTest<&k##SearchLayout##Layout, SearchString, k##Category##SearchFlags>)
+#define DEFINE_NAME_PATH_PERFORMANCE_TEST(Category, SearchLayout, SearchString) DEFINE_PERFORMANCE_INTEGRATION_TEST(Category##_##SearchLayout##_##SearchString, FileNamePathPerformanceTest<&k##SearchLayout##Layout, SearchString, k##Category##SearchFlags>)
 
 #define DEFINE_PERFORMANCE_TEST_SEARCH_STRING_COMBOS(Category, SearchLayout) \
     DEFINE_NAME_PATH_PERFORMANCE_TEST(Category, SearchLayout, LittleMatches); \

@@ -13,6 +13,12 @@
     <ClCompile Include="Source\PerformanceTest.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Source\PerformanceIntegrationTest.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PerformanceTestDataLayout.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -21,6 +27,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\PerformanceTest.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PerformanceIntegrationTest.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PerformanceTestDataLayout.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>
