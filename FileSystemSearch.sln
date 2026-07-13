@@ -3,12 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11505.172
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchEngine", "SearchEngine\SearchEngine.vcxproj", "{42CB7641-3FF2-4973-B1BE-1AE94123FD10}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch", "FileSystemSearch\FileSystemSearch.vcxproj", "{E3A9B0BE-0C6C-4091-BC9A-A641404C8723}"
 	ProjectSection(ProjectDependencies) = postProject
 		{42CB7641-3FF2-4973-B1BE-1AE94123FD10} = {42CB7641-3FF2-4973-B1BE-1AE94123FD10}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchEngine", "SearchEngine\SearchEngine.vcxproj", "{42CB7641-3FF2-4973-B1BE-1AE94123FD10}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{1F495C75-1A61-4487-8FB8-E5EE1E997DEF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchEngine.Testing", "SearchEngine\SearchEngine.Testing.vcxproj", "{B8E829C3-6427-4E49-A42C-C1AA2C39504D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch_FunctionalTests", "Tests\FunctionalTests\FileSystemSearch_FunctionalTests.vcxproj", "{675DB5E3-1A24-46DE-A645-B83368FB85AC}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -19,10 +23,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch_Performanc
 	ProjectSection(ProjectDependencies) = postProject
 		{B8E829C3-6427-4E49-A42C-C1AA2C39504D} = {B8E829C3-6427-4E49-A42C-C1AA2C39504D}
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{1F495C75-1A61-4487-8FB8-E5EE1E997DEF}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchEngine.Testing", "SearchEngine\SearchEngine.Testing.vcxproj", "{B8E829C3-6427-4E49-A42C-C1AA2C39504D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
