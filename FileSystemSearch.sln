@@ -12,12 +12,17 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch", "FileSys
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch_FunctionalTests", "Tests\FunctionalTests\FileSystemSearch_FunctionalTests.vcxproj", "{675DB5E3-1A24-46DE-A645-B83368FB85AC}"
 	ProjectSection(ProjectDependencies) = postProject
-		{42CB7641-3FF2-4973-B1BE-1AE94123FD10} = {42CB7641-3FF2-4973-B1BE-1AE94123FD10}
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D} = {B8E829C3-6427-4E49-A42C-C1AA2C39504D}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch_PerformanceTests", "Tests\PerformanceTests\FileSystemSearch_PerformanceTests.vcxproj", "{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D} = {B8E829C3-6427-4E49-A42C-C1AA2C39504D}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{1F495C75-1A61-4487-8FB8-E5EE1E997DEF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchEngine.Testing", "SearchEngine\SearchEngine.Testing.vcxproj", "{B8E829C3-6427-4E49-A42C-C1AA2C39504D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +64,14 @@ Global
 		{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23}.Release|Arm64.Build.0 = Release|Arm64
 		{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23}.Release|x64.ActiveCfg = Release|x64
 		{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23}.Release|x64.Build.0 = Release|x64
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D}.Debug|Arm64.ActiveCfg = Debug|Arm64
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D}.Debug|Arm64.Build.0 = Debug|Arm64
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D}.Debug|x64.ActiveCfg = Debug|x64
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D}.Debug|x64.Build.0 = Debug|x64
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D}.Release|Arm64.ActiveCfg = Release|Arm64
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D}.Release|Arm64.Build.0 = Release|Arm64
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D}.Release|x64.ActiveCfg = Release|x64
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,11 +79,13 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{675DB5E3-1A24-46DE-A645-B83368FB85AC} = {1F495C75-1A61-4487-8FB8-E5EE1E997DEF}
 		{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23} = {1F495C75-1A61-4487-8FB8-E5EE1E997DEF}
+		{B8E829C3-6427-4E49-A42C-C1AA2C39504D} = {1F495C75-1A61-4487-8FB8-E5EE1E997DEF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2F5518D0-93A3-4F65-8C2F-AA6EB83E939C}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		SearchEngine\SearchEngine.Common.vcxitems*{42cb7641-3ff2-4973-b1be-1ae94123fd10}*SharedItemsImports = 4
+		SearchEngine\SearchEngine.Common.vcxitems*{b8e829c3-6427-4e49-a42c-c1aa2c39504d}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

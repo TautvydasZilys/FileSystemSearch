@@ -35,7 +35,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;$(ProjectDir)..\Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)SearchEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -69,13 +69,6 @@
     <ClInclude Include="..\Framework\Utilities\CompileTimeString.h" />
     <ClInclude Include="..\Framework\Utilities\FileUtilities.h" />
     <ClInclude Include="Source\PerformanceTest.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)SearchEngine\SearchEngine.vcxproj">
-      <Project>{42cb7641-3ff2-4973-b1be-1ae94123fd10}</Project>
-      <OutputItemType>Content</OutputItemType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
