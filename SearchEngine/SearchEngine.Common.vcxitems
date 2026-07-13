@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{68D09F46-BF62-4CCF-A8B2-BB1E52A7E19E}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\DirectStorage\DirectStorageReader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\DirectStorage\DirectXContext.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\OverlappedIO\OverlappedIOReader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\FileSearcher.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\SearchEngine.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\SearchResultReporter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\StringSearch\StringSearcher.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\Utilities\ScopedStackAllocator.cpp" />
+    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\CriticalSection.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\Event.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\HandleHolder.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\HeapArray.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\NonCopyable.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\ReaderWriterLock.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\StringUtils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\Version.rc" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Include\SearchEngine.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\FileContentSearchData.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\DirectStorage\DirectStorageFileReadData.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\DirectStorage\DirectStorageReader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\DirectStorage\DirectXContext.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\DirectStorage\ReadBatch.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\OverlappedIO\OverlappedIOReader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\FileSearcher.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\Resources\resource.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\SearchInstructions.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\SearchResultData.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\SearchResultReporter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\StringSearch\OrdinalStringSearcher.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\StringSearch\StringSearcher.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\StringSearch\UnicodeUtf16StringSearcher.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\AsynchronousPeriodicTimer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\FileEnumerator.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\IndexStableRingBuffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\ObjectPool.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\PathUtils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\ScopedStackAllocator.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\WorkQueue.h" />
+    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="$(MSBuildThisFileDirectory)Source\Resources\SearchEngine.rc" />
+  </ItemGroup>
+</Project>
