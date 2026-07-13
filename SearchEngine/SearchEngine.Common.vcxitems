@@ -22,19 +22,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Source\SearchResultReporter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Source\StringSearch\StringSearcher.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Source\Utilities\ScopedStackAllocator.cpp" />
-    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\CriticalSection.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\Event.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\HandleHolder.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\HeapArray.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\NonCopyable.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\ReaderWriterLock.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\StringUtils.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\Version.rc" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\SearchEngine.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\FileContentSearchData.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\DirectStorage\DirectStorageFileReadData.h" />
@@ -57,7 +46,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\PathUtils.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\ScopedStackAllocator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\Utilities\WorkQueue.h" />
-    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)packages.config" />

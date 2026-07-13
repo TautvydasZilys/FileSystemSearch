@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{96ADDE58-55DD-4026-B29F-7083BB7FF362}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)PrecompiledHeader.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)CriticalSection.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Event.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)HandleHolder.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)HeapArray.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)NonCopyable.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)PrecompiledHeader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ReaderWriterLock.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)StringUtils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Version.rc" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)WindowClassHolder.h" />
+  </ItemGroup>
+</Project>

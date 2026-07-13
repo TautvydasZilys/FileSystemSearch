@@ -42,7 +42,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <PrecompiledHeaderFile>PrecompiledHeader.h</PrecompiledHeaderFile>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)FileSystemSearch.Common</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
 	  <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -53,7 +53,7 @@
       <AdditionalDependencies>Synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)FileSystemSearch.Common;$(ProjectDir)Source</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -75,5 +75,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
-  </ItemDefinitionGroup>  
+  </ItemDefinitionGroup>
+  <Import Project="$(SolutionDir)FileSystemSearch.Common\FileSystemSearch.Common.vcxitems" Label="Shared" />
 </Project>

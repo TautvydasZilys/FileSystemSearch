@@ -8,6 +8,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch", "FileSys
 		{42CB7641-3FF2-4973-B1BE-1AE94123FD10} = {42CB7641-3FF2-4973-B1BE-1AE94123FD10}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSystemSearch.Common", "FileSystemSearch.Common\FileSystemSearch.Common.vcxitems", "{96ADDE58-55DD-4026-B29F-7083BB7FF362}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchEngine.Common", "SearchEngine\SearchEngine.Common.vcxitems", "{68D09F46-BF62-4CCF-A8B2-BB1E52A7E19E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SearchEngine", "SearchEngine\SearchEngine.vcxproj", "{42CB7641-3FF2-4973-B1BE-1AE94123FD10}"
@@ -102,6 +104,7 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		SearchEngine\SearchEngine.Common.vcxitems*{42cb7641-3ff2-4973-b1be-1ae94123fd10}*SharedItemsImports = 4
 		SearchEngine\SearchEngine.Common.vcxitems*{68d09f46-bf62-4ccf-a8b2-bb1e52a7e19e}*SharedItemsImports = 9
+		FileSystemSearch.Common\FileSystemSearch.Common.vcxitems*{96adde58-55dd-4026-b29f-7083bb7ff362}*SharedItemsImports = 9
 		SearchEngine\SearchEngine.Common.vcxitems*{b8e829c3-6427-4e49-a42c-c1aa2c39504d}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

@@ -34,20 +34,8 @@
     <ClCompile Include="Source\TestList.cpp" />
     <ClCompile Include="Source\TestLogger.cpp" />
     <ClCompile Include="Source\Utilities\FileUtilities.cpp" />
-    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
-    <ClInclude Include="..\..\Common\CriticalSection.h" />
-    <ClInclude Include="..\..\Common\Event.h" />
-    <ClInclude Include="..\..\Common\HandleHolder.h" />
-    <ClInclude Include="..\..\Common\HeapArray.h" />
-    <ClInclude Include="..\..\Common\NonCopyable.h" />
-    <ClInclude Include="..\..\Common\ReaderWriterLock.h" />
-    <ClInclude Include="..\..\Common\StringUtils.h" />
-    <ClInclude Include="..\..\Common\WindowClassHolder.h" />
     <ClInclude Include="Source\TestHelpers.h" />
     <ClInclude Include="Source\TestList.h" />
     <ClInclude Include="Source\TestLogger.h" />

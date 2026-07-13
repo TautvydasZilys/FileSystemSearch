@@ -19,24 +19,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Source\FileReadBackends\OverlappedIO\OverlappedIOReader.cpp">
       <Filter>FileReadBackends\OverlappedIO</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\CriticalSection.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\Event.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\HandleHolder.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\HeapArray.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\NonCopyable.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\StringSearch\OrdinalStringSearcher.h">
       <Filter>StringSearch</Filter>
     </ClInclude>
@@ -90,18 +74,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\Resources\resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\Version.rc">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Include\SearchEngine.h">
       <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\ReaderWriterLock.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\Common\StringUtils.h">
-      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -110,9 +84,6 @@
   <ItemGroup>
     <Filter Include="Utilities">
       <UniqueIdentifier>{e511a06a-f90a-457f-92b7-b3445e7adf4d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Common">
-      <UniqueIdentifier>{e15ddfa1-c706-4885-82eb-d2bc3945b731}</UniqueIdentifier>
     </Filter>
     <Filter Include="StringSearch">
       <UniqueIdentifier>{a40d6b8a-7168-451c-84cd-a44e8560c84c}</UniqueIdentifier>

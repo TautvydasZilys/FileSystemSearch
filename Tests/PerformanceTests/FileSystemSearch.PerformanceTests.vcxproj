@@ -37,21 +37,9 @@
     <ClCompile Include="Source\FileNameAndPathSearchPerformanceTests.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\PerformanceTest.cpp" />
-    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\PerformanceTest.h" />
-    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
-    <ClInclude Include="..\..\Common\CriticalSection.h" />
-    <ClInclude Include="..\..\Common\Event.h" />
-    <ClInclude Include="..\..\Common\HandleHolder.h" />
-    <ClInclude Include="..\..\Common\HeapArray.h" />
-    <ClInclude Include="..\..\Common\NonCopyable.h" />
-    <ClInclude Include="..\..\Common\ReaderWriterLock.h" />
-    <ClInclude Include="..\..\Common\StringUtils.h" />
-    <ClInclude Include="..\..\Common\WindowClassHolder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

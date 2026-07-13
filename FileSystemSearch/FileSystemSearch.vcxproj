@@ -39,15 +39,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\CriticalSection.h" />
-    <ClInclude Include="..\Common\Event.h" />
-    <ClInclude Include="..\Common\HandleHolder.h" />
-    <ClInclude Include="..\Common\HeapArray.h" />
-    <ClInclude Include="..\Common\NonCopyable.h" />
-    <ClInclude Include="..\Common\ReaderWriterLock.h" />
-    <ClInclude Include="..\Common\StringUtils.h" />
-    <ClInclude Include="..\Common\Version.rc" />
-    <ClInclude Include="..\Common\WindowClassHolder.h" />
     <ClCompile Include="Source\AppWindows\SearchResultWindow.cpp" />
     <ClCompile Include="Source\AppWindows\SearchWindow.cpp" />
     <ClCompile Include="Source\Controls\BorderedTextBox.cpp" />
@@ -56,9 +47,6 @@
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\Utilities\NumberFormatter.cpp" />
     <ClCompile Include="Source\Utilities\FontCache.cpp" />
-    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
     <ClInclude Include="Source\Controls\BorderedTextBox.h" />
     <ClInclude Include="Source\Controls\ExplorerWindow\ExplorerWindow.h" />
     <ClInclude Include="Source\Controls\ExplorerWindow\FileSystemBindData.h" />
@@ -74,7 +62,6 @@
     <ClInclude Include="Source\Utilities\FontCache.h" />
     <ClInclude Include="Source\Utilities\HwndHolder.h" />
     <ClInclude Include="Source\Utilities\WindowUtilities.h" />
-    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Resources\resource.h" />
