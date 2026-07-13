@@ -10,8 +10,8 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Arm64">
-      <Configuration>Debug</Configuration>
       <Platform>Arm64</Platform>
+      <Configuration>Debug</Configuration>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Arm64">
       <Configuration>Release</Configuration>
@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>16.0</VCProjectVersion>
+    <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23}</ProjectGuid>
-    <RootNamespace>FileSystemSearch_PerformanceTests</RootNamespace>
-    <ConfigurationType>Application</ConfigurationType>
+    <ProjectGuid>{24a4c6c1-5047-4972-8d5f-38f10f92ff8b}</ProjectGuid>
+    <RootNamespace>FileSystemSearch_TestFramework</RootNamespace>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(SolutionDir)FileSystemSearch.common.props" />
   <PropertyGroup>
@@ -31,24 +31,19 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;$(ProjectDir)..\TestFramework\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <Link>
-      <AdditionalDependencies>$(OutDir)FileSystemSearch.TestFramework.lib;$(OutDir)SearchEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Console</SubSystem>
-    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source\FileContentSearchPerformanceTests.cpp" />
-    <ClCompile Include="Source\FileNameAndPathSearchPerformanceTests.cpp" />
-    <ClCompile Include="Source\Main.cpp" />
-    <ClCompile Include="Source\PerformanceTest.cpp" />
+    <ClCompile Include="Source\TestHelpers.cpp" />
+    <ClCompile Include="Source\TestList.cpp" />
+    <ClCompile Include="Source\TestLogger.cpp" />
+    <ClCompile Include="Source\Utilities\FileUtilities.cpp" />
     <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\PerformanceTest.h" />
     <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
     <ClInclude Include="..\..\Common\CriticalSection.h" />
     <ClInclude Include="..\..\Common\Event.h" />
@@ -58,6 +53,12 @@
     <ClInclude Include="..\..\Common\ReaderWriterLock.h" />
     <ClInclude Include="..\..\Common\StringUtils.h" />
     <ClInclude Include="..\..\Common\WindowClassHolder.h" />
+    <ClInclude Include="Source\TestHelpers.h" />
+    <ClInclude Include="Source\TestList.h" />
+    <ClInclude Include="Source\TestLogger.h" />
+    <ClInclude Include="Source\TestMacros.h" />
+    <ClInclude Include="Source\Utilities\CompileTimeString.h" />
+    <ClInclude Include="Source\Utilities\FileUtilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

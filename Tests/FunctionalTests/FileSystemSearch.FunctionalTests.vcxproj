@@ -10,8 +10,8 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Arm64">
-      <Platform>Arm64</Platform>
       <Configuration>Debug</Configuration>
+      <Platform>Arm64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Arm64">
       <Configuration>Release</Configuration>
@@ -31,24 +31,20 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;$(ProjectDir)..\Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;$(ProjectDir)..\TestFramework\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)SearchEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)FileSystemSearch.TestFramework.lib;$(OutDir)SearchEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Framework\TestHelpers.cpp" />
-    <ClCompile Include="..\Framework\TestList.cpp" />
-    <ClCompile Include="..\Framework\TestLogger.cpp" />
-    <ClCompile Include="..\Framework\Utilities\FileUtilities.cpp" />
+    <ClCompile Include="Source\BasicTests.cpp" />
     <ClCompile Include="Source\EdgeCaseTests.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\BasicTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
@@ -60,12 +56,6 @@
     <ClInclude Include="..\..\Common\ReaderWriterLock.h" />
     <ClInclude Include="..\..\Common\StringUtils.h" />
     <ClInclude Include="..\..\Common\WindowClassHolder.h" />
-    <ClInclude Include="..\Framework\TestHelpers.h" />
-    <ClInclude Include="..\Framework\TestList.h" />
-    <ClInclude Include="..\Framework\TestLogger.h" />
-    <ClInclude Include="..\Framework\TestMacros.h" />
-    <ClInclude Include="..\Framework\Utilities\CompileTimeString.h" />
-    <ClInclude Include="..\Framework\Utilities\FileUtilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
