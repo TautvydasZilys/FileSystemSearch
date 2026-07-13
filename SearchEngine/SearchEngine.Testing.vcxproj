@@ -8,6 +8,17 @@
     <OutDir>$(SolutionDir)build\bin\Tests\$(PlatformShortName)\$(Configuration)\</OutDir>
     <TargetName>SearchEngine</TargetName>
   </PropertyGroup>
+  <ItemGroup>
+    <ClInclude Include="TestSource\StringSearcherTestAPI.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="TestSource\StringSearcherTestAPI.cpp" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>INCLUDE_TESTS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="SearchEngine.Common.vcxitems" Label="Shared" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="SearchEngine.targets" Label="Targets" />

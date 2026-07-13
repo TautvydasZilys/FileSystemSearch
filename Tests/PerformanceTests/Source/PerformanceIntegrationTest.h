@@ -100,50 +100,31 @@ namespace Testing
             if constexpr (!kSavePerformanceTestResultForComparison)
                 expectedPaths = LoadPerformanceTestResultForComparison(testLayout.GetTestDirectory().view());
 
-            std::vector<double> measurements;
-            measurements.resize(kIterations);
-
-            LARGE_INTEGER frequency;
-            QueryPerformanceFrequency(&frequency);
-
-            for (size_t i = 0; i < kIterations; i++)
+            m_MedianTime = RunPerformanceTestIterations(kIterations,
+            [&]()
             {
-                LARGE_INTEGER start, end;
                 testLayout.InvalidateTestFileCache();
+            }, 
+            [&]()
+            {
+                return testLayout.PerformTestSearch(T::SearchPattern, T::SearchString.value, T::SearchFlags);
+            },
+            [&](size_t i, std::vector<std::wstring>& foundPaths)
+            {
+                std::sort(foundPaths.begin(), foundPaths.end());
 
+                if constexpr (kSavePerformanceTestResultForComparison)
                 {
-                    QueryPerformanceCounter(&start);
-                    auto foundPaths = testLayout.PerformTestSearch(T::SearchPattern, T::SearchString.value, T::SearchFlags);
-                    QueryPerformanceCounter(&end);
-
-                    std::sort(foundPaths.begin(), foundPaths.end());
-
-                    if constexpr (kSavePerformanceTestResultForComparison)
-                    {
-                        SavePerformanceTestResultForComparison(testLayout.GetTestDirectory().view(), foundPaths);
-                    }
-                    else
-                    {
-                        CHECK(foundPaths.size() == expectedPaths.size(), std::format(L"Found {} paths, but expected {} paths at iteration #{}", foundPaths.size(), expectedPaths.size(), i));
-
-                        for (size_t j = 0; j < foundPaths.size(); j++)
-                            CHECK(foundPaths[j] == expectedPaths[j], std::format(L"Found path '{}' does not match expected path '{}' at iteration #{}", foundPaths[j], expectedPaths[j], i));
-                    }
+                    SavePerformanceTestResultForComparison(testLayout.GetTestDirectory().view(), foundPaths);
                 }
+                else
+                {
+                    CHECK(foundPaths.size() == expectedPaths.size(), std::format(L"Found {} paths, but expected {} paths at iteration #{}", foundPaths.size(), expectedPaths.size(), i));
 
-                measurements[i] = static_cast<double>(end.QuadPart - start.QuadPart) / frequency.QuadPart;
-            }
-
-            std::sort(measurements.begin(), measurements.end());
-
-            if (kIterations % 2 == 0)
-            {
-                m_MedianTime = (measurements[kIterations / 2 - 1] + measurements[kIterations / 2]) / 2.0;
-            }
-            else
-            {
-                m_MedianTime = measurements[kIterations / 2];
-            }
+                    for (size_t j = 0; j < foundPaths.size(); j++)
+                        CHECK(foundPaths[j] == expectedPaths[j], std::format(L"Found path '{}' does not match expected path '{}' at iteration #{}", foundPaths[j], expectedPaths[j], i));
+                }
+            });
         }
     };
 

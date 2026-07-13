@@ -19,6 +19,9 @@
     <ClCompile Include="Source\PerformanceTestDataLayout.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Source\StringSearchPerformanceTest.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -33,6 +36,9 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Source\PerformanceTestDataLayout.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\StringSearchPerformanceTest.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

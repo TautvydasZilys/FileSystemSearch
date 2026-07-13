@@ -21,22 +21,8 @@ std::wstring Testing::PerformanceIntegrationTestBase::GetPerformanceTestResultFo
 
 std::vector<std::wstring> Testing::PerformanceIntegrationTestBase::LoadPerformanceTestResultForComparison(std::wstring_view testDirectory) const
 {
-    std::string text;
-
     const auto testResultPath = GetPerformanceTestResultForComparisonPath();
-    FileHandleHolder file = CreateFile2(testResultPath.c_str(), GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, nullptr);
-    CHECK(file, std::format(L"Failed to open '{}' for reading: {}", testResultPath, GetLastError()));
-
-    LARGE_INTEGER fileSize;
-    auto result = GetFileSizeEx(file, &fileSize);
-    CHECK(result, std::format(L"Failed to get file size of '{}': {}", testResultPath, GetLastError()));
-    CHECK(fileSize.QuadPart <= std::numeric_limits<DWORD>::max(), std::format(L"File size of '{}' is too large: {}", testResultPath, fileSize.QuadPart));
-
-    text.resize(fileSize.QuadPart);
-
-    DWORD bytesRead;
-    result = ReadFile(file, text.data(), static_cast<DWORD>(text.size()), &bytesRead, nullptr);
-    CHECK(result && bytesRead == text.size(), std::format(L"Failed to read file '{}': {}", testResultPath, GetLastError()));
+    std::string text = ReadWholeFile<std::string>(testResultPath.c_str());
 
     std::string_view textView = text;
 

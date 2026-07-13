@@ -1,7 +1,10 @@
 #include "PrecompiledHeader.h"
 #include "PerformanceTest.h"
 #include "PerformanceIntegrationTest.h"
+#include "StringSearcherTestAPI.h"
+#include "StringSearchPerformanceTest.h"
 #include "TestLogger.h"
+#include "Utilities/FileUtilities.h"
 
 static void RunAllPerformanceIntegrationTests(int& failureCount, int& successCount, int& testCount, int& layoutCount)
 {
@@ -88,6 +91,69 @@ static void RunAllPerformanceIntegrationTests(int& failureCount, int& successCou
     }
 }
 
+struct TestStringSearcherDeleter
+{
+    void operator()(TestStringSearcher* ptr) const 
+    {
+        FreeStringSearcher(ptr);
+    }
+};
+
+static void RunAllStringSearchPerformanceTests(int& failureCount, int& successCount, int& testCount)
+{
+    using namespace Testing;
+
+    std::vector<StringSearchPerformanceTest*> allTests;
+
+    {
+        auto test = StringSearchPerformanceTest::GetFirstTest();
+        while (test != nullptr)
+        {
+            allTests.push_back(test);
+            test = test->GetNextTest();
+        }
+    }
+
+    std::sort(allTests.begin(), allTests.end(), [](const StringSearchPerformanceTest* a, const StringSearchPerformanceTest* b)
+    {
+        return a->TestName() < b->TestName();
+    });
+
+    std::map<StringSearcherParameters, std::unique_ptr<TestStringSearcher, TestStringSearcherDeleter>> stringSearchers;
+    std::map<std::wstring_view, std::vector<uint8_t>> fileContents;
+
+    for (const auto& test : allTests)
+    {
+        auto searcherParameters = test->GetSearcherParameters();
+        if (stringSearchers.find(searcherParameters) == stringSearchers.end())
+            stringSearchers.emplace(searcherParameters, CreateStringSearcher(searcherParameters.searchString, searcherParameters.searchFlags));
+
+        auto fileToSearch = test->GetFileToSearch();
+        if (fileContents.find(fileToSearch) == fileContents.end())
+            fileContents.emplace(fileToSearch, ReadWholeFile<std::vector<uint8_t>>(test->GetFileToSearch()));
+    }
+
+    for (const auto& test : allTests)
+    {
+        //if (test->TestName().find(L"StringSearchPerformanceTest_UnicodeSearchString_Utf16IgnoreCaseSearchFlags_LargeSourceFile_DirectStorageReaderChunkSize") == std::wstring_view::npos)
+        //    continue;
+
+        try
+        {
+            PrintToStdout(std::format(L"Running '{}'\r\n", test->TestName()));
+            testCount++;
+            test->Run(stringSearchers.at(test->GetSearcherParameters()).get(), fileContents.at(test->GetFileToSearch()));
+            successCount++;
+            PrintToStdout(L"    PASS!\r\n");
+        }
+        catch (const TestFailedException& e)
+        {
+            failureCount++;
+            PrintToStdout(std::format(L"    FAILED:\r\n        {}\r\n", e.Text()));
+        }
+    }
+}
+
 int Testing::RunAllPerformanceTests()
 {
     try
@@ -98,6 +164,7 @@ int Testing::RunAllPerformanceTests()
         int successCount = 0;
         int testCount = 0;
         int layoutCount = 0;
+        RunAllStringSearchPerformanceTests(failureCount, successCount, testCount);
         RunAllPerformanceIntegrationTests(failureCount, successCount, testCount, layoutCount);
 
         PrintToStdout(std::format(L"Ran {} tests across {} layouts: {} succeeded, {} failed.\r\n", testCount, layoutCount, successCount, failureCount));
@@ -110,40 +177,49 @@ int Testing::RunAllPerformanceTests()
     }
 }
 
+struct TestResult
+{
+    std::wstring_view testName;
+    double medianRunTime;
+};
+
+template <typename PerformanceTestType>
+void GatherTestResults(std::vector<TestResult>& testResults)
+{
+    auto test = PerformanceTestType::GetFirstTest();
+    while (test != nullptr)
+    {
+        testResults.emplace_back(test->TestName(), test->GetMedianRunTime());
+        test = test->GetNextTest();
+    }
+}
+
 void Testing::ReportPerformanceTestResults()
 {
     PrintToStdout(std::format(L"\r\nPerformance Test Results:\r\n"));
 
-    std::vector<PerformanceIntegrationTestBase*> allTests;
+    std::vector<TestResult> testResults;
+    GatherTestResults<StringSearchPerformanceTest>(testResults);
+    GatherTestResults<PerformanceIntegrationTestBase>(testResults);
 
-    {
-        auto test = PerformanceIntegrationTestBase::GetFirstTest();
-        while (test != nullptr)
-        {
-            allTests.push_back(test);
-            test = test->GetNextTest();
-        }
-    }
-
-    if (allTests.empty())
+    if (testResults.empty())
     {
         PrintToStdout(std::format(L"    No performance tests were run.\r\n"));
         return;
     }
 
-    std::sort(allTests.begin(), allTests.end(), [](const PerformanceIntegrationTestBase* a, const PerformanceIntegrationTestBase* b)
+    std::sort(testResults.begin(), testResults.end(), [](const TestResult& a, const TestResult& b)
     {
-        return a->TestName() < b->TestName();
+        return a.testName < b.testName;
     });
 
-    for (auto test : allTests)
+    for (auto& test : testResults)
     {
-        auto name = test->TestName();
-        if (isnan(test->GetMedianRunTime()))
+        auto name = test.testName;
+        if (isnan(test.medianRunTime))
             continue;
 
-        auto durationMS = 1000.0 * test->GetMedianRunTime();
-
+        auto durationMS = 1000.0 * test.medianRunTime;
         PrintToStdout(std::format(L"    {:100}: {:.2f} ms\r\n", name, durationMS));
     }
 }

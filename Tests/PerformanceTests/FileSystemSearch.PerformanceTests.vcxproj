@@ -39,11 +39,15 @@
     <ClCompile Include="Source\PerformanceIntegrationTest.cpp" />
     <ClCompile Include="Source\PerformanceTest.cpp" />
     <ClCompile Include="Source\PerformanceTestDataLayout.cpp" />
+    <ClCompile Include="Source\StringSearchPerformanceTest.cpp" />
+    <ClCompile Include="Source\StringSearchPerformanceTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\PerformanceIntegrationTest.h" />
     <ClInclude Include="Source\PerformanceTest.h" />
     <ClInclude Include="Source\PerformanceTestDataLayout.h" />
+    <ClInclude Include="Source\SearchStrings.h" />
+    <ClInclude Include="Source\StringSearchPerformanceTest.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

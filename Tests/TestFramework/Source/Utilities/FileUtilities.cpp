@@ -1,7 +1,6 @@
 #include "PrecompiledHeader.h"
 #include "FileUtilities.h"
 #include "TestLogger.h"
-#include "TestMacros.h"
 
 void CreateDirectoryRecursive(const std::wstring& path)
 {

@@ -2,6 +2,7 @@
 #include "HandleHolder.h"
 #include "TestMacros.h"
 #include "PerformanceIntegrationTest.h"
+#include "SearchStrings.h"
 
 template <const Testing::PerformanceTestDataLayout* Layout, typename SearchString>
 struct FileContentsPathPerformanceTest : SearchString
@@ -20,27 +21,6 @@ struct SourceFilesSearchLayout
 {
     static constexpr std::array<size_t, 2> LayoutSizes = { 30, 20 };
 };
-
-struct ShortSearchString
-{
-    static constexpr CompileTimeStringW SearchString = L"System";
-};
-
-struct LongSearchString
-{
-    static constexpr CompileTimeStringW SearchString = L"static constexpr std::array<size_t, 5> LayoutSizes = { 4, 4, 4, 5 };";
-};
-
-struct UnicodeSearchString
-{
-    static constexpr CompileTimeStringW SearchString = L"Gąsdindamas ąsotį gręžiantį žąsiną, žvejys tąsė įsipainiojusį vėžį.";
-};
-
-template <CompileTimeStringW RelativePath>
-consteval CompileTimeString<wchar_t, MAX_PATH> GetTestSourceFile()
-{
-    return Testing::GetPerformanceTestDataDirectory() + L"\\" + RelativePath;
-}
 
 template <typename T, std::size_t... Sizes>
 constexpr auto MergeArrays(const std::array<T, Sizes>&... arrays)
@@ -67,41 +47,35 @@ constexpr auto MakeArray(const std::array<T, 1>& value)
     return result;
 }
 
-static constexpr CompileTimeStringW<MAX_PATH> kD3D10Warp = LR"(C:\Windows\System32\d3d10warp.dll)";
-static constexpr CompileTimeStringW<MAX_PATH> kDbgEng = LR"(C:\Windows\System32\dbgeng.dll)";
-static constexpr CompileTimeStringW<MAX_PATH> kShell32 = LR"(C:\Windows\System32\shell32.dll)";
-static constexpr CompileTimeStringW<MAX_PATH> kWindowsStorage = LR"(C:\Windows\System32\Windows.Storage.dll)";
-static constexpr CompileTimeStringW<MAX_PATH> kWindowsUIXaml = LR"(C:\Windows\System32\Windows.UI.Xaml.dll)";
-
 struct BinaryFiles
 {
     static constexpr auto TestFiles = MergeArrays(
-        MakeArray<3>(kD3D10Warp),
-        MakeArray<3>(kDbgEng),
-        MakeArray<2>(kShell32),
-        MakeArray<2>(kWindowsStorage),
-        MakeArray<1>(kWindowsUIXaml)
+        MakeArray<3>(D3D10Warp),
+        MakeArray<3>(DbgEng),
+        MakeArray<2>(Shell32),
+        MakeArray<2>(WindowsStorage),
+        MakeArray<1>(WindowsUIXaml)
     );
 };
 
 struct LargeSourceFiles
 {
-    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\gentree.cpp">() };
+    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { CoreCLRGenTree };
 };
 
 struct MediumSourceFiles
 {
-    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\class.cpp">() };
+    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { CoreCLRClass };
 };
 
 struct SmallSourceFiles
 {
-    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { GetTestSourceFile<L"CoreCLR-source\\unwind.cpp">() };
+    static constexpr std::array<CompileTimeString<wchar_t, MAX_PATH>, 1> TestFiles = { CoreCLRUnwind };
 };
 
 struct MixedFilesByCount
 {
-    static constexpr auto TestFiles = MergeArrays(std::to_array({ kD3D10Warp, kDbgEng, kShell32, kWindowsStorage, kWindowsUIXaml }), LargeSourceFiles::TestFiles, MediumSourceFiles::TestFiles, SmallSourceFiles::TestFiles);
+    static constexpr auto TestFiles = MergeArrays(std::to_array({ D3D10Warp, DbgEng, Shell32, WindowsStorage, WindowsUIXaml }), LargeSourceFiles::TestFiles, MediumSourceFiles::TestFiles, SmallSourceFiles::TestFiles);
 };
 
 struct MixedFilesBySize
