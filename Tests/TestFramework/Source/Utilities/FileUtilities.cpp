@@ -24,6 +24,7 @@ void CreateDirectoryRecursive(const std::wstring& path)
 
 void DeleteDirectoryRecursive(std::wstring path)
 {
+    CHECK(!path.empty(), L"DeleteDirectoryRecursive called with an empty path");
     if (path.back() != L'\\')
         path.push_back(L'\\');
 
