@@ -142,3 +142,55 @@ SEARCH_TEST(FolderWithNoFiles)
     auto searchResults = PerformTestSearch(L"*", L".", SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileName | SearchFlags::kSearchInFileContents | SearchFlags::kSearchContentsAsUtf8 | SearchFlags::kSearchContentsAsUtf16 | SearchFlags::kSearchRecursively);
     CHECK(searchResults.empty(), L"No results should have been found in an empty folder");
 }
+
+SEARCH_TEST(MaximumLengthSearchStringWorks)
+{
+    auto searchString = std::wstring(1024, L'A');
+    
+    std::string testFileContents(1024 + 2, 'A');
+    testFileContents[0] = 'B';
+    testFileContents.back() = 'B';
+
+    Testing::TestFile f(GetTestDirectory(), L"file.txt", testFileContents);
+
+    testFileContents[1] = 'B';
+    Testing::TestFile f2(GetTestDirectory(), L"file2.txt", testFileContents);
+
+    auto searchResults = PerformTestSearch(L"*", searchString.c_str(), SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileContents | SearchFlags::kSearchContentsAsUtf8);
+
+    CHECK(searchResults.size() == 1, L"Content search with maximum length search string failed to find the file");
+    CHECK(searchResults[0] == f.GetPath(), L"Content search with maximum length search string found the wrong file");
+}
+
+SEARCH_TEST(SearchStringLongerThanMaximumLengthRaisesError)
+{
+    struct TestContext
+    {
+        Event<EventType::ManualReset> doneEvent;
+        std::vector<std::wstring> errors;
+        bool foundSomething = false;
+    } testContext;
+
+    auto searcher = ::Search(
+        [](void* context, const WIN32_FIND_DATAW&, const wchar_t*) { static_cast<TestContext*>(context)->foundSomething = true; },
+        [](void*, const SearchStatistics&, double) {},
+        [](void* context, const SearchStatistics&) { static_cast<TestContext*>(context)->doneEvent.Set(); },
+        [](void* context, const wchar_t* errorMessage) { static_cast<TestContext*>(context)->errors.emplace_back(errorMessage); },
+        GetTestDirectory().c_str(),
+        L"*",
+        std::wstring(1025, L'A').c_str(),
+        SearchFlags::kSearchForFiles | SearchFlags::kSearchInFilePath | SearchFlags::kSearchInFileContents | SearchFlags::kSearchContentsAsUtf8,
+        std::numeric_limits<uint64_t>::max(),
+        &testContext);
+
+    if (searcher != nullptr)
+    {
+        auto waitResult = WaitForSingleObject(testContext.doneEvent, INFINITE);
+        CHECK(waitResult == WAIT_OBJECT_0, L"Failed to wait for search operation to complete");
+
+        CleanupSearchOperation(searcher);
+    }
+
+    CHECK(!testContext.errors.empty(), L"Search operation with too long search string did not produce errors.");
+    CHECK(!testContext.foundSomething, L"Search operation with too long search string should not find any files.");
+}

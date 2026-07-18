@@ -18,7 +18,10 @@ void Testing::StringSearchPerformanceTest::Run(TestStringSearcher* testSearcher,
 
             offset += bytesToSearch;
             if (offset != fileBytes.size())
+            {
+                CHECK(offset >= m_MaxSearchStringLength, L"Offset is less than the maximum search string length");
                 offset -= m_MaxSearchStringLength;
+            }
         }
     }, [](size_t) {});
 }

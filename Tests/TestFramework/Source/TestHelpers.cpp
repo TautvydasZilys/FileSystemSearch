@@ -130,10 +130,13 @@ std::vector<std::wstring> Testing::SearchTestImpl<BaseClass>::PerformTestSearch(
         ignoreFilesLargerThan,
         &testContext);
 
-    auto waitResult = WaitForSingleObject(testContext.doneEvent, INFINITE);
-    CHECK(waitResult == WAIT_OBJECT_0, L"Failed to wait for search operation to complete");
+    if (searcher != nullptr)
+    {
+        auto waitResult = WaitForSingleObject(testContext.doneEvent, INFINITE);
+        CHECK(waitResult == WAIT_OBJECT_0, L"Failed to wait for search operation to complete");
 
-    CleanupSearchOperation(searcher);
+        CleanupSearchOperation(searcher);
+    }
 
     CHECK(testContext.errors.empty(), [](const std::vector<std::wstring>& errors)
     {
