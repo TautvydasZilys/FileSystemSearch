@@ -14,4 +14,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <Manifest Include="$(SolutionDir)FileSystemSearch\Source\Resources\FileSystemSearch.exe.manifest" />
+  </ItemGroup>
 </Project>
