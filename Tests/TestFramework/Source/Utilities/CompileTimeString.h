@@ -35,7 +35,7 @@ struct CompileTimeString
     template <size_t Start, size_t Count = N - Start - 1>
     consteval CompileTimeString<CharType, Count + 1> SubStr() const
     {
-        static_assert(Start < Length, "Start index is out of bounds");
+        static_assert(Start >= 0 && Start < Length, "Start index is out of bounds");
         static_assert(Start + Count <= Length, "Requested substring continues past the end of the original string");
 
         CompileTimeString<CharType, Count + 1> result;
@@ -76,7 +76,7 @@ struct CompileTimeString
 
     CharType value[N];
 
-    static_assert(N > 0, "CompileTimeString<cCharType,  must have a non-zero size to fit a null terminator");
+    static_assert(N > 0, "CompileTimeString<CharType> must have a non-zero size to fit a null terminator");
 };
 
 template <std::size_t N>
