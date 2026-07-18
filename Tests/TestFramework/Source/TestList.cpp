@@ -24,7 +24,7 @@ int Testing::RunAllFunctionalTests()
         {
             try
             {
-                PrintToStdout(std::format(L"Running '{}'\r\n", test->TestName().data()));
+                PrintToStdout(std::format(L"Running '{}'\r\n", test->TestName()));
                 testCount++;
                 test->Run();
                 successCount++;
