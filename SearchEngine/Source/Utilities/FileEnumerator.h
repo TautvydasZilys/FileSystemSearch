@@ -18,7 +18,7 @@ inline void EnumerateFileSystem(const std::wstring& searchPath, std::wstring_vie
 	auto tempSearchPath = PathUtils::CombinePathsTemporary(searchPath, searchPattern, allocator);
 	FINDEX_SEARCH_OPS searchOp = (enumerationFlags & FileSystemEnumerationFlags::kEnumerateFiles) == FileSystemEnumerationFlags::kEnumerateNone ? FindExSearchLimitToDirectories : FindExSearchNameMatch;
 
-	auto findHandle = FindFirstFileExW(tempSearchPath, FindExInfoBasic, &findData, searchOp, nullptr, FIND_FIRST_EX_LARGE_FETCH);
+	FindHandleHolder findHandle = FindFirstFileExW(tempSearchPath, FindExInfoBasic, &findData, searchOp, nullptr, FIND_FIRST_EX_LARGE_FETCH);
 
 	if (findHandle == INVALID_HANDLE_VALUE)
 		return;
@@ -37,6 +37,4 @@ inline void EnumerateFileSystem(const std::wstring& searchPath, std::wstring_vie
 		onFileEnumerated(findData);
 	}
 	while (FindNextFileW(findHandle, &findData) != FALSE);
-
-	FindClose(findHandle);
 }

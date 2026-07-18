@@ -265,14 +265,10 @@ void SearchWindow::SearchButtonClicked()
         return;
     }
 
-    if (searchString.length() > 1 << 26)
+    if (searchString.length() > 1024)
     {
-        if (searchString.length() > (1 << 30) || 
-            WideCharToMultiByte(CP_UTF8, 0, searchString.c_str(), static_cast<int>(searchString.length()), nullptr, 0, nullptr, nullptr) > (1 << 30))
-        {
-            DisplayValidationFailure(L"Search string is too long.");
-            return;
-        }
+        DisplayValidationFailure(L"Search string cannot be longer than 1024 characters.");
+        return;
     }
 
     if (searchInFileContents && searchContentsAsUtf8 && 

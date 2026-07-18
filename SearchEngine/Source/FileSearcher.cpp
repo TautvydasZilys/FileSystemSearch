@@ -1,11 +1,11 @@
 #include "PrecompiledHeader.h"
 #include "FileReadBackends/DirectStorage/DirectXContext.h"
 #include "FileSearcher.h"
+#include "StringUtils.h"
 #include "Utilities/AsynchronousPeriodicTimer.h"
 #include "Utilities/FileEnumerator.h"
 #include "Utilities/PathUtils.h"
 #include "Utilities/ScopedStackAllocator.h"
-#include "Utilities/StringUtils.h"
 
 FileSearcher::FileSearcher(SearchInstructions&& searchInstructions) :
 	m_RefCount(1),
@@ -222,6 +222,12 @@ bool FileSearcher::SearchInFileName(const std::wstring& directory, const WIN32_F
 
 FileSearcher* FileSearcher::BeginSearch(SearchInstructions&& searchInstructions)
 {
+	if (searchInstructions.searchString.length() > 1024)
+	{
+		searchInstructions.onError(searchInstructions.callbackContext, L"Search string cannot be longer than 1024 characters.");
+		return nullptr;
+	}
+
 	FileSearcher* searcher = new FileSearcher(std::forward<SearchInstructions>(searchInstructions));
 	if (searcher->m_FailedInit)
 	{

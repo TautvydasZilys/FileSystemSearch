@@ -1,104 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64">
-      <Configuration>Release</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|Arm64">
-      <Configuration>Debug</Configuration>
-      <Platform>Arm64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Arm64">
-      <Configuration>Release</Configuration>
-      <Platform>Arm64</Platform>
-    </ProjectConfiguration>
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{42CB7641-3FF2-4973-B1BE-1AE94123FD10}</ProjectGuid>
-    <Keyword>Win32Proj</Keyword>
-    <RootNamespace>SearchEngine</RootNamespace>
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
-  <Import Project="$(SolutionDir)FileSystemSearch.common.props" />
-  <ItemDefinitionGroup>
-    <ClCompile>
-	  <PreprocessorDefinitions>BUILDING_SEARCHENGINE=1;USE_DSTORAGE=1;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>dxgi.lib;d3d12.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
-  </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.cpp" />
-    <ClCompile Include="Source\FileReadBackends\DirectStorage\DirectXContext.cpp" />
-    <ClCompile Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.cpp" />
-    <ClCompile Include="Source\FileSearcher.cpp" />
-    <ClCompile Include="Source\SearchEngine.cpp" />
-    <ClCompile Include="Source\SearchResultReporter.cpp" />
-    <ClCompile Include="Source\StringSearch\StringSearcher.cpp" />
-    <ClCompile Include="Source\Utilities\ScopedStackAllocator.cpp" />
-    <ClCompile Include="$(SolutionDir)Common\PrecompiledHeader.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\Common\CriticalSection.h" />
-    <ClInclude Include="..\Common\Event.h" />
-    <ClInclude Include="..\Common\HandleHolder.h" />
-    <ClInclude Include="..\Common\HeapArray.h" />
-    <ClInclude Include="..\Common\NonCopyable.h" />
-    <ClInclude Include="..\Common\ReaderWriterLock.h" />
-    <ClInclude Include="..\Common\Version.rc" />
-    <ClInclude Include="Include\SearchEngine.h" />
-    <ClInclude Include="Source\FileContentSearchData.h" />
-    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageFileReadData.h" />
-    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectStorageReader.h" />
-    <ClInclude Include="Source\FileReadBackends\DirectStorage\DirectXContext.h" />
-    <ClInclude Include="Source\FileReadBackends\DirectStorage\ReadBatch.h" />
-    <ClInclude Include="Source\FileReadBackends\OverlappedIO\OverlappedIOReader.h" />
-    <ClInclude Include="Source\FileSearcher.h" />
-    <ClInclude Include="Source\Resources\resource.h" />
-    <ClInclude Include="Source\SearchInstructions.h" />
-    <ClInclude Include="Source\SearchResultData.h" />
-    <ClInclude Include="Source\SearchResultReporter.h" />
-    <ClInclude Include="Source\StringSearch\OrdinalStringSearcher.h" />
-    <ClInclude Include="Source\StringSearch\StringSearcher.h" />
-    <ClInclude Include="Source\StringSearch\UnicodeUtf16StringSearcher.h" />
-    <ClInclude Include="Source\Utilities\AsynchronousPeriodicTimer.h" />
-    <ClInclude Include="Source\Utilities\FileEnumerator.h" />
-    <ClInclude Include="Source\Utilities\IndexStableRingBuffer.h" />
-    <ClInclude Include="Source\Utilities\ObjectPool.h" />
-    <ClInclude Include="Source\Utilities\PathUtils.h" />
-    <ClInclude Include="Source\Utilities\ScopedStackAllocator.h" />
-    <ClInclude Include="Source\Utilities\StringUtils.h" />
-    <ClInclude Include="Source\Utilities\WorkQueue.h" />
-    <ClInclude Include="$(SolutionDir)Common\PrecompiledHeader.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Source\Resources\SearchEngine.rc" />
-  </ItemGroup>
+  <Import Project="SearchEngine.props" Label="PropertySheets" />
+  <Import Project="SearchEngine.Common.vcxitems" Label="Shared" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\Microsoft.Direct3D.DirectStorage.1.3.0\build\native\targets\Microsoft.Direct3D.DirectStorage.targets" Condition="Exists('..\packages\Microsoft.Direct3D.DirectStorage.1.3.0\build\native\targets\Microsoft.Direct3D.DirectStorage.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.DirectStorage.1.3.0\build\native\targets\Microsoft.Direct3D.DirectStorage.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.DirectStorage.1.3.0\build\native\targets\Microsoft.Direct3D.DirectStorage.targets'))" />
-  </Target>
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <Import Project="SearchEngine.targets" Label="Targets" />
 </Project>

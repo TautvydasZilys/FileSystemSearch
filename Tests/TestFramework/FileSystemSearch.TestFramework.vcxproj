@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Arm64">
+      <Configuration>Debug</Configuration>
+      <Platform>Arm64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Arm64">
+      <Configuration>Release</Configuration>
+      <Platform>Arm64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{24a4c6c1-5047-4972-8d5f-38f10f92ff8b}</ProjectGuid>
+    <RootNamespace>FileSystemSearch_TestFramework</RootNamespace>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)Tests\FileSystemSearch.Tests.common.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)SearchEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\TestHelpers.cpp" />
+    <ClCompile Include="Source\TestList.cpp" />
+    <ClCompile Include="Source\TestLogger.cpp" />
+    <ClCompile Include="Source\Utilities\FileUtilities.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\TestHelpers.h" />
+    <ClInclude Include="Source\TestList.h" />
+    <ClInclude Include="Source\TestLogger.h" />
+    <ClInclude Include="Source\TestMacros.h" />
+    <ClInclude Include="Source\Utilities\CompileTimeString.h" />
+    <ClInclude Include="Source\Utilities\FileUtilities.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

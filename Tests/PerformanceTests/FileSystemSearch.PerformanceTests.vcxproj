@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Arm64">
+      <Configuration>Debug</Configuration>
+      <Platform>Arm64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Arm64">
+      <Configuration>Release</Configuration>
+      <Platform>Arm64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{DBBF5E74-CBAA-4CE5-B1B6-F02886E07A23}</ProjectGuid>
+    <RootNamespace>FileSystemSearch_PerformanceTests</RootNamespace>
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)Tests\FileSystemSearch.Tests.common.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(ProjectDir)..\TestFramework\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(OutDir)FileSystemSearch.TestFramework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\FileContentSearchPerformanceTests.cpp" />
+    <ClCompile Include="Source\FileNameAndPathSearchPerformanceTests.cpp" />
+    <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\PerformanceIntegrationTest.cpp" />
+    <ClCompile Include="Source\PerformanceTest.cpp" />
+    <ClCompile Include="Source\PerformanceTestDataLayout.cpp" />
+    <ClCompile Include="Source\StringSearchPerformanceTest.cpp" />
+    <ClCompile Include="Source\StringSearchPerformanceTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\PerformanceIntegrationTest.h" />
+    <ClInclude Include="Source\PerformanceTest.h" />
+    <ClInclude Include="Source\PerformanceTestDataLayout.h" />
+    <ClInclude Include="Source\SearchStrings.h" />
+    <ClInclude Include="Source\StringSearchPerformanceTest.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

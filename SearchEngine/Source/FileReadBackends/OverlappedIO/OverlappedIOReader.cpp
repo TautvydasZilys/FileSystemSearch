@@ -93,7 +93,10 @@ void OverlappedIOReader::SearchFileContents(const FileOpenData& searchData, uint
 	fileOffset += bytesRead;
 	Assert(static_cast<int64_t>(fileOffset) >= 0);
 	if (fileOffset != searchData.fileSize)
+	{
+		Assert(fileOffset >= m_MaxSearchStringLength);
 		fileOffset -= m_MaxSearchStringLength;
+	}
 
 	while (!m_IsFinished && searchData.fileSize - fileOffset > 0)
 	{
@@ -126,7 +129,10 @@ void OverlappedIOReader::SearchFileContents(const FileOpenData& searchData, uint
 		fileOffset += bytesRead;
 		Assert(static_cast<int64_t>(fileOffset) >= 0);
 		if (fileOffset != searchData.fileSize)
+		{
+			Assert(fileOffset >= m_MaxSearchStringLength);
 			fileOffset -= m_MaxSearchStringLength;
+		}
 	}
 
 	if (m_StringSearcher.PerformFileContentSearch(secondaryBuffer, bytesRead, stackAllocator))

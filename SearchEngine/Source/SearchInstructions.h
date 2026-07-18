@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SearchEngineTypes.h"
-#include "Utilities/StringUtils.h"
+#include "StringUtils.h"
 
 struct SearchInstructions
 {
