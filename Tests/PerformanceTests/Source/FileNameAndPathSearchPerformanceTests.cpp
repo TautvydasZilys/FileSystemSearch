@@ -35,8 +35,8 @@ DEFINE_PERFORMANCE_TEST_DATA_LAYOUT(DeepSearch);
 
 constexpr SearchFlags kFileNameSearchFlags = SearchFlags::kSearchForFiles | SearchFlags::kSearchInFileName | SearchFlags::kSearchRecursively;
 constexpr SearchFlags kFilePathSearchFlags = SearchFlags::kSearchForFiles | SearchFlags::kSearchInFilePath | SearchFlags::kSearchRecursively;
-constexpr SearchFlags kDirectoryNameSearchFlags = SearchFlags::kSearchForFiles | SearchFlags::kSearchInFilePath | SearchFlags::kSearchRecursively;
-constexpr SearchFlags kDirectoryPathSearchFlags = SearchFlags::kSearchForFiles | SearchFlags::kSearchInFilePath | SearchFlags::kSearchRecursively;
+constexpr SearchFlags kDirectoryNameSearchFlags = SearchFlags::kSearchForDirectories | SearchFlags::kSearchInDirectoryName | SearchFlags::kSearchRecursively;
+constexpr SearchFlags kDirectoryPathSearchFlags = SearchFlags::kSearchForDirectories | SearchFlags::kSearchInDirectoryPath | SearchFlags::kSearchRecursively;
 
 #define DEFINE_NAME_PATH_PERFORMANCE_TEST(Category, SearchLayout, SearchString) DEFINE_PERFORMANCE_INTEGRATION_TEST(Category##_##SearchLayout##_##SearchString, FileNamePathPerformanceTest<&k##SearchLayout##Layout, SearchString, k##Category##SearchFlags>)
 
