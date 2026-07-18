@@ -19,7 +19,7 @@ struct CompileTimeString
     {
         static_assert(M <= N, "Cannot construct a CompileTimeString from a larger string literal");
         std::copy_n(str, M, value);
-        std::fill_n(value + M, N - M, L'\0');
+        std::fill_n(value + M, N - M, CharType('\0'));
         EnsureNullTerminated();
     }
 
@@ -28,7 +28,7 @@ struct CompileTimeString
     {
         static_assert(M <= N, "Cannot construct a CompileTimeString, from a larger CompileTimeString");
         std::copy_n(other.value, M, value);
-        std::fill_n(value + M, N - M, L'\0');
+        std::fill_n(value + M, N - M, CharType('\0'));
         EnsureNullTerminated();
     }
 
@@ -40,7 +40,7 @@ struct CompileTimeString
 
         CompileTimeString<CharType, Count + 1> result;
         std::copy_n(value + Start, Count, result.value);
-        result.value[Count] = L'\0';
+        result.value[Count] = CharType('\0');
         return result;
     }
 
@@ -70,7 +70,7 @@ struct CompileTimeString
 
     consteval void EnsureNullTerminated()
     {
-        if (value[N - 1] != L'\0')
+        if (value[N - 1] != CharType('\0'))
             throw "Input string must be null terminated!";
     }
 
