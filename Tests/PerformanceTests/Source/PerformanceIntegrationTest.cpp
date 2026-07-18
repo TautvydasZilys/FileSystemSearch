@@ -32,25 +32,37 @@ std::vector<std::wstring> Testing::PerformanceIntegrationTestBase::LoadPerforman
 
     textView.remove_prefix(ptr - textView.data());
 
-    CHECK(textView.size() >= 2 && textView.front() == '\r' && textView[1] == '\n', std::format(L"Expected CRLF after path count in '{}'", testResultPath));
-    textView.remove_prefix(2);
+    CHECK(textView.size() >= 1, std::format(L"Expected line break after path count in '{}'", testResultPath));
+    if (textView.front() == '\r')
+    {
+        textView.remove_prefix(1);
+        CHECK(textView.size() >= 1 && textView.front() == '\n', std::format(L"Expected LF after CR in '{}'", testResultPath));
+        textView.remove_prefix(1);
+    }
+    else
+    {
+        CHECK(textView.front() == '\n', std::format(L"Expected line break after path count in '{}'", testResultPath));
+        textView.remove_prefix(1);
+    }
 
     std::vector<std::wstring> foundPaths;
     foundPaths.resize(pathCount);
 
     for (size_t i = 0; i < pathCount; i++)
     {
-        auto lineEnd = textView.find("\r\n");
+        auto lineEnd = textView.find('\n');
         CHECK(lineEnd != std::string_view::npos, std::format(L"Failed to find end of line for path {} in '{}'", i, testResultPath));
 
         std::string_view pathUtf8(textView.data(), lineEnd);
+        if (!pathUtf8.empty() && pathUtf8.back() == '\r')
+            pathUtf8.remove_suffix(1);
 
         foundPaths[i].reserve(testDirectory.length() + 1 + pathUtf8.length());
         foundPaths[i] = testDirectory;
         foundPaths[i] += L"\\";
         foundPaths[i] += StringUtils::Utf8ToUtf16(pathUtf8);
 
-        textView.remove_prefix(lineEnd + 2);
+        textView.remove_prefix(lineEnd + 1);
     }
 
     return foundPaths;

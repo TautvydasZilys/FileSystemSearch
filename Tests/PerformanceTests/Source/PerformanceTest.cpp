@@ -224,7 +224,7 @@ void Testing::ReportPerformanceTestResults()
     auto baselineText = ReadFileToEnd<std::string>(baselineFile, kBaselineFilePath.value);
 
     size_t lineNumber = 0;
-    for (auto line : std::views::split(baselineText, "\r\n"sv))
+    for (auto line : std::views::split(baselineText, '\n'))
     {
         lineNumber++;
         if (line.empty())
