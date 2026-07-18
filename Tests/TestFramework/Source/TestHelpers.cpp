@@ -83,15 +83,7 @@ Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_vie
 Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, std::span<const char> fileContents) :
     TestFile(testDirectory, fileName)
 {
-    FileHandleHolder file = CreateFile2(m_Path.c_str(), GENERIC_WRITE, 0, CREATE_ALWAYS, nullptr);
-    CHECK(file, std::format(L"Failed to open file '{}' for writing", m_Path));
-
-    if (fileContents.size() > std::numeric_limits<DWORD>::max())
-        __debugbreak(); // TO DO: add support for writing files over 4 GB
-
-    DWORD bytesWritten;
-    auto writeResult = WriteFile(file, fileContents.data(), static_cast<DWORD>(fileContents.size()), &bytesWritten, nullptr);
-    CHECK(writeResult && bytesWritten == fileContents.size(), std::format(L"Failed to write to file '{}'", m_Path));
+    WriteWholeFile(m_Path.c_str(), fileContents);
 }
 
 Testing::TestFile::TestFile(const TestDirectory& testDirectory, std::wstring_view fileName, const wchar_t* sourceFilePath) :

@@ -76,7 +76,7 @@ namespace Testing
 
     protected:
         const PerformanceTestDataLayout* m_PerformanceTestDataLayout;
-        mutable double m_MedianTime;
+        mutable double m_MedianTime = NAN;
 
     private:
         friend void ReportPerformanceTestResults();

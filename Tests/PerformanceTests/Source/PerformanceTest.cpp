@@ -3,23 +3,40 @@
 #include "PerformanceIntegrationTest.h"
 #include "StringSearcherTestAPI.h"
 #include "StringSearchPerformanceTest.h"
+#include "StringUtils.h"
 #include "TestLogger.h"
 #include "Utilities/FileUtilities.h"
 
-static void RunAllPerformanceIntegrationTests(int& failureCount, int& successCount, int& testCount, int& layoutCount)
+template <typename T> requires std::derived_from<T, Testing::RegisteredTest<T>> && std::derived_from<T, Testing::ITest>
+static std::vector<T*> GatherAllTests()
 {
-    using namespace Testing;
-
-    std::vector<PerformanceIntegrationTestBase*> allTests;
+    std::vector<T*> allTests;
 
     {
-        auto test = PerformanceIntegrationTestBase::GetFirstTest();
+        auto test = T::GetFirstTest();
         while (test != nullptr)
         {
             allTests.push_back(test);
             test = test->GetNextTest();
         }
     }
+
+    std::sort(allTests.begin(), allTests.end(), [](const T* a, const T* b)
+    {
+        return a->TestName() < b->TestName();
+    });
+
+    for (size_t i = 1; i < allTests.size(); i++)
+        CHECK(allTests[i - 1]->TestName() != allTests[i]->TestName(), std::format(L"Two tests have the same name: '{}' and '{}'", allTests[i - 1]->TestName(), allTests[i]->TestName()));
+    
+    return allTests;
+}
+
+static void RunAllPerformanceIntegrationTests(int& failureCount, int& successCount, int& testCount, int& layoutCount)
+{
+    using namespace Testing;
+
+    auto allTests = GatherAllTests<PerformanceIntegrationTestBase>();
 
     // First check if there are any layouts that are identical but have different names
     std::sort(allTests.begin(), allTests.end(), [](const PerformanceIntegrationTestBase* a, const PerformanceIntegrationTestBase* b)
@@ -103,22 +120,7 @@ static void RunAllStringSearchPerformanceTests(int& failureCount, int& successCo
 {
     using namespace Testing;
 
-    std::vector<StringSearchPerformanceTest*> allTests;
-
-    {
-        auto test = StringSearchPerformanceTest::GetFirstTest();
-        while (test != nullptr)
-        {
-            allTests.push_back(test);
-            test = test->GetNextTest();
-        }
-    }
-
-    std::sort(allTests.begin(), allTests.end(), [](const StringSearchPerformanceTest* a, const StringSearchPerformanceTest* b)
-    {
-        return a->TestName() < b->TestName();
-    });
-
+    auto allTests = GatherAllTests<StringSearchPerformanceTest>();
     std::map<StringSearcherParameters, std::unique_ptr<TestStringSearcher, TestStringSearcherDeleter>> stringSearchers;
     std::map<std::wstring_view, std::vector<uint8_t>> fileContents;
 
@@ -179,8 +181,10 @@ int Testing::RunAllPerformanceTests()
 
 struct TestResult
 {
-    std::wstring_view testName;
-    double medianRunTime;
+    std::string testName;
+    std::wstring_view testNameUtf16;
+    double baselineMedianRunTimeMS;
+    double actualMedianRunTimeMS;
 };
 
 template <typename PerformanceTestType>
@@ -189,14 +193,14 @@ void GatherTestResults(std::vector<TestResult>& testResults)
     auto test = PerformanceTestType::GetFirstTest();
     while (test != nullptr)
     {
-        testResults.emplace_back(test->TestName(), test->GetMedianRunTime());
+        testResults.emplace_back(StringUtils::Utf16ToUtf8(test->TestName()), test->TestName(), NAN, test->GetMedianRunTime() * 1000.0);
         test = test->GetNextTest();
     }
 }
 
 void Testing::ReportPerformanceTestResults()
 {
-    PrintToStdout(std::format(L"\r\nPerformance Test Results:\r\n"));
+    using std::operator""sv;
 
     std::vector<TestResult> testResults;
     GatherTestResults<StringSearchPerformanceTest>(testResults);
@@ -204,7 +208,7 @@ void Testing::ReportPerformanceTestResults()
 
     if (testResults.empty())
     {
-        PrintToStdout(std::format(L"    No performance tests were run.\r\n"));
+        PrintToStdout(std::format(L"No performance tests were run.\r\n"));
         return;
     }
 
@@ -213,13 +217,103 @@ void Testing::ReportPerformanceTestResults()
         return a.testName < b.testName;
     });
 
-    for (auto& test : testResults)
+    constexpr auto kBaselineFilePath = GetPerformanceTestDataDirectory() + L"\\Baseline.txt";
+    constexpr auto kTestComparisonFilePath = GetPerformanceTestDataDirectory() + L"\\Comparison.txt";
+
+    FileHandleHolder baselineFile = CreateFile2(kBaselineFilePath.value, GENERIC_READ | GENERIC_WRITE, 0, OPEN_ALWAYS, nullptr);    
+    auto baselineText = ReadFileToEnd<std::string>(baselineFile, kBaselineFilePath.value);
+
+    size_t lineNumber = 0;
+    for (auto line : std::views::split(baselineText, "\r\n"sv))
     {
-        auto name = test.testName;
-        if (isnan(test.medianRunTime))
+        lineNumber++;
+        if (line.empty())
             continue;
 
-        auto durationMS = 1000.0 * test.medianRunTime;
-        PrintToStdout(std::format(L"    {:100}: {:.2f} ms\r\n", name, durationMS));
+        std::string_view lineView(line.begin(), line.end());
+        auto commaPos = lineView.find(',');
+        if (commaPos == std::string_view::npos || commaPos == 0 || commaPos == lineView.size() - 1)
+        {
+            PrintToStdout(std::format("Error parsing '{}': Invalid line format at line {}: '{}'\r\n", StringUtils::Utf16ToUtf8(kBaselineFilePath.value), lineNumber, lineView));
+            continue;
+        }
+
+        auto testName = lineView.substr(0, commaPos);
+        auto timeStr = lineView.substr(commaPos + 1);
+
+        double baselineTimeMS;
+        auto [ptr, err] = std::from_chars(timeStr.data(), timeStr.data() + timeStr.size(), baselineTimeMS);
+        if (err != std::errc())
+        {
+            PrintToStdout(std::format("Error parsing '{}': Invalid number format at line {}: '{}'\r\n", StringUtils::Utf16ToUtf8(kBaselineFilePath.value), lineNumber, timeStr));
+            continue;
+        }
+
+        auto it = std::lower_bound(testResults.begin(), testResults.end(), testName, [](const TestResult& a, std::string_view b)
+        {
+            return a.testName < b;
+        });
+        
+        if (it != testResults.end() && it->testName == testName)
+        {
+            if (!isnan(it->baselineMedianRunTimeMS))
+                PrintToStdout(std::format("WARNING: duplicate baseline for test '{}': {} ms and {} ms\r\n", it->testName, it->baselineMedianRunTimeMS, baselineTimeMS));
+
+            it->baselineMedianRunTimeMS = baselineTimeMS;
+        }
+        else
+        {
+            PrintToStdout(std::format("WARNING: baseline for test '{}' in '{}' does not match any test that was run. Was the test deleted?\r\n", testName, StringUtils::Utf16ToUtf8(kBaselineFilePath.value)));
+        }
     }
+
+    std::string baselineOutput;
+    std::string comparisonOutput;
+
+    for (auto& test : testResults)
+    {
+        // Only change baseline if it's a new test or we have a significant (>5%) performance difference. 
+        // This is to avoid changing the baseline for small fluctuations in performance that may be due to other factors.
+        bool changeBaseline = false;
+        if (isnan(test.actualMedianRunTimeMS))
+        {
+            if (isnan(test.baselineMedianRunTimeMS))
+                continue;
+        }
+        else if (isnan(test.baselineMedianRunTimeMS))
+        {
+            changeBaseline = true;
+            comparisonOutput += std::format("{:150}: {} ms (new test)\r\n", test.testName, test.actualMedianRunTimeMS);
+        }
+        else
+        {
+            if (test.baselineMedianRunTimeMS < test.actualMedianRunTimeMS)
+            {
+                auto slowdownPercentage = (test.actualMedianRunTimeMS - test.baselineMedianRunTimeMS) / test.baselineMedianRunTimeMS * 100.0;
+                if (slowdownPercentage > 5.0)
+                {
+                    changeBaseline = true;
+                    comparisonOutput += std::format("{:150}: {} ms (slower than baseline by {} ms, {:.2f}%)\r\n", test.testName, test.actualMedianRunTimeMS, (test.actualMedianRunTimeMS - test.baselineMedianRunTimeMS), slowdownPercentage);
+                }
+            }
+            else
+            {
+                auto speedupPercentage = (test.baselineMedianRunTimeMS - test.actualMedianRunTimeMS) / test.baselineMedianRunTimeMS * 100.0;
+                if (speedupPercentage > 5.0)
+                {
+                    changeBaseline = true;
+                    comparisonOutput += std::format("{:150}: {} ms (faster than baseline by {} ms, {:.2f}%)\r\n", test.testName, test.actualMedianRunTimeMS, (test.baselineMedianRunTimeMS - test.actualMedianRunTimeMS), speedupPercentage);
+                }
+            }
+        }
+
+        baselineOutput += test.testName;
+        baselineOutput += std::format(",{:.14f}\r\n", changeBaseline ? test.actualMedianRunTimeMS : test.baselineMedianRunTimeMS);
+    }
+
+    SetFilePointer(baselineFile, 0, nullptr, FILE_BEGIN);
+    WriteWholeFile(baselineFile, kBaselineFilePath.value, baselineOutput);
+    SetEndOfFile(baselineFile);
+
+    WriteWholeFile(kTestComparisonFilePath.value, comparisonOutput);
 }

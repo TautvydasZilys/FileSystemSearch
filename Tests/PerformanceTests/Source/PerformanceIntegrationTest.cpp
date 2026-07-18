@@ -77,12 +77,5 @@ void Testing::PerformanceIntegrationTestBase::SavePerformanceTestResultForCompar
     }
 
     const auto outputPath = GetPerformanceTestResultForComparisonPath();
-    FileHandleHolder outputFile = CreateFile2(outputPath.c_str(), GENERIC_WRITE, 0, CREATE_ALWAYS, nullptr);
-    CHECK(outputFile != INVALID_HANDLE_VALUE, std::format(L"Failed to create file '{}': {}", outputPath, GetLastError()));
-
-    CHECK(outputBuffer.size() < std::numeric_limits<DWORD>::max(), std::format(L"Output buffer is too large to write to file '{}'", outputPath));
-
-    DWORD bytesWritten;
-    auto writeResult = WriteFile(outputFile, outputBuffer.data(), static_cast<DWORD>(outputBuffer.size()), &bytesWritten, nullptr);
-    CHECK(writeResult && bytesWritten == outputBuffer.size(), std::format(L"Failed to write to file '{}': {}", outputPath, GetLastError()));
+    WriteWholeFile(outputPath.c_str(), outputBuffer);
 }

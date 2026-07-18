@@ -50,6 +50,6 @@ namespace Testing
         const wchar_t* m_FileToSearch;
         uint32_t m_ChunkSize;
         size_t m_MaxSearchStringLength;
-        mutable double m_MedianTime;
+        mutable double m_MedianTime = NAN;
     };
 }
