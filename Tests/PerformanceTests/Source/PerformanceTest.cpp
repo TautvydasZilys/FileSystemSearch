@@ -287,23 +287,12 @@ void Testing::ReportPerformanceTestResults()
         }
         else
         {
-            if (test.baselineMedianRunTimeMS < test.actualMedianRunTimeMS)
+            auto differenceMS = test.actualMedianRunTimeMS - test.baselineMedianRunTimeMS;
+            auto differencePercentage = differenceMS / test.baselineMedianRunTimeMS * 100.0;
+            if (std::abs(differencePercentage) > 12.5)
             {
-                auto slowdownPercentage = (test.actualMedianRunTimeMS - test.baselineMedianRunTimeMS) / test.baselineMedianRunTimeMS * 100.0;
-                if (slowdownPercentage > 5.0)
-                {
-                    changeBaseline = true;
-                    comparisonOutput += std::format("{:150}: {} ms (slower than baseline by {} ms, {:.2f}%)\r\n", test.testName, test.actualMedianRunTimeMS, (test.actualMedianRunTimeMS - test.baselineMedianRunTimeMS), slowdownPercentage);
-                }
-            }
-            else
-            {
-                auto speedupPercentage = (test.baselineMedianRunTimeMS - test.actualMedianRunTimeMS) / test.baselineMedianRunTimeMS * 100.0;
-                if (speedupPercentage > 5.0)
-                {
-                    changeBaseline = true;
-                    comparisonOutput += std::format("{:150}: {} ms (faster than baseline by {} ms, {:.2f}%)\r\n", test.testName, test.actualMedianRunTimeMS, (test.baselineMedianRunTimeMS - test.actualMedianRunTimeMS), speedupPercentage);
-                }
+                changeBaseline = true;
+                comparisonOutput += std::format("{:130}: {} ms ({:+f} ms, {:+.2f}%)\r\n", test.testName, test.actualMedianRunTimeMS, differenceMS, differencePercentage);
             }
         }
 
